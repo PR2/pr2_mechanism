@@ -1,0 +1,23 @@
+# This message contains the state of one realtime controller
+# that was spawned in pr2_mechanism_control
+
+# the name of the controller
+string name
+
+# the time at which these controller statistics were measured
+time timestamp
+
+# bool that indicates if the controller is currently
+# in a running or a stopped state
+bool running
+
+# the maximum time the update loop of the controller ever needed to complete
+duration max_time
+
+# the average time the update loop of the controller needs to complete. 
+# the average is computed in a sliding time window.
+duration mean_time
+
+# the variance on the time the update loop of the controller needs to complete.
+# the variance applies to a sliding time window.
+duration variance_time

@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="pr2_mechanism_control" type="listenerpublisher_ms.py" />
+  <test test-name="mechanism_state_py" pkg="pr2_mechanism_control" type="test_ms.py" />
+</launch>

@@ -1,0 +1,97 @@
+#! /usr/bin/env python
+# Copyright (c) 2008, Willow Garage, Inc.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the Willow Garage, Inc. nor the names of its
+#       contributors may be used to endorse or promote products derived from
+#       this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+# Brings up a set of controllers when run, and brings them down when
+# killed.  Extremely useful for spawning a set of controllers from
+# roslaunch.
+#
+# Author: Wim Meeussen
+
+import roslib, time, yaml, os
+roslib.load_manifest('pr2_controller_manager')
+
+import rospy, sys
+from pr2_controller_manager import pr2_controller_manager_interface
+
+import signal
+
+def print_usage(exit_code = 0):
+    print 'controller_loader <yaml_file controller_name yaml_file controller_name ...>'
+    sys.exit(exit_code)
+
+loaded = []
+prev_handler = None
+
+
+def shutdown(sig, stackframe):
+    global loaded
+    for name in reversed(loaded):
+        pr2_controller_manager_interface.stop_controller(name)
+        pr2_controller_manager_interface.unload_controller(name)
+    # We're shutdown.  Now invoke rospy's handler for full cleanup.
+    if prev_handler is not None:
+        prev_handler(signal.SIGINT,None)
+
+
+if __name__ == '__main__':
+    argv = rospy.myargv()
+    if len(argv) < 2:
+        print_usage()
+    rospy.init_node('controller_loader', anonymous=True)
+
+    # Override rospy's signal handling.  We'll invoke rospy's handler after
+    # we're done shutting down.
+    prev_handler = signal.getsignal(signal.SIGINT)
+    signal.signal(signal.SIGINT, shutdown)
+
+    argstart = 1
+    autostart = 1
+    if argv[1] == '--stopped':
+        autostart = 0
+        argstart = 2
+
+    for c in range(argstart,len(argv)-1,2):
+        file = argv[c]
+        name = argv[c+1]
+        print 'Loading yaml file %s in namespace %s' %(file, name)
+        if not os.path.exists(file):
+            rospy.logerr("Could not find yaml file %s" % file)           
+        else:
+            rospy.set_param(name, yaml.load(open(file)))
+            if pr2_controller_manager_interface.load_controller(name):
+                loaded.append(name)
+            else:
+                rospy.logerr("Could not load controller %s" % name)                           
+    rospy.loginfo("Loaded controllers: %s" % ', '.join(loaded))
+    
+    # autostart is needed
+    if autostart:
+        if not pr2_controller_manager_interface.start_controllers(loaded):    
+            rospy.logerr("Could not start controller %s" % loaded)                           
+
+    rospy.spin()

@@ -1,0 +1,17 @@
+/**
+@mainpage
+
+@htmlinclude manifest.html
+
+PR2 Mechanism Model
+
+@section cpp The C++ API
+
+ - pr2_mechanism_model::RobotState
+ - pr2_mechanism_model::Transmission
+ - pr2_mechanism_model::JointState
+ - pr2_mechanism_model::Chain
+
+
+**/
+

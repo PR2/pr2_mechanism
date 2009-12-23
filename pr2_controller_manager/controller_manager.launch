@@ -1,0 +1,28 @@
+<launch>
+
+<!--  
+      This launch file configures the controller manager, and brings three 
+      nodes that use the data published by the contorller manager:
+       * the robot state publisher listens to joint_state messages and publishes tf
+       * the controller_to_diagnostics listens to mechanism_statistics and
+         publishes to the diagnostics system
+       * the joints_to_agnostics listens to mechanism_statistics and
+         publishes to the diagnostics system
+-->
+
+
+<!-- Controller manager parameters -->
+  <param name="pr2_controller_manager/mechanism_statistics_publish_rate" value="1.0" />
+  <param name="pr2_controller_manager/joint_state_publish_rate" value="100.0" />
+
+<!-- Robot state publisher -->
+  <node pkg="robot_state_publisher" type="state_publisher" name="robot_state_publisher">
+    <param name="publish_frequency" type="double" value="50.0" />
+    <param name="tf_prefix" type="string" value="" />
+  </node>
+
+<!-- Diagnostics -->
+  <node pkg="pr2_controller_manager" type="controllers_to_diagnostics.py" name="controller_diagnostics" />
+  <node pkg="pr2_controller_manager" type="joints_to_diagnostics.py" name="joint_state_logging" />
+
+</launch>

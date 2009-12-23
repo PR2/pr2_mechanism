@@ -1,0 +1,21 @@
+<stack name="pr2_mechanism" version="0.1.0">
+  <description brief="The pr2 mechanism stack">
+    The pr2 mechanism stack contains the infrastructure to control the
+    pr2 robot in a hard realtime control loop. The main interface to
+    packages in this stack is through C++, but it is possible to
+    interact with controllers through the ROS interface. While the
+    stack is currently aimed at controlling the pr2 robot, it should
+    work on most force controlled robots. The list of packages in this
+    stack is shown below.
+  </description>
+  <author>Maintained by Wim Meeussen</author>
+  <license>BSD</license>  
+  <review status="doc reviewed" notes=""/>
+  <url>http://ros.org/wiki/pr2_mechanism</url>
+  <depend stack="robot_model"/> <!-- urdf, kdl_parser --> 
+  <depend stack="geometry"/> <!-- tf, angles --> 
+  <depend stack="common"/> <!-- tinyxml, pluginlib --> 
+  <depend stack="ros"/> <!-- rospy, std_msgs, roscpp --> 
+  <depend stack="common_msgs"/> <!-- diagnostic_msgs --> 
+
+</stack>

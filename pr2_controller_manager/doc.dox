@@ -1,0 +1,35 @@
+/**
+@mainpage
+
+@htmlinclude manifest.html
+
+PR2 Controller Manager
+
+@section cpp The C++ API
+ Users of the pr2 controller manager should \b never have to interact with the C++ API.
+
+@section ros The ROS API
+ The ROS API of the pr2 controlelr manager is summerized below. For a detailled description, see the project page \url http://ros.org/wiki/pr2_controller_manager
+
+@subsection topic PR2 Controller Manager Node ROS Topics
+ - ROS topics published by the controller manager node
+  - mechanism statistics:
+   - \b mechanism_statistics, pr2_mechanism_msgs_::MechanismStatistics, controller_manager.h
+  - joint states:
+   - \b joint_states, sensor_msgs::JointState, controller_manager.h
+  - frame transforms:
+   - \b /tf, tf::tfMessage, controller_manager.h
+
+
+@subsection services PR2 Controller Manager Node ROS Services
+ - ROS service publsihed by the controller manager node
+  - controller_manager node:
+   - \b list_controllers
+   - \b list_controller_types
+   - \b load_controller
+   - \b unload_controller
+   - \b switch_controller
+   - \b reload_controller_libraries
+
+**/
+

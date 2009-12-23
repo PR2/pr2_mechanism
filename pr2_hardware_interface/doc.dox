@@ -1,0 +1,19 @@
+/**
+@mainpage
+
+@htmlinclude manifest.html
+
+PR2 Hardware Interface
+
+@section cpp The C++ API
+
+ - pr2_hardware_interface::HardwareInterface
+  - pr2_hardware_interface::Accelerometer
+  - pr2_hardware_interface::Actuator
+  - pr2_hardware_interface::DigitalOut
+  - pr2_hardware_interface::PressureSensor
+  - pr2_hardware_interface::Projector
+
+
+**/
+

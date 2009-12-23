@@ -1,0 +1,17 @@
+<package>
+  <description brief="pr2_mechanism_msgs">
+     This package defines services that are used to communicate with
+     the realtime control loop in pr2_mechanism_control, and messages
+     that contain the state of the realtime controllers, the joints
+     and the actuators.
+  </description>
+  <author>Stuart Glaser sglaser@willowgarage.com, Wim Meeussen</author>
+  <license>BSD</license>
+  <review status="doc reviewed" notes=""/>
+  <url>http://ros.org/wiki/pr2_mechanism_msgs</url>
+  <depend package="std_msgs" />
+  <export>
+    <cpp cflags="-I${prefix}/msg/cpp -I${prefix}/srv/cpp" />
+  </export>
+</package>
+
