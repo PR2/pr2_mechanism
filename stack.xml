@@ -1,4 +1,4 @@
-<stack name="pr2_mechanism" version="0.1.0">
+<stack>
   <description brief="The pr2 mechanism stack">
     The pr2 mechanism stack contains the infrastructure to control the
     pr2 robot in a hard realtime control loop. The main interface to
@@ -12,10 +12,10 @@
   <license>BSD</license>  
   <review status="doc reviewed" notes=""/>
   <url>http://ros.org/wiki/pr2_mechanism</url>
-  <depend stack="robot_model"/> <!-- urdf, kdl_parser --> 
-  <depend stack="geometry"/> <!-- tf, angles --> 
-  <depend stack="common"/> <!-- tinyxml, pluginlib --> 
-  <depend stack="ros"/> <!-- rospy, std_msgs, roscpp --> 
-  <depend stack="common_msgs"/> <!-- diagnostic_msgs --> 
+  <depend stack="common" /> <!-- tinyxml, pluginlib -->
+  <depend stack="common_msgs" /> <!-- geometry_msgs, sensor_msgs, diagnostic_msgs -->
+  <depend stack="geometry" /> <!-- angles -->
+  <depend stack="robot_model" /> <!-- urdf, kdl_parser -->
+  <depend stack="ros" /> <!-- std_msgs, rospy, roscpp -->
 
 </stack>
