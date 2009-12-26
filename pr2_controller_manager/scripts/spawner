@@ -38,7 +38,7 @@ roslib.load_manifest('pr2_controller_manager')
 import rospy, sys
 import os.path
 import getopt
-from pr2_mechanism_msgs.srv import LoadController, UnloadController, SwitchController
+from pr2_mechanism_msgs.srv import *
 from std_msgs.msg import *
 
 from xml.dom.minidom import parse, parseString
@@ -61,7 +61,7 @@ prev_handler = None
 
 def shutdown(sig, stackframe):
     global loaded
-    switch_controller([], loaded, 2)
+    switch_controller([], loaded, SwitchControllerRequest.STRICT)
     for name in reversed(loaded):
         for i in range(3):
             try:

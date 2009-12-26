@@ -11,10 +11,8 @@ rosbuild_add_boost_directories()
 rosbuild_add_library(pr2_controller_manager src/controller_manager.cpp src/scheduler.cpp)
 rosbuild_remove_compile_flags(pr2_controller_manager -W)
 rosbuild_link_boost(pr2_controller_manager thread)
-#rosbuild_add_executable(ms_publisher_test test/ms_publisher_test.cpp)
-#rosbuild_add_rostest(test/test-mechanism-state-cpp.xml)
-#rosbuild_add_rostest(test/test-mechanism-state-py.xml)
 
 rosbuild_add_library(controller_test test/controllers/test_controller.cpp)
-
-
+rosbuild_add_executable(test_controllers test/test.cpp)
+rosbuild_add_gtest_build_flags(test_controllers)
+rosbuild_add_rostest(test/controller_test.launch)

@@ -1,7 +1,26 @@
 <launch>
+  <!-- Load configuration of controllers -->
   <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller1" command="load" />
   <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller2" command="load" />
   <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller3" command="load" />
   <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller4" command="load" />
   <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller5" command="load" />
+  <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller6" command="load" />
+  <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller7" command="load" />
+  <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller8" command="load" />
+  <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller9" command="load" />
+
+  <!-- Spawn some controllers stopped/started -->
+  <node pkg="pr2_controller_manager" type="spawner" args="controller1" name="spawn1"/>
+  <node pkg="pr2_controller_manager" type="spawner" args="--stopped controller2" name="spawn2" />
+
+  <node pkg="pr2_controller_manager" type="spawner" args="controller3 controller4" name="spawn34" />  
+  <node pkg="pr2_controller_manager" type="spawner" args="--stopped controller5 controller6" name="spawn56" />  
+
+  <include file="$(find gazebo)/launch/empty_world_no_x.launch" />
+  <include file="$(find pr2_gazebo)/pr2_no_controllers.launch" />
+
+  <!-- test -->
+  <test test-name="test_controller_manager" pkg="pr2_controller_manager" type="test_controllers" />
+
 </launch>
