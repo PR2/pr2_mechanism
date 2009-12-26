@@ -1,0 +1,5 @@
+<library path="lib/libcontroller_test">
+  <class name="TestController" 
+         type="my_controller_ns::MyControllerClass"           
+         base_class_type="pr2_controller_interface::Controller" />
+</library>

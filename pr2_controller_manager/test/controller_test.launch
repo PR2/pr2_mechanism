@@ -1,0 +1,7 @@
+<launch>
+  <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller1" command="load" />
+  <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller2" command="load" />
+  <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller3" command="load" />
+  <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller4" command="load" />
+  <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller5" command="load" />
+</launch>

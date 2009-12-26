@@ -15,4 +15,6 @@ rosbuild_link_boost(pr2_controller_manager thread)
 #rosbuild_add_rostest(test/test-mechanism-state-cpp.xml)
 #rosbuild_add_rostest(test/test-mechanism-state-py.xml)
 
+rosbuild_add_library(controller_test test/controllers/test_controller.cpp)
+
 
