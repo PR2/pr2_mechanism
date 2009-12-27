@@ -8,7 +8,7 @@
   <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller6" command="load" />
   <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller7" command="load" />
   <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller8" command="load" />
-  <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller9" command="load" />
+  <rosparam file="$(find pr2_controller_manager)/test/controller_config_broken.yaml" ns="controller9" command="load" />
 
   <!-- Spawn some controllers stopped/started -->
   <node pkg="pr2_controller_manager" type="spawner" args="controller1" name="spawn1"/>

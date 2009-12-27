@@ -1,0 +1,2 @@
+type: TestController
+publish_topic_name: my_topic

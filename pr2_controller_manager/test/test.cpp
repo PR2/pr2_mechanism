@@ -44,6 +44,7 @@
 #include <pr2_mechanism_msgs/UnloadController.h>
 #include <pr2_mechanism_msgs/ListControllers.h>
 #include <pr2_mechanism_msgs/SwitchController.h>
+#include <sensor_msgs/JointState.h>
 
 static const unsigned int _failure = 0;
 static const unsigned int _unloaded = 1;
@@ -62,6 +63,19 @@ class TestController : public testing::Test
 public:
   ros::NodeHandle node_;
   ros::ServiceClient load_srv_, unload_srv_, switch_srv_, list_srv_;
+  std::string callback1_name_, callback4_name_;
+  unsigned int callback1_counter_;
+
+  void callback1(const sensor_msgs::JointStateConstPtr& msg)
+  {
+    callback1_name_ = msg->name[0];
+    callback1_counter_++;
+  }
+
+  void callback4(const sensor_msgs::JointStateConstPtr& msg)
+  {
+    callback4_name_ = msg->name[0];
+  }
 
   bool loadController(const std::string& name)
   {
@@ -246,6 +260,9 @@ TEST_F(TestController, loading)
   // this one is not loaded yet
   EXPECT_TRUE(loadController("controller7"));
 
+  // this one is wrongly configured
+  EXPECT_FALSE(loadController("controller9"));
+
   // this one is not configured
   EXPECT_FALSE(loadController("controller10"));
 
@@ -407,6 +424,67 @@ TEST_F(TestController, start_stop_best_effort)
   SUCCEED();
 }
 
+
+
+TEST_F(TestController, service_and_realtime_publisher)
+{
+  EXPECT_EQ(controllerState("controller1"), _running);
+  EXPECT_EQ(controllerState("controller4"), _stopped);
+
+  // connect to topic
+  ros::Subscriber sub1 = node_.subscribe<sensor_msgs::JointState>("controller1/my_topic", 100, 
+                                                                  boost::bind(&TestController_service_and_realtime_publisher_Test::callback1, this, _1));
+  ros::Subscriber sub4 = node_.subscribe<sensor_msgs::JointState>("controller4/my_topic", 100, 
+                                                                  boost::bind(&TestController_service_and_realtime_publisher_Test::callback4, this, _1));
+
+  std::string not_started = "not_started";
+  callback1_name_ = not_started;
+  callback4_name_ = not_started;
+  while (callback1_name_ == "not_started")
+    ros::Duration(0.1).sleep();
+  ros::Duration(1.0).sleep(); // avoid problem with simultanious access to callback1_name_
+  EXPECT_EQ(callback1_name_, "");
+  EXPECT_EQ(callback4_name_, not_started);
+
+  std::string test_message = "Hoe gaat het met Wim?";
+  ros::ServiceClient srv_client1 = node_.serviceClient<pr2_mechanism_msgs::LoadController>("controller1/my_service");
+  ros::ServiceClient srv_client4 = node_.serviceClient<pr2_mechanism_msgs::LoadController>("controller1/my_service");
+  pr2_mechanism_msgs::LoadController srv_msg;
+  srv_msg.request.name = test_message;
+  EXPECT_TRUE(srv_client1.call(srv_msg));
+  EXPECT_TRUE(srv_client4.call(srv_msg));
+
+  ros::Duration(1.0).sleep();
+  EXPECT_EQ(callback1_name_, test_message);
+  EXPECT_EQ(callback4_name_, not_started);
+
+  sub1.shutdown();
+  sub4.shutdown();
+
+  SUCCEED();
+}
+
+
+TEST_F(TestController, publisher_hz)
+{
+  EXPECT_EQ(controllerState("controller1"), _running);
+
+  // connect to topic
+  ros::Subscriber sub1 = node_.subscribe<sensor_msgs::JointState>("controller1/my_topic", 100, 
+                                                                  boost::bind(&TestController_publisher_hz_Test::callback1, this, _1));
+
+  callback1_counter_ = 0;
+  while (callback1_counter_ == 0)
+    ros::Duration(0.1).sleep();
+  callback1_counter_ = 0;
+  ros::Duration(5.0).sleep();
+  EXPECT_NEAR(callback1_counter_, 5000, 200);
+
+  sub1.shutdown();
+  SUCCEED();
+}
+
+
 TEST_F(TestController, singlethread_bombardment)
 {
   bombardment_started_ = true;
@@ -417,10 +495,10 @@ TEST_F(TestController, singlethread_bombardment)
 
 TEST_F(TestController, multithread_bombardment)
 {
-  boost::thread bomb1(boost::bind(&TestController_multithread_bombardment_Test::randomBombardment, this, 200));
-  boost::thread bomb2(boost::bind(&TestController_multithread_bombardment_Test::randomBombardment, this, 200));
-  boost::thread bomb3(boost::bind(&TestController_multithread_bombardment_Test::randomBombardment, this, 200));
-  boost::thread bomb4(boost::bind(&TestController_multithread_bombardment_Test::randomBombardment, this, 200));
+  boost::thread bomb1(boost::bind(&TestController_multithread_bombardment_Test::randomBombardment, this, 500));
+  boost::thread bomb2(boost::bind(&TestController_multithread_bombardment_Test::randomBombardment, this, 500));
+  boost::thread bomb3(boost::bind(&TestController_multithread_bombardment_Test::randomBombardment, this, 500));
+  boost::thread bomb4(boost::bind(&TestController_multithread_bombardment_Test::randomBombardment, this, 500));
   bombardment_started_ = true;
   bomb1.join();
   bomb2.join();
@@ -429,7 +507,6 @@ TEST_F(TestController, multithread_bombardment)
 
   SUCCEED();
 }
-
 
 
 int main(int argc, char** argv)

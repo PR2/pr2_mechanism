@@ -8,39 +8,35 @@ using namespace my_controller_ns;
 bool MyControllerClass::init(pr2_mechanism_model::RobotState *robot,
                              ros::NodeHandle &n)
 {
-  /*
-  // get joint name
-  std::string joint_name;
-  if (!n.getParam("joint_name", joint_name))
+  std::string service_name, topic_name;
+  if (!n.getParam("service_name", service_name))
   {
-    ROS_ERROR("No joint given in namespace: '%s')",
-              n.getNamespace().c_str());
+    ROS_ERROR("No service name given in namespace: '%s')", n.getNamespace().c_str());
     return false;
   }
-
-  // get pointer to joint state
-  joint_state_ = robot->getJointState(joint_name);
-  if (!joint_state_)
+  if (!n.getParam("topic_name", topic_name))
   {
-    ROS_ERROR("MyController could not find joint named '%s'",
-              joint_name.c_str());
+    ROS_ERROR("No topic name given in namespace: '%s')", n.getNamespace().c_str());
     return false;
   }
-  */
-
-  // advertise service 
-  srv_ = n.advertiseService("test",
-                            &MyControllerClass::serviceCallback, this);
-
 
   // copy robot pointer so we can access time
   robot_ = robot;
 
+  // advertise topic
+  pub_.reset(new realtime_tools::RealtimePublisher<sensor_msgs::JointState>(n, topic_name, 100));
+  pub_->msg_.name.resize(1);
+  pub_->msg_.name[0] = "";
+
+  // advertise service 
+  srv_ = n.advertiseService(service_name, &MyControllerClass::serviceCallback, this);
+
   return true;
-}/// Controller startup in realtime
+}
+
+/// Controller startup in realtime
 void MyControllerClass::starting()
 {
-  //init_pos_ = joint_state_->position_;
   time_of_last_cycle_ = robot_->getTime();
 }
 
@@ -49,11 +45,10 @@ void MyControllerClass::starting()
 void MyControllerClass::update()
 {
   ros::Time time_of_last_cycle_ = robot_->getTime();
-  //double tmp;
-  //tmp = joint_state_->position_;
-  //tmp = joint_state_->velocity_;
-  //tmp = joint_state_->measured_effort_;
-  //joint_state_->commanded_effort_ = tmp;
+
+  if (pub_->trylock()){
+    pub_->unlockAndPublish();
+  }
 }
 
 
@@ -63,9 +58,10 @@ void MyControllerClass::stopping()
 
 
 /// Service call 
-bool MyControllerClass::serviceCallback(pr2_mechanism_msgs::SwitchController::Request& req,
-                                        pr2_mechanism_msgs::SwitchController::Response& resp)
+bool MyControllerClass::serviceCallback(pr2_mechanism_msgs::LoadController::Request& req,
+                                        pr2_mechanism_msgs::LoadController::Response& resp)
 {
+  pub_->msg_.name[0] = req.name;
   return true;
 }
 

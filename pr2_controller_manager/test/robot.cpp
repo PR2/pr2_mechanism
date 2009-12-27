@@ -53,25 +53,29 @@ int main(int argc, char** argv)
     robot_description_xml.Parse(robot_description_string.c_str());
   else
   {
-    ROS_FATAL("Could not load the robot description from the parameter server");
+    ROS_ERROR("Could not load the robot description from the parameter server");
     return -1;
   }
   TiXmlElement *robot_description_root = robot_description_xml.FirstChildElement("robot");
   if (!robot_description_root)
   {
-    ROS_FATAL("Could not parse the robot description");
+    ROS_ERROR("Could not parse the robot description");
     return -1;
   }
-
+  
   // Initialize controller manager from robot description
-  cm.initXml(robot_description_root);
+  if (!cm.initXml(robot_description_root)){
+    ROS_ERROR("Could not initialize controller manager");
+    return -1;
+  }
 
   ros::AsyncSpinner spinner(4);
   spinner.start();
 
+  ros::Rate rate(1000.0);
   while (ros::ok()){
     cm.update();
-    ros::Duration(0.001).sleep();
+    rate.sleep();
   }
 
   spinner.stop();

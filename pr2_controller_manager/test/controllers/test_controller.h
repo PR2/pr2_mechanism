@@ -1,21 +1,21 @@
 #include <pr2_controller_interface/controller.h>
 #include <pr2_mechanism_model/joint.h>
 #include <ros/ros.h>
-#include <pr2_mechanism_msgs/SwitchController.h>
-
+#include <pr2_mechanism_msgs/LoadController.h>
+#include <realtime_tools/realtime_publisher.h>
+#include <boost/scoped_ptr.hpp>
+#include <sensor_msgs/JointState.h>
 
 namespace my_controller_ns{
 
 class MyControllerClass: public pr2_controller_interface::Controller
 {
 private:
-  bool serviceCallback(pr2_mechanism_msgs::SwitchController::Request& req,
-                       pr2_mechanism_msgs::SwitchController::Response& resp);
+  bool serviceCallback(pr2_mechanism_msgs::LoadController::Request& req,
+                       pr2_mechanism_msgs::LoadController::Response& resp);
 
-  //  pr2_mechanism_model::JointState* joint_state_;
-  //  double init_pos_;
-  double amplitude_;
   ros::ServiceServer srv_;
+  boost::scoped_ptr<realtime_tools::RealtimePublisher<sensor_msgs::JointState> > pub_;
   pr2_mechanism_model::RobotState *robot_;
   ros::Time time_of_last_cycle_;
 
