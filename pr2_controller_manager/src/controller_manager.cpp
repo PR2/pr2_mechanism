@@ -68,7 +68,10 @@ ControllerManager::~ControllerManager()
 
 bool ControllerManager::initXml(TiXmlElement* config)
 {
-  model_.initXml(config);
+  if (!model_.initXml(config)){
+    ROS_ERROR("Failed to initialize pr2 mechanism model");
+    return false;
+  }
   state_ = new RobotState(&model_);
   motors_previously_halted_ = state_->isHalted();
 
