@@ -17,8 +17,9 @@
   <node pkg="pr2_controller_manager" type="spawner" args="controller3 controller4" name="spawn34" />  
   <node pkg="pr2_controller_manager" type="spawner" args="--stopped controller5 controller6" name="spawn56" />  
 
-  <include file="$(find gazebo)/launch/empty_world_no_x.launch" />
-  <include file="$(find pr2_gazebo)/pr2_no_controllers.launch" />
+  <!-- fake robot -->
+  <node pkg="pr2_controller_manager" type="test_robot" name="test_robot" />
+  <include file="$(find pr2_description)/robots/upload_pr2.launch" />
 
   <!-- test -->
   <test test-name="test_controller_manager" pkg="pr2_controller_manager" type="test_controllers" />

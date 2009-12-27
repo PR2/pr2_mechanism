@@ -8,6 +8,7 @@ using namespace my_controller_ns;
 bool MyControllerClass::init(pr2_mechanism_model::RobotState *robot,
                              ros::NodeHandle &n)
 {
+  /*
   // get joint name
   std::string joint_name;
   if (!n.getParam("joint_name", joint_name))
@@ -25,6 +26,7 @@ bool MyControllerClass::init(pr2_mechanism_model::RobotState *robot,
               joint_name.c_str());
     return false;
   }
+  */
 
   // advertise service 
   srv_ = n.advertiseService("test",
@@ -38,7 +40,7 @@ bool MyControllerClass::init(pr2_mechanism_model::RobotState *robot,
 }/// Controller startup in realtime
 void MyControllerClass::starting()
 {
-  init_pos_ = joint_state_->position_;
+  //init_pos_ = joint_state_->position_;
   time_of_last_cycle_ = robot_->getTime();
 }
 
@@ -47,11 +49,11 @@ void MyControllerClass::starting()
 void MyControllerClass::update()
 {
   ros::Time time_of_last_cycle_ = robot_->getTime();
-  double tmp;
-  tmp = joint_state_->position_;
-  tmp = joint_state_->velocity_;
-  tmp = joint_state_->measured_effort_;
-  joint_state_->commanded_effort_ = tmp;
+  //double tmp;
+  //tmp = joint_state_->position_;
+  //tmp = joint_state_->velocity_;
+  //tmp = joint_state_->measured_effort_;
+  //joint_state_->commanded_effort_ = tmp;
 }
 
 

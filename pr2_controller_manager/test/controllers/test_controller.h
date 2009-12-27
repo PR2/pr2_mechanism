@@ -12,8 +12,8 @@ private:
   bool serviceCallback(pr2_mechanism_msgs::SwitchController::Request& req,
                        pr2_mechanism_msgs::SwitchController::Response& resp);
 
-  pr2_mechanism_model::JointState* joint_state_;
-  double init_pos_;
+  //  pr2_mechanism_model::JointState* joint_state_;
+  //  double init_pos_;
   double amplitude_;
   ros::ServiceServer srv_;
   pr2_mechanism_model::RobotState *robot_;
