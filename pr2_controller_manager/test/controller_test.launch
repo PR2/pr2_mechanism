@@ -13,9 +13,16 @@
   <!-- Spawn some controllers stopped/started -->
   <node pkg="pr2_controller_manager" type="spawner" args="controller1" name="spawn1"/>
   <node pkg="pr2_controller_manager" type="spawner" args="--stopped controller2" name="spawn2" />
-
   <node pkg="pr2_controller_manager" type="spawner" args="controller3 controller4" name="spawn34" />  
   <node pkg="pr2_controller_manager" type="spawner" args="--stopped controller5 controller6" name="spawn56" />  
+
+  <!-- controller manager configuration -->
+  <param name="pr2_controller_manager/mechanism_statistics_publish_rate" value="2.0" />
+  <param name="pr2_controller_manager/joint_state_publish_rate" value="200.0" />
+
+  <!-- Diagnostics -->
+  <node pkg="pr2_controller_manager" type="controllers_to_diagnostics.py" name="controller_diagnostics" />
+  <node pkg="pr2_controller_manager" type="joints_to_diagnostics.py" name="joint_state_logging" />
 
   <!-- fake robot -->
   <node pkg="pr2_controller_manager" type="test_robot" name="test_robot" />

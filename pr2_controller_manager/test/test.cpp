@@ -45,6 +45,8 @@
 #include <pr2_mechanism_msgs/ListControllers.h>
 #include <pr2_mechanism_msgs/SwitchController.h>
 #include <sensor_msgs/JointState.h>
+#include <pr2_mechanism_msgs/MechanismStatistics.h>
+#include <diagnostic_msgs/DiagnosticArray.h>
 
 static const unsigned int _failure = 0;
 static const unsigned int _unloaded = 1;
@@ -64,7 +66,29 @@ public:
   ros::NodeHandle node_;
   ros::ServiceClient load_srv_, unload_srv_, switch_srv_, list_srv_;
   std::string callback1_name_, callback4_name_;
-  unsigned int callback1_counter_;
+  unsigned int callback1_counter_, callback_js_counter_, callback_ms_counter_;
+  unsigned int joint_diagnostic_counter_, controller_diagnostic_counter_;
+
+  void callbackDiagnostic(const diagnostic_msgs::DiagnosticArrayConstPtr& msg)
+  {
+    if (!msg->status.empty()){
+      if (msg->status[0].name.substr(0,5) == "Joint")
+        joint_diagnostic_counter_++;
+
+      if (msg->status[0].name == "Controllers")
+        controller_diagnostic_counter_++;
+    }
+  }
+
+  void callbackJs(const sensor_msgs::JointStateConstPtr& msg)
+  {
+    callback_js_counter_++;
+  }
+
+  void callbackMs(const pr2_mechanism_msgs::MechanismStatisticsConstPtr& msg)
+  {
+    callback_ms_counter_++;
+  }
 
   void callback1(const sensor_msgs::JointStateConstPtr& msg)
   {
@@ -440,7 +464,10 @@ TEST_F(TestController, service_and_realtime_publisher)
   std::string not_started = "not_started";
   callback1_name_ = not_started;
   callback4_name_ = not_started;
-  while (callback1_name_ == "not_started")
+
+  ros::Time start = ros::Time::now();
+  ros::Duration timeout(5.0);
+  while (callback1_name_ == "not_started" && ros::Time::now() - start < timeout)
     ros::Duration(0.1).sleep();
   ros::Duration(1.0).sleep(); // avoid problem with simultanious access to callback1_name_
   EXPECT_EQ(callback1_name_, "");
@@ -474,7 +501,9 @@ TEST_F(TestController, publisher_hz)
                                                                   boost::bind(&TestController_publisher_hz_Test::callback1, this, _1));
 
   callback1_counter_ = 0;
-  while (callback1_counter_ == 0)
+  ros::Time start = ros::Time::now();
+  ros::Duration timeout(5.0);
+  while (callback1_counter_ == 0 && ros::Time::now() - start < timeout)
     ros::Duration(0.1).sleep();
   callback1_counter_ = 0;
   ros::Duration(5.0).sleep();
@@ -483,6 +512,54 @@ TEST_F(TestController, publisher_hz)
   sub1.shutdown();
   SUCCEED();
 }
+
+
+TEST_F(TestController, manager_hz)
+{
+  // connect to topic
+  ros::Subscriber sub_js = node_.subscribe<sensor_msgs::JointState>("joint_states", 100, 
+                                                                    boost::bind(&TestController_manager_hz_Test::callbackJs, this, _1));
+  callback_js_counter_ = 0;
+  ros::Time start = ros::Time::now();
+  ros::Duration timeout(5.0);
+  while (callback_js_counter_ == 0 && ros::Time::now() - start < timeout)
+    ros::Duration(0.1).sleep();
+  callback_js_counter_ = 0;
+  ros::Duration(5.0).sleep();
+  EXPECT_NEAR(callback_js_counter_, 1000, 40);
+  sub_js.shutdown();
+
+
+  ros::Subscriber sub_ms = node_.subscribe<pr2_mechanism_msgs::MechanismStatistics>("mechanism_statistics", 100, 
+                                                                                    boost::bind(&TestController_manager_hz_Test::callbackMs, this, _1));
+  callback_ms_counter_ = 0;
+  start = ros::Time::now();
+  while (callback_ms_counter_ == 0 && ros::Time::now() - start < timeout)
+    ros::Duration(0.1).sleep();
+  callback_ms_counter_ = 0;
+  ros::Duration(5.0).sleep();
+  EXPECT_NEAR(callback_ms_counter_, 10, 2);
+  sub_ms.shutdown();
+
+  SUCCEED();
+}
+
+
+TEST_F(TestController, diagnostic_hz)
+{
+  // connect to topic
+  ros::Subscriber sub_diagnostics = node_.subscribe<diagnostic_msgs::DiagnosticArray>("/diagnostics", 100, 
+                                                                                      boost::bind(&TestController_manager_hz_Test::callbackDiagnostic, this, _1));
+  joint_diagnostic_counter_ = 0;
+  controller_diagnostic_counter_ = 0;
+  ros::Duration(5.0).sleep();
+  EXPECT_GT(joint_diagnostic_counter_, (unsigned int)1);
+  EXPECT_GT(controller_diagnostic_counter_, (unsigned int)1);
+  sub_diagnostics.shutdown();
+
+  SUCCEED();
+}
+
 
 
 TEST_F(TestController, singlethread_bombardment)

@@ -72,7 +72,14 @@ def state_cb(msg):
     if (now - last_publish_time).to_sec() > 1.0:
         d = DiagnosticArray()
         d.header.stamp = msg.header.stamp
-        d.status = [joint_to_diag(js) for js in msg.joint_statistics]
+        if msg.joint_statistics == []:
+            ds = DiagnosticStatus()
+            ds.level = 1
+            ds.message = 'No Joint states published by the controller manager'
+            ds.name = "Joints: none"
+            d.status = [ds]
+        else:
+            d.status = [joint_to_diag(js) for js in msg.joint_statistics]
         pub_diag.publish(d)
         last_publish_time = now
 
