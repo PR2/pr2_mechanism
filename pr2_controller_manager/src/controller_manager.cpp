@@ -51,7 +51,6 @@ ControllerManager::ControllerManager(HardwareInterface *hw, const ros::NodeHandl
   start_request_(0),
   stop_request_(0),
   please_switch_(false),
-  switch_success_(false),
   current_controllers_list_(0),
   used_by_realtime_(-1),
   pub_joint_state_(nh, "joint_states", 1),
@@ -165,33 +164,24 @@ void ControllerManager::update()
   // there are controllers to start/stop
   if (please_switch_)
   {
-    // try to start controllers
-    switch_success_ = true;
-    int last_started = -1;
-    for (unsigned int i=0; i<start_request_.size(); i++){
-      if (!start_request_[i]->startRequest() &&
-          switch_strictness_ == pr2_mechanism_msgs::SwitchController::Request::STRICT){
-        switch_success_ = false;
-        break;
-      }
-      last_started = i;
-    }
+    ROS_DEBUG("Realtime loop: start switching controllers");
 
-    // if starting failed, stop them again
-    if (!switch_success_){
-      for (int i=0; i<=last_started; i++){
-        start_request_[i]->stopRequest();
-      }
-    }
     // stop controllers
-    else {
-      for (unsigned int i=0; i<stop_request_.size(); i++)
-        stop_request_[i]->stopRequest();
-    }
-
+    ROS_DEBUG("Realtime loop: stopping %i controllers", stop_request_.size());
+    for (unsigned int i=0; i<stop_request_.size(); i++)
+      if (!stop_request_[i]->stopRequest()) 
+        ROS_FATAL("Failed to stop controller in realtime loop. This should never happen.");        
+    
+    // start controllers
+    ROS_DEBUG("Realtime loop: starting %i controllers", start_request_.size());
+    for (unsigned int i=0; i<start_request_.size(); i++)
+      if (!start_request_[i]->startRequest())
+        ROS_FATAL("Failed to stop controller in realtime loop. This should never happen.");        
+    
     start_request_.clear();
     stop_request_.clear();
     please_switch_ = false;
+    ROS_DEBUG("Realtime loop: finished switching controllers");
   }
 }
 
@@ -424,6 +414,9 @@ bool ControllerManager::switchController(const std::vector<std::string>& start_c
                                          const std::vector<std::string>& stop_controllers,
                                          int strictness)
 {
+  if (!stop_request_.empty() || !start_request_.empty())
+    ROS_FATAL("The switch controller stop and start list are not empty that the beginning of the swithcontroller call. This should not happen.");
+
   if (strictness == 0){
     ROS_WARN("Controller Manager: To switch controlelrs you need to specify a strictness level of STRICT or BEST_EFFORT. Defaulting to BEST_EFFORT.");
     strictness = pr2_mechanism_msgs::SwitchController::Request::BEST_EFFORT;
@@ -447,6 +440,7 @@ bool ControllerManager::switchController(const std::vector<std::string>& start_c
       if (strictness ==  pr2_mechanism_msgs::SwitchController::Request::STRICT){
         ROS_ERROR("Could not stop controller with name %s because no controller with this name exists",
                   stop_controllers[i].c_str());
+        stop_request_.clear();
         return false;
       }
       else{
@@ -454,9 +448,13 @@ bool ControllerManager::switchController(const std::vector<std::string>& start_c
                   stop_controllers[i].c_str());
       }
     }
-    else
+    else{
+      ROS_DEBUG("Found controller %s that needs to be stopped in list of controllers",
+                stop_controllers[i].c_str());
       stop_request_.push_back(ct);
+    }
   }
+  ROS_DEBUG("Stop request vector has size %i", stop_request_.size());
 
   // list all controllers to start
   for (unsigned int i=0; i<start_controllers.size(); i++)
@@ -466,6 +464,8 @@ bool ControllerManager::switchController(const std::vector<std::string>& start_c
       if (strictness ==  pr2_mechanism_msgs::SwitchController::Request::STRICT){
         ROS_ERROR("Could not start controller with name %s because no controller with this name exists",
                   start_controllers[i].c_str());
+        stop_request_.clear();
+        start_request_.clear();
         return false;
       }
       else{
@@ -473,20 +473,25 @@ bool ControllerManager::switchController(const std::vector<std::string>& start_c
                   start_controllers[i].c_str());
       }
     }
-    else
+    else{
+      ROS_DEBUG("Found controller %s that needs to be started in list of controllers",
+                start_controllers[i].c_str());
       start_request_.push_back(ct);
+    }
   }
+  ROS_DEBUG("Start request vector has size %i", start_request_.size());
 
   // start the atomic controller switching
   switch_strictness_ = strictness;
   please_switch_ = true;
 
   // wait until switch is finished
+  ROS_DEBUG("Request atomic controller switch from realtime loop");
   while (please_switch_)
     usleep(100);
 
   ROS_DEBUG("Successfully switched controllers");
-  return switch_success_;
+  return true;
 }
 
 

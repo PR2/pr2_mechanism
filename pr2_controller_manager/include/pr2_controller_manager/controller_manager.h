@@ -90,7 +90,7 @@ private:
 
   // for controller switching
   std::vector<pr2_controller_interface::Controller*> start_request_, stop_request_;
-  bool please_switch_, switch_success_;
+  bool please_switch_;
   int switch_strictness_;
 
   // controller lists
