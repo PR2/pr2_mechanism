@@ -38,6 +38,7 @@
 #include <gtest/gtest.h>
 #include <ros/ros.h>
 #include <boost/thread.hpp>
+#include <cstdlib>
 
 #include <pr2_mechanism_msgs/LoadController.h>
 #include <pr2_mechanism_msgs/UnloadController.h>
@@ -45,13 +46,15 @@
 #include <pr2_mechanism_msgs/SwitchController.h>
 
 static const unsigned int _failure = 0;
-static const unsigned int _unloaded = 0;
-static const unsigned int _stopped = 0;
-static const unsigned int _running = 0;
+static const unsigned int _unloaded = 1;
+static const unsigned int _stopped = 2;
+static const unsigned int _running = 3;
 
 
 int g_argc;
 char** g_argv;
+
+static bool bombardment_started_ = false;
 
 
 class TestController : public testing::Test
@@ -62,7 +65,6 @@ public:
 
   bool loadController(const std::string& name)
   {
-    ros::service::waitForService("pr2_controller_manager/load_controller");
 
     pr2_mechanism_msgs::LoadController srv_msg;
     srv_msg.request.name = name;
@@ -72,7 +74,6 @@ public:
 
   bool unloadController(const std::string& name)
   {
-    ros::service::waitForService("pr2_controller_manager/unload_controller");
 
     pr2_mechanism_msgs::UnloadController srv_msg;
     srv_msg.request.name = name;
@@ -80,9 +81,19 @@ public:
     return srv_msg.response.ok;
   }
 
+  bool switchController(const std::vector<std::string>& start, const std::vector<std::string>& stop, int strictness)
+  {
+
+    pr2_mechanism_msgs::SwitchController srv_msg;
+    srv_msg.request.start_controllers = start;
+    srv_msg.request.stop_controllers = stop;
+    srv_msg.request.strictness = strictness;
+    if (!switch_srv_.call(srv_msg)) return false;
+    return srv_msg.response.ok;
+  }
+
   unsigned int nrControllers()
   {
-    ros::service::waitForService("pr2_controller_manager/list_controllers");
 
     pr2_mechanism_msgs::ListControllers srv_msg;
     if (!list_srv_.call(srv_msg)) return 0;;
@@ -91,7 +102,6 @@ public:
 
   unsigned int controllerState(const std::string& name)
   {
-    ros::service::waitForService("pr2_controller_manager/list_controllers");
 
     pr2_mechanism_msgs::ListControllers srv_msg;
     if (!list_srv_.call(srv_msg)) return _failure;
@@ -105,6 +115,54 @@ public:
     return _unloaded;
   }
 
+  std::string randomController()
+  {
+      unsigned int random = rand();
+      random = random % 10;
+      std::stringstream s;
+      s << random;
+      return "controller" + s.str();
+  }
+
+  void randomBombardment(unsigned int times)
+  {
+    while (!bombardment_started_)
+      ros::Duration(0.1).sleep();
+
+    for (unsigned int i=0; i<times; i++){
+      unsigned int random = rand();
+      random = random % 4;
+      switch (random){
+      case 0:{
+        loadController(randomController());
+        break;
+      }
+      case 1:{
+        unloadController(randomController());
+        break;
+      }
+      case 2:{
+        std::vector<std::string> start, stop;
+        unsigned int start_size = rand() %10;
+        unsigned int stop_size = rand() %10;
+        for (unsigned int i=0; i<start_size; i++)
+          start.push_back(randomController());
+        for (unsigned int i=0; i<stop_size; i++)
+          stop.push_back(randomController());
+        if (rand() %1 == 0)
+          switchController(start, stop, pr2_mechanism_msgs::SwitchController::Request::STRICT);
+        else
+          switchController(start, stop, pr2_mechanism_msgs::SwitchController::Request::BEST_EFFORT);
+        break;
+      }
+      case 3:{
+        controllerState(randomController());
+        break;
+      }
+      }
+    }
+  }
+  
 
 protected:
   /// constructor
@@ -119,8 +177,15 @@ protected:
 
   void SetUp()
   {
+    ros::service::waitForService("pr2_controller_manager/load_controller");
+    ros::service::waitForService("pr2_controller_manager/unload_controller");
+    ros::service::waitForService("pr2_controller_manager/switch_controller");
+    ros::service::waitForService("pr2_controller_manager/list_controllers");
+    ros::service::waitForService("pr2_controller_manager/list_controllers");
+
     load_srv_ = node_.serviceClient<pr2_mechanism_msgs::LoadController>("pr2_controller_manager/load_controller");
     unload_srv_ = node_.serviceClient<pr2_mechanism_msgs::UnloadController>("pr2_controller_manager/unload_controller");
+    switch_srv_ = node_.serviceClient<pr2_mechanism_msgs::SwitchController>("pr2_controller_manager/switch_controller");
     list_srv_ = node_.serviceClient<pr2_mechanism_msgs::ListControllers>("pr2_controller_manager/list_controllers");
   }
 
@@ -143,6 +208,7 @@ TEST_F(TestController, spawner)
     ros::Duration(1.0).sleep();
   EXPECT_TRUE(ros::Time::now() - start < timeout);
 
+  // this should be the controller state if spawner worked
   EXPECT_EQ(controllerState("controller1"), _running);
   EXPECT_EQ(controllerState("controller2"), _stopped);
   EXPECT_EQ(controllerState("controller3"), _running);
@@ -150,6 +216,8 @@ TEST_F(TestController, spawner)
   EXPECT_EQ(controllerState("controller5"), _stopped);
   EXPECT_EQ(controllerState("controller6"), _stopped);
   EXPECT_EQ(controllerState("controller7"), _unloaded);
+  EXPECT_EQ(controllerState("controller8"), _unloaded);
+  EXPECT_EQ(controllerState("controller9"), _unloaded);
   SUCCEED();
 }
 
@@ -178,6 +246,9 @@ TEST_F(TestController, loading)
   // this one is not loaded yet
   EXPECT_TRUE(loadController("controller7"));
 
+  // this one is not configured
+  EXPECT_FALSE(loadController("controller10"));
+
   // check end state
   EXPECT_EQ(controllerState("controller1"), _running);
   EXPECT_EQ(controllerState("controller2"), _stopped);
@@ -185,7 +256,7 @@ TEST_F(TestController, loading)
   EXPECT_EQ(controllerState("controller4"), _running);
   EXPECT_EQ(controllerState("controller5"), _stopped);
   EXPECT_EQ(controllerState("controller6"), _stopped);
-  EXPECT_EQ(controllerState("controller7"), _unloaded);
+  EXPECT_EQ(controllerState("controller7"), _stopped);
   EXPECT_EQ(controllerState("controller8"), _unloaded);
   EXPECT_EQ(controllerState("controller9"), _unloaded);
 
@@ -233,6 +304,131 @@ TEST_F(TestController, unloading)
   SUCCEED();
 }
 
+TEST_F(TestController, start_stop_strict)
+{
+  // check initial state
+  EXPECT_EQ(controllerState("controller1"), _running);
+  EXPECT_EQ(controllerState("controller2"), _unloaded);
+  EXPECT_EQ(controllerState("controller3"), _running);
+  EXPECT_EQ(controllerState("controller4"), _running);
+  EXPECT_EQ(controllerState("controller5"), _unloaded);
+  EXPECT_EQ(controllerState("controller6"), _unloaded);
+  EXPECT_EQ(controllerState("controller7"), _unloaded);
+  EXPECT_EQ(controllerState("controller8"), _unloaded);
+  EXPECT_EQ(controllerState("controller9"), _unloaded);
+
+  // starting already started controller
+  std::vector<std::string> start, stop;
+  start.push_back("controller1");
+  EXPECT_TRUE(switchController(start, stop, pr2_mechanism_msgs::SwitchController::Request::STRICT));
+  EXPECT_EQ(controllerState("controller1"), _running);
+
+  // starting unloaded controller
+  start.push_back("controller2");
+  EXPECT_FALSE(switchController(start, stop, pr2_mechanism_msgs::SwitchController::Request::STRICT));
+  EXPECT_EQ(controllerState("controller1"), _running);
+  EXPECT_EQ(controllerState("controller2"), _unloaded);
+
+  // starting one already stated, 1 stopped
+  EXPECT_TRUE(loadController("controller2"));
+  EXPECT_TRUE(switchController(start, stop, pr2_mechanism_msgs::SwitchController::Request::STRICT));
+  EXPECT_EQ(controllerState("controller1"), _running);
+  EXPECT_EQ(controllerState("controller2"), _running);
+
+  // start and stop same controller
+  stop.push_back("controller2");
+  EXPECT_TRUE(switchController(start, stop, pr2_mechanism_msgs::SwitchController::Request::STRICT));
+  EXPECT_EQ(controllerState("controller1"), _running);
+  EXPECT_EQ(controllerState("controller2"), _running);
+
+  // stop unloaded controller
+  stop.push_back("controller5");
+  EXPECT_FALSE(switchController(start, stop, pr2_mechanism_msgs::SwitchController::Request::STRICT));
+  EXPECT_EQ(controllerState("controller1"), _running);
+  EXPECT_EQ(controllerState("controller2"), _running);
+  EXPECT_EQ(controllerState("controller5"), _unloaded);
+
+  // stop unloaded and running controller
+  stop.push_back("controller4");
+  EXPECT_FALSE(switchController(start, stop, pr2_mechanism_msgs::SwitchController::Request::STRICT));
+  EXPECT_EQ(controllerState("controller1"), _running);
+  EXPECT_EQ(controllerState("controller2"), _running);
+  EXPECT_EQ(controllerState("controller4"), _running);
+  EXPECT_EQ(controllerState("controller5"), _unloaded);
+
+  // stop running and stopped controller
+  EXPECT_TRUE(loadController("controller5"));
+  EXPECT_TRUE(switchController(start, stop, pr2_mechanism_msgs::SwitchController::Request::STRICT));
+  EXPECT_EQ(controllerState("controller1"), _running);
+  EXPECT_EQ(controllerState("controller2"), _running);
+  EXPECT_EQ(controllerState("controller4"), _stopped);
+  EXPECT_EQ(controllerState("controller5"), _stopped);
+
+  // stop 2 stopped controllers, and 1 running controller
+  stop.push_back("controller3");
+  EXPECT_TRUE(switchController(start, stop, pr2_mechanism_msgs::SwitchController::Request::STRICT));
+  EXPECT_EQ(controllerState("controller1"), _running);
+  EXPECT_EQ(controllerState("controller2"), _running);
+  EXPECT_EQ(controllerState("controller3"), _stopped);
+  EXPECT_EQ(controllerState("controller4"), _stopped);
+  EXPECT_EQ(controllerState("controller5"), _stopped);
+
+  SUCCEED();
+}
+
+
+TEST_F(TestController, start_stop_best_effort)
+{
+  // check initial state
+  EXPECT_EQ(controllerState("controller1"), _running);
+  EXPECT_EQ(controllerState("controller2"), _running);
+  EXPECT_EQ(controllerState("controller3"), _stopped);
+  EXPECT_EQ(controllerState("controller4"), _stopped);
+  EXPECT_EQ(controllerState("controller5"), _stopped);
+  EXPECT_EQ(controllerState("controller6"), _unloaded);
+  EXPECT_EQ(controllerState("controller7"), _unloaded);
+  EXPECT_EQ(controllerState("controller8"), _unloaded);
+  EXPECT_EQ(controllerState("controller9"), _unloaded);
+
+  // starting already started controller
+  std::vector<std::string> start, stop;
+  start.push_back("controller1");
+  EXPECT_TRUE(switchController(start, stop, pr2_mechanism_msgs::SwitchController::Request::BEST_EFFORT));
+  EXPECT_EQ(controllerState("controller1"), _running);
+
+  // starting unloaded, started and stopped controller
+  start.push_back("controller3");
+  start.push_back("controller6");
+  EXPECT_TRUE(switchController(start, stop, pr2_mechanism_msgs::SwitchController::Request::BEST_EFFORT));
+  EXPECT_EQ(controllerState("controller1"), _running);
+  EXPECT_EQ(controllerState("controller3"), _running);
+  EXPECT_EQ(controllerState("controller6"), _unloaded);
+
+  SUCCEED();
+}
+
+TEST_F(TestController, singlethread_bombardment)
+{
+  bombardment_started_ = true;
+  randomBombardment(1000);
+  bombardment_started_ = false;
+  SUCCEED();
+}
+
+TEST_F(TestController, multithread_bombardment)
+{
+  boost::thread bomb1(boost::bind(&TestController_multithread_bombardment_Test::randomBombardment, this, 200));
+  boost::thread bomb2(boost::bind(&TestController_multithread_bombardment_Test::randomBombardment, this, 200));
+  boost::thread bomb3(boost::bind(&TestController_multithread_bombardment_Test::randomBombardment, this, 200));
+  boost::thread bomb4(boost::bind(&TestController_multithread_bombardment_Test::randomBombardment, this, 200));
+  bombardment_started_ = true;
+  bomb1.join();
+  bomb2.join();
+  bomb3.join();
+  bomb4.join();
+
+  SUCCEED();
+}
 
 
 
