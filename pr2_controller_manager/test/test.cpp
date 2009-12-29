@@ -287,6 +287,13 @@ TEST_F(TestController, loading)
 
   // this one is wrongly configured
   EXPECT_FALSE(loadController("controller9"));
+  EXPECT_FALSE(loadController("controller11"));
+  EXPECT_FALSE(loadController("controller12"));
+  EXPECT_FALSE(loadController("controller13"));
+  EXPECT_FALSE(loadController("controller14"));
+  EXPECT_FALSE(loadController("controller15"));
+  EXPECT_FALSE(loadController("controller16"));
+  EXPECT_FALSE(loadController("controller17"));
 
   // this one is not configured
   EXPECT_FALSE(loadController("controller10"));

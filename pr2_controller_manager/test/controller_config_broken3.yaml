@@ -1,5 +1,5 @@
 type: TestController
-root_name: head_pan_link
+joint_name: head_pan_joint
 tip_name: head_tilt_link
 topic_name: my_topic
 service_name: my_service

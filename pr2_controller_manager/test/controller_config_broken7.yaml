@@ -1,0 +1,6 @@
+type: TestController
+joint_name: head_pan_joint
+root_name: head_wim_link
+tip_name: head_wim_link
+topic_name: my_topic
+service_name: my_service
