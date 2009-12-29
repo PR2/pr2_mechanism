@@ -1,0 +1,4 @@
+type: TestController
+joint_name: head_wim_joint
+topic_name: my_topic
+service_name: my_service

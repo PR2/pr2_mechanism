@@ -43,7 +43,10 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "testRobot");
   ros::NodeHandle node;
 
+  // create fake hardware interface with an actuator
   pr2_hardware_interface::HardwareInterface hw;
+  hw.actuators_["head_tilt_motor"] = new pr2_hardware_interface::Actuator("head_tilt_motor");
+  hw.actuators_["head_pan_motor"] = new pr2_hardware_interface::Actuator("head_pan_motor");
   pr2_controller_manager::ControllerManager cm(&hw, node);
 
   // read robot description from parameter server

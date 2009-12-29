@@ -1,14 +1,14 @@
 <launch>
   <!-- Load configuration of controllers -->
   <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller1" command="load" />
-  <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller2" command="load" />
-  <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller3" command="load" />
-  <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller4" command="load" />
+  <rosparam file="$(find pr2_controller_manager)/test/controller_config2.yaml" ns="controller2" command="load" />
+  <rosparam file="$(find pr2_controller_manager)/test/controller_config3.yaml" ns="controller3" command="load" />
+  <rosparam file="$(find pr2_controller_manager)/test/controller_config4.yaml" ns="controller4" command="load" />
   <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller5" command="load" />
-  <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller6" command="load" />
-  <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller7" command="load" />
-  <rosparam file="$(find pr2_controller_manager)/test/controller_config.yaml" ns="controller8" command="load" />
-  <rosparam file="$(find pr2_controller_manager)/test/controller_config_broken.yaml" ns="controller9" command="load" />
+  <rosparam file="$(find pr2_controller_manager)/test/controller_config2.yaml" ns="controller6" command="load" />
+  <rosparam file="$(find pr2_controller_manager)/test/controller_config4.yaml" ns="controller7" command="load" />
+  <rosparam file="$(find pr2_controller_manager)/test/controller_config_broken.yaml" ns="controller8" command="load" />
+  <rosparam file="$(find pr2_controller_manager)/test/controller_config_broken2.yaml" ns="controller9" command="load" />
 
   <!-- Spawn some controllers stopped/started -->
   <node pkg="pr2_controller_manager" type="spawner" args="controller1" name="spawn1"/>

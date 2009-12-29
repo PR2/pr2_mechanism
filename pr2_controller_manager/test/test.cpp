@@ -82,7 +82,8 @@ public:
 
   void callbackJs(const sensor_msgs::JointStateConstPtr& msg)
   {
-    callback_js_counter_++;
+    if (!msg->name.empty())
+      callback_js_counter_++;
   }
 
   void callbackMs(const pr2_mechanism_msgs::MechanismStatisticsConstPtr& msg)
