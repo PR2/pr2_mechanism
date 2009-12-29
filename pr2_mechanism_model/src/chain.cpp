@@ -44,8 +44,24 @@ bool Chain::init(RobotState *robot_state, const std::string &root, const std::st
 
   // Constructs the kdl chain
   KDL::Tree kdl_tree;
-  if (!kdl_parser::treeFromUrdfModel(robot_state->model_->robot_model_, kdl_tree) || 
-      !kdl_tree.getChain(root, tip, kdl_chain_)) return false;
+  if (!kdl_parser::treeFromUrdfModel(robot_state->model_->robot_model_, kdl_tree)){
+    ROS_ERROR("Could not convert urdf into kdl tree");
+    return false;
+  }
+
+  bool res;
+  try{
+    res = kdl_tree.getChain(root, tip, kdl_chain_);
+  }
+  catch(...){
+    res = false;
+  }
+  if (!res){
+    ROS_ERROR("Could not extract chain between %s and %s from kdl tree",
+              root.c_str(), tip.c_str());
+    return false;
+  }
+
 
   // Pulls out all the joint indices
   joints_.clear();
