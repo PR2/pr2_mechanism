@@ -68,6 +68,7 @@ public:
   std::string callback1_name_, callback4_name_;
   unsigned int callback1_counter_, callback_js_counter_, callback_ms_counter_;
   unsigned int joint_diagnostic_counter_, controller_diagnostic_counter_;
+  double callback1_effort_;
 
   void callbackDiagnostic(const diagnostic_msgs::DiagnosticArrayConstPtr& msg)
   {
@@ -94,6 +95,7 @@ public:
   void callback1(const sensor_msgs::JointStateConstPtr& msg)
   {
     callback1_name_ = msg->name[0];
+    callback1_effort_ = msg->effort[0];
     callback1_counter_++;
   }
 
@@ -480,6 +482,12 @@ TEST_F(TestController, service_and_realtime_publisher)
   ros::Duration(1.0).sleep(); // avoid problem with simultanious access to callback1_name_
   EXPECT_EQ(callback1_name_, "");
   EXPECT_EQ(callback4_name_, not_started);
+
+  // check for effort limits
+  for (unsigned int i=0; i<1000; i++){
+    EXPECT_LE(callback1_effort_, 0.0);
+    ros::Duration(0.01).sleep();
+  }
 
   std::string test_message = "Hoe gaat het met Wim?";
   ros::ServiceClient srv_client1 = node_.serviceClient<pr2_mechanism_msgs::LoadController>("controller1/my_service");

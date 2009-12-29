@@ -27,6 +27,14 @@ bool MyControllerClass::init(pr2_mechanism_model::RobotState *robot,
               joint_name.c_str());
     return false;
   }
+  if (!joint_state_->joint_->limits)
+  {
+    ROS_ERROR("MyController could not find limits of joint '%s'",
+              joint_name.c_str());
+    return false;
+  }
+  max_effort_ = joint_state_->joint_->limits->effort;
+
 
 
   // get chain
@@ -57,6 +65,8 @@ bool MyControllerClass::init(pr2_mechanism_model::RobotState *robot,
   pub_.reset(new realtime_tools::RealtimePublisher<sensor_msgs::JointState>(n, topic_name, 100));
   pub_->msg_.name.resize(1);
   pub_->msg_.name[0] = "";
+  pub_->msg_.effort.resize(1);
+  pub_->msg_.effort[0] = 0.0;
 
 
   // advertise service 
@@ -81,17 +91,21 @@ void MyControllerClass::starting()
 /// Controller update loop in realtime
 void MyControllerClass::update()
 {
+  if (pub_->trylock()){
+    pub_->msg_.effort[0] = fabs(joint_state_->commanded_effort_) - max_effort_; // this should never be greater than zero
+    pub_->unlockAndPublish();
+  }
+
   ros::Time time_of_last_cycle_ = robot_->getTime();
 
   double tmp;
   tmp = joint_state_->position_;
   tmp = joint_state_->velocity_;
   tmp = joint_state_->measured_effort_;
-  joint_state_->commanded_effort_ = tmp;;
-
-  if (pub_->trylock()){
-    pub_->unlockAndPublish();
-  }
+  if (joint_state_->commanded_effort_ > 0)
+    joint_state_->commanded_effort_ = -10000.0;  // above max effort
+  else
+    joint_state_->commanded_effort_ = 10000.0;  // above max effort
 }
 
 
