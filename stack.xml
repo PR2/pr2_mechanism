@@ -10,7 +10,7 @@
   </description>
   <author>Maintained by Wim Meeussen</author>
   <license>BSD</license>  
-  <review status="doc reviewed" notes=""/>
+  <review status="Doc reviewed" notes="2009-11-13"/>
   <url>http://ros.org/wiki/pr2_mechanism</url>
   <depend stack="common" /> <!-- tinyxml, pluginlib -->
   <depend stack="common_msgs" /> <!-- geometry_msgs, sensor_msgs, diagnostic_msgs -->
