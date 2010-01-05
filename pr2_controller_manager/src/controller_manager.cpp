@@ -307,11 +307,9 @@ bool ControllerManager::loadController(const std::string& name)
   for (size_t i=0; i<to.size(); i++)
     pub_mech_stats_.msg_.controller_statistics[i].name = to[i].name;
 
-  // Success!  Swaps in the new set of controllers.
+  // Destroys the old controllers list when the realtime thread is finished with it.
   int former_current_controllers_list_ = current_controllers_list_;
   current_controllers_list_ = free_controllers_list;
-
-  // Destroys the old controllers list when the realtime thread is finished with it.
   while (used_by_realtime_ == former_current_controllers_list_)
     usleep(200);
   from.clear();
@@ -385,26 +383,29 @@ bool ControllerManager::unloadController(const std::string &name)
   }
 
   //  Do the controller scheduling
+  ROS_DEBUG("Rescheduling controller execution order");
   if (!scheduleControllers(to, controllers_scheduling_[free_controllers_list])){
     to.clear();
     ROS_ERROR("Scheduling controllers failed when removing controller '%s' failed", name.c_str());
     return false;
   }
 
-  // Success!  Swaps in the new set of controllers.
-  int former_current_controllers_list_ = current_controllers_list_;
-  current_controllers_list_ = free_controllers_list;
-
   // Resize controller state vector
+  ROS_DEBUG("Resizing controller state vector");
   pub_mech_stats_.lock();
   pub_mech_stats_.msg_.set_controller_statistics_size(to.size());
   for (size_t i=0; i<to.size(); i++)
     pub_mech_stats_.msg_.controller_statistics[i].name = to[i].name;
 
   // Destroys the old controllers list when the realtime thread is finished with it.
+  ROS_DEBUG("Realtime switches over to new controller list");
+  int former_current_controllers_list_ = current_controllers_list_;
+  current_controllers_list_ = free_controllers_list;
   while (used_by_realtime_ == former_current_controllers_list_)
     usleep(200);
+  ROS_DEBUG("Destruct controller");
   from.clear();
+  ROS_DEBUG("Destruct controller finished");
   pub_mech_stats_.unlock();
 
   ROS_DEBUG("Successfully unloaded controller '%s'", name.c_str());
@@ -630,7 +631,9 @@ bool ControllerManager::reloadControllerLibrariesSrv(
   pr2_mechanism_msgs::ReloadControllerLibraries::Response &resp)
 {
   // lock services
+  ROS_DEBUG("reload libraries service called");
   boost::mutex::scoped_lock guard(services_lock_);
+  ROS_DEBUG("reload libraries service locked");
 
   // only reload libraries if no controllers are running
   std::vector<std::string> controllers;
@@ -667,6 +670,8 @@ bool ControllerManager::reloadControllerLibrariesSrv(
                                                                                             "pr2_controller_interface::Controller"));
   ROS_INFO("Controller manager: reloaded controller libraries");
   resp.ok = true;
+
+  ROS_DEBUG("reload libraries service finished");
   return true;
 }
 
@@ -676,12 +681,16 @@ bool ControllerManager::listControllerTypesSrv(
   pr2_mechanism_msgs::ListControllerTypes::Response &resp)
 {
   // lock services
+  ROS_DEBUG("list types service called");
   boost::mutex::scoped_lock guard(services_lock_);
+  ROS_DEBUG("list types service locked");
 
   (void) req;
   std::vector<std::string> types = controller_loader_->getDeclaredClasses();
 
   resp.set_types_vec(types);
+
+  ROS_DEBUG("list types service finished");
   return true;
 }
 
@@ -691,7 +700,10 @@ bool ControllerManager::listControllersSrv(
   pr2_mechanism_msgs::ListControllers::Response &resp)
 {
   // lock services
+  ROS_DEBUG("list controller service called");
   boost::mutex::scoped_lock guard(services_lock_);
+  ROS_DEBUG("list controller service locked");
+
   std::vector<std::string> controllers;
   std::vector<size_t> schedule;
 
@@ -712,6 +724,8 @@ bool ControllerManager::listControllersSrv(
     else
       resp.state[i] = "stopped";
   }
+
+  ROS_DEBUG("list controller service finished");
   return true;
 }
 
@@ -720,10 +734,10 @@ bool ControllerManager::loadControllerSrv(
   pr2_mechanism_msgs::LoadController::Request &req,
   pr2_mechanism_msgs::LoadController::Response &resp)
 {
-  ROS_DEBUG("loading service called for controller %s ",req.name.c_str());
-
   // lock services
+  ROS_DEBUG("loading service called for controller %s ",req.name.c_str());
   boost::mutex::scoped_lock guard(services_lock_);
+  ROS_DEBUG("loading service locked");
 
   resp.ok = loadController(req.name);
 
@@ -736,10 +750,11 @@ bool ControllerManager::unloadControllerSrv(
   pr2_mechanism_msgs::UnloadController::Request &req,
   pr2_mechanism_msgs::UnloadController::Response &resp)
 {
-  ROS_DEBUG("unloading service called for controller %s ",req.name.c_str());
-
   // lock services
+  ROS_DEBUG("unloading service called for controller %s ",req.name.c_str());
   boost::mutex::scoped_lock guard(services_lock_);
+  ROS_DEBUG("unloading service locked");
+
   resp.ok = unloadController(req.name);
 
   ROS_DEBUG("unloading service finished for controller %s ",req.name.c_str());
@@ -751,10 +766,10 @@ bool ControllerManager::switchControllerSrv(
   pr2_mechanism_msgs::SwitchController::Request &req,
   pr2_mechanism_msgs::SwitchController::Response &resp)
 {
-  ROS_DEBUG("switching service called");
-
   // lock services
+  ROS_DEBUG("switching service called");
   boost::mutex::scoped_lock guard(services_lock_);
+  ROS_DEBUG("switching service locked");
 
   resp.ok = switchController(req.start_controllers, req.stop_controllers, req.strictness);
 
