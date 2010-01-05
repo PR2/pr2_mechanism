@@ -43,7 +43,6 @@ from std_msgs.msg import *
 
 from xml.dom.minidom import parse, parseString
 import xml.dom
-import signal
 
 def print_usage(exit_code = 0):
     print 'spawner [--stopped] [--wait-for=wait_for_topic] <controller names>'
@@ -56,22 +55,14 @@ unload_controller = rospy.ServiceProxy('pr2_controller_manager/unload_controller
 switch_controller = rospy.ServiceProxy('pr2_controller_manager/switch_controller', SwitchController)
 
 loaded = []
-prev_handler = None
 
-
-def shutdown(sig, stackframe):
+def shutdown():
     global loaded
     switch_controller([], loaded, SwitchControllerRequest.STRICT)
     for name in reversed(loaded):
         rospy.logout("Trying to unload %s" % name)
         unload_controller(name)
         rospy.logout("Succeeded in unloading %s" % name)
-
-    # handler below does not work. Just exiting...
-    sys.exit(0)
-    # We're shutdown.  Now invoke rospy's handler for full cleanup.
-    if prev_handler is not None:
-        prev_handler(signal.SIGINT,None)
 
 # At this moment, I am absolutely livid about Python's lack of
 # reasonable scoping mechanisms.  This variable had to be declared
@@ -123,11 +114,8 @@ def main():
             if rospy.is_shutdown():
                 return
 
-    # Override rospy's signal handling.  We'll invoke rospy's handler after
-    # we're done shutting down.
-    prev_handler = signal.getsignal(signal.SIGINT)
-    signal.signal(signal.SIGINT, shutdown)
-
+    # hook for unloading controllers on shutdown
+    rospy.on_shutdown(shutdown)
 
     # This for loop supports the deprecated behavior of spawning
     # controllers from XML.  Currently the gazebo milestone tests
