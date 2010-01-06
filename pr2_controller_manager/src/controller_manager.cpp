@@ -56,11 +56,16 @@ ControllerManager::ControllerManager(HardwareInterface *hw, const ros::NodeHandl
   pub_joint_state_(nh, "joint_states", 1),
   pub_mech_stats_(nh, "mechanism_statistics", 1),
   last_published_joint_state_(ros::Time::now()),
-  last_published_mechanism_stats_(ros::Time::now())
+  last_published_mechanism_stats_(ros::Time::now()),
+  destruct_controller_(false),
+  destruct_controller_thread_(boost::bind(&ControllerManager::destructController, this)),
+  destruct_timeout_(10.0)
 {}
 
 ControllerManager::~ControllerManager()
 {
+  destruct_controller_thread_.join();
+
   if (state_)
     delete state_;
 }
@@ -324,10 +329,10 @@ bool ControllerManager::loadController(const std::string& name)
 
 bool ControllerManager::unloadController(const std::string &name)
 {
-  ROS_DEBUG("Will unload controller '%s'", name.c_str());
-
   // lock the controllers
+  ROS_DEBUG("Unloading controller '%s'", name.c_str());
   boost::mutex::scoped_lock guard(controllers_lock_);
+  ROS_DEBUG("UnloadController obtained controller lock");
 
   // get reference to controller list
   int free_controllers_list = (current_controllers_list_ + 1) % 2;
@@ -367,6 +372,7 @@ bool ControllerManager::unloadController(const std::string &name)
                   name.c_str());
         return false;
       }
+      destruct_controller_ptr_ = from[i].c;
       removed = true;
     }
     else
@@ -398,20 +404,38 @@ bool ControllerManager::unloadController(const std::string &name)
     pub_mech_stats_.msg_.controller_statistics[i].name = to[i].name;
 
   // Destroys the old controllers list when the realtime thread is finished with it.
-  ROS_DEBUG("Realtime switches over to new controller list");
   int former_current_controllers_list_ = current_controllers_list_;
   current_controllers_list_ = free_controllers_list;
   while (used_by_realtime_ == former_current_controllers_list_)
     usleep(200);
-  ROS_DEBUG("Destruct controller");
+  ROS_DEBUG("Waiting for controller %s to get destructed", name.c_str());
   from.clear();
-  ROS_DEBUG("Destruct controller finished");
+  //destruct_controller_ptr_.reset();
+  destruct_controller_ = true;
+  ros::Time start = ros::Time::now();
+  while (ros::ok() && destruct_controller_){
+    if (ros::Time::now() > start + destruct_timeout_){
+      ROS_FATAL("Controller manager got stuck in destructor of %s", name.c_str());
+      ros::Duration(5.0).sleep();
+    }
+    ros::Duration(0.01).sleep();
+  }
   pub_mech_stats_.unlock();
 
   ROS_DEBUG("Successfully unloaded controller '%s'", name.c_str());
   return true;
 }
 
+
+void ControllerManager::destructController()
+{
+  while (ros::ok()){
+    while (ros::ok() && !destruct_controller_)
+      ros::Duration(0.4).sleep();
+    destruct_controller_ptr_.reset();
+    destruct_controller_ = false;
+  }
+}
 
 
 bool ControllerManager::switchController(const std::vector<std::string>& start_controllers,
