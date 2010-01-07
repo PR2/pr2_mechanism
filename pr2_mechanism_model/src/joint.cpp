@@ -46,7 +46,7 @@ using namespace pr2_mechanism_model;
 void JointStatistics::update(JointState* jnt)
 {
   if (initialized_){
-    odometer_ += fabs(old_position_ - jnt->position_); 
+    odometer_ += fabs(old_position_ - jnt->position_);
     if (jnt->joint_->safety && jnt->joint_->limits && (fabs(jnt->commanded_effort_) > fabs(jnt->measured_effort_)))
       violated_limits_ = true;
     min_position_ = fmin(jnt->position_, min_position_);
@@ -76,6 +76,9 @@ void JointState::enforceLimits()
   // only enforce joints that specify joint limits and safety code
   if (!joint_->safety || !joint_->limits)
     return;
+
+  if (isnan(commanded_effort_) || isinf(commanded_effort_))
+    commanded_effort_ = 0.0;
 
   double vel_high = joint_->limits->velocity;
   double vel_low = -joint_->limits->velocity;
