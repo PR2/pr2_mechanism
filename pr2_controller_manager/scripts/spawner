@@ -41,9 +41,6 @@ import getopt
 from pr2_mechanism_msgs.srv import *
 from std_msgs.msg import *
 
-from xml.dom.minidom import parse, parseString
-import xml.dom
-
 def print_usage(exit_code = 0):
     print 'spawner [--stopped] [--wait-for=wait_for_topic] <controller names>'
     print "  stopped: loads controllers, but doesn't start them"
@@ -116,39 +113,6 @@ def main():
 
     # hook for unloading controllers on shutdown
     rospy.on_shutdown(shutdown)
-
-    # This for loop supports the deprecated behavior of spawning
-    # controllers from XML.  Currently the gazebo milestone tests
-    # still depend on it.
-    for name in args[:]:
-        if os.path.exists(name):
-            args.remove(name)
-            # Loading with XML, put here for backwards compatibility
-            # so all out launch scripts don't break.
-            f = open(name)
-            doc = parse(f)
-            f.close()
-
-            c_node = doc.firstChild
-            if c_node.tagName == 'controllers':
-                c_node = c_node.firstChild
-            while c_node:
-                if c_node.nodeType == xml.dom.Node.ELEMENT_NODE and c_node.tagName == 'controller':
-                    n = str(c_node.getAttribute('name'))
-                    type = str(c_node.getAttribute('type'))
-                    rospy.set_param(n + "/xml", c_node.toxml())
-                    rospy.set_param(n + "/type", type)
-                    resp = load_controller(n)
-                    if resp.ok != 0:
-                        loaded.append(n)
-                    else:
-                        time.sleep(1) # give error message a chance to get out
-                        rospy.logerr("Failed to load %s" % n)
-                c_node = c_node.nextSibling
-
-
-    if rospy.is_shutdown():
-        return
 
     for name in args:
         resp = load_controller(name)
