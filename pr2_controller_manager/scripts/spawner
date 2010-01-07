@@ -38,6 +38,7 @@ roslib.load_manifest('pr2_controller_manager')
 import rospy, sys
 import os.path
 import getopt
+import yaml
 from pr2_mechanism_msgs.srv import *
 from std_msgs.msg import *
 
@@ -114,7 +115,19 @@ def main():
     # hook for unloading controllers on shutdown
     rospy.on_shutdown(shutdown)
 
+    # find yaml files to load
+    controllers = []
     for name in args:
+        if os.path.exists(name):
+            name_yaml = yaml.load(open(name))
+            rospy.set_param("",name_yaml)
+            for controller in name_yaml:
+                controllers.append(controller)
+        else:
+            controllers.append(name)
+
+    # load controllers
+    for name in controllers:
         resp = load_controller(name)
         if resp.ok != 0:
             loaded.append(name)
