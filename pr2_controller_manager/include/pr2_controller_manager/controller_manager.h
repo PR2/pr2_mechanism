@@ -53,8 +53,6 @@
 #include <pr2_mechanism_msgs/SwitchController.h>
 #include <pr2_mechanism_msgs/MechanismStatistics.h>
 #include <sensor_msgs/JointState.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/thread/thread.hpp>
 
 
 namespace pr2_controller_manager{
@@ -127,15 +125,10 @@ private:
                          pr2_mechanism_msgs::UnloadController::Response &resp);
   bool reloadControllerLibrariesSrv(pr2_mechanism_msgs::ReloadControllerLibraries::Request &req,
                                     pr2_mechanism_msgs::ReloadControllerLibraries::Response &resp);
-  void destructController();
   boost::mutex services_lock_;
   ros::ServiceServer srv_list_controllers_, srv_list_controller_types_, srv_load_controller_;
   ros::ServiceServer srv_unload_controller_, srv_switch_controller_, srv_reload_libraries_;
   bool motors_previously_halted_;
-  boost::shared_ptr<pr2_controller_interface::Controller> destruct_controller_ptr_;
-  volatile bool destruct_controller_;
-  boost::thread destruct_controller_thread_;
-  ros::Duration destruct_timeout_;
 };
 
 }
