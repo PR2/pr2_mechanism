@@ -1,8 +1,8 @@
 <package>
   <description brief="pr2_mechanism_msgs">
      This package defines services that are used to communicate with
-     the realtime control loop in pr2_mechanism_control, and messages
-     that contain the state of the realtime controllers, the joints
+     the realtime control loop. It also defines messages
+     that represent the state of the realtime controllers, the joints
      and the actuators.
   </description>
   <author>Stuart Glaser sglaser@willowgarage.com, Wim Meeussen</author>
