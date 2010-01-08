@@ -34,6 +34,7 @@
 
 import roslib, time
 roslib.load_manifest('pr2_controller_manager')
+import rosparam
 
 import rospy, sys
 import os.path
@@ -120,7 +121,7 @@ def main():
     for name in args:
         if os.path.exists(name):
             name_yaml = yaml.load(open(name))
-            rospy.set_param("",name_yaml)
+            rosparam._set_param("",name_yaml)
             for controller in name_yaml:
                 controllers.append(controller)
         else:
