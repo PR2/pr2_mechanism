@@ -1,12 +1,11 @@
 <stack>
-  <description brief="The pr2 mechanism stack">
-    The pr2 mechanism stack contains the infrastructure to control the
-    pr2 robot in a hard realtime control loop. The main interface to
+  <description brief="PR2 mechanism">
+    The <tt>pr2_mechanism</tt> stack contains the infrastructure to control the
+    PR2 robot in a hard realtime control loop. The main interface to
     packages in this stack is through C++, but it is possible to
-    interact with controllers through the ROS interface. While the
-    stack is currently aimed at controlling the pr2 robot, it should
-    work on most force controlled robots. The list of packages in this
-    stack is shown below.
+    interact with controllers through a ROS API. While the
+    stack is currently aimed at controlling the PR2 robot, it should
+    work on most force-controlled robots. 
   </description>
   <author>Maintained by Wim Meeussen</author>
   <license>BSD</license>  
