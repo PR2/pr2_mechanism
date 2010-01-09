@@ -59,11 +59,28 @@ public:
   void getPositions(std::vector<double>&);
   /// get the joint positions of the chain as a kdl jnt array
   void getPositions(KDL::JntArray&);
+  /// gets the joint positions of the chain as any type with size() and []
+  template <class Vec>
+  void getPositions(Vec &v)
+  {
+    assert((int)v.size() == (int)joints_.size());
+    for (size_t i = 0; i < joints_.size(); ++i)
+      v[i] = joints_[i]->position_;
+  }
 
   /// get the joint velocities of the chain as a std vector
   void getVelocities(std::vector<double>&);
   /// get the joint velocities and positoin of the chain as a kdl jnt array vel.  Fills in the positions too.
   void getVelocities(KDL::JntArrayVel&);
+  /// gets the joint velocities of the chain as any type with size() and []
+  template <class Vec>
+  void getVelocities(Vec &v)
+  {
+    assert((int)v.size() == (int)joints_.size());
+    for (size_t i = 0; i < joints_.size(); ++i)
+      v[i] = joints_[i]->velocity_;
+  }
+
 
   /// get the measured joint efforts of the chain as a std vector
   void getEfforts(std::vector<double>&);
