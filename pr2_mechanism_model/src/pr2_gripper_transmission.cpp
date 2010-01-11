@@ -215,9 +215,6 @@ void PR2GripperTransmission::computeGapStates(
   double MR,double MR_dot,double MT,
   double &theta,double &dtheta_dMR,double &dt_dtheta,double &dt_dMR,double &gap_size,double &gap_velocity,double &gap_effort)
 {
-  // enforce MR limit: greater than 0
-  MR = MR >= 0.0 ? MR : 0.0;
-
   //
   // below transforms from encoder value to gap size, based on 090224_link_data.xls provided by Functions Engineering
   //
@@ -226,14 +223,23 @@ void PR2GripperTransmission::computeGapStates(
   u                   = u < -1.0 ? -1.0 : u > 1.0 ? 1.0 : u;
   theta               = theta0_ - phi0_ + acos(u);
   // limit theta
-  theta = theta > 0 ? theta : 0;
+  //theta = theta > 0 ? theta : 0;
   // force theta to be greater than theta0_
   //theta = angles::normalize_angle_positive(angles::shortest_angular_distance(theta0_,theta))+theta0_;
 
   gap_size            = t0_ + r_ * ( sin(theta) - sin(theta0_) );
 
   //
-  // based on similar transforms, get the velocity of the gripper gap size based on encoder velocity
+  // compute jacobians based on transforms, get the velocity of the gripper gap size based on encoder velocity
+  //
+  // for jacobian, we want to limit MR >= 0
+  MR = MR >= 0.0 ? MR : 0.0;
+  // then recompute u and theta based on restricted MR
+  u                   = (a_*a_+b_*b_-h_*h_
+                         -pow(L0_+MR*screw_reduction_/gear_ratio_,2))/(2.0*a_*b_);
+  u                   = u < -1.0 ? -1.0 : u > 1.0 ? 1.0 : u;
+  theta               = theta0_ - phi0_ + acos(u);
+
   //
   double arg          = 1.0 - pow(u,2);
   arg                 = arg > TOL ? arg : TOL; //LIMIT: CAP u at TOL artificially
@@ -266,7 +272,7 @@ void PR2GripperTransmission::inverseGapStates(
   double theta,double &MR,double &dMR_dtheta,double &dtheta_dt,double &dMR_dt)
 {
   // limit theta
-  theta = theta > 0 ? theta : 0;
+  //theta = theta > 0 ? theta : 0;
   // force theta to be greater than theta0_
   //theta = angles::normalize_angle_positive(angles::shortest_angular_distance(theta0_,theta))+theta0_;
 
@@ -285,18 +291,19 @@ void PR2GripperTransmission::inverseGapStates(
     dMR_dtheta       = 0.0;
   }
 
-  // enforce MR limit: greater than 0
-  MR = MR >= 0.0 ? MR : 0.0;
-
   // compute gap_size from theta
   double gap_size = t0_ + r_ * ( sin(theta) - sin(theta0_) ); // in mm
 
-  // compute more inverse gradients
+  // compute inverse jacobians for the transform
+  // for this, enforce dMR_dtheta >= 0
+  // @todo: this affects sim only, need to check this for sim.
+  double tmp_dMR_dtheta = dMR_dtheta >= 0.0 ? dMR_dtheta : 0.0;
+
   double u           = (gap_size - t0_)/r_ + sin(theta0_);
   double arg2        = 1.0 - pow(u,2);
   arg2               = arg2 > TOL ? arg2 : TOL; //LIMIT: CAP arg2 at TOL artificially
   dtheta_dt          = 1.0 / sqrt( arg2 ) / r_;  // derivative of asin
-  dMR_dt             = dMR_dtheta * dtheta_dt;  // remember, here, t is gap_size
+  dMR_dt             = tmp_dMR_dtheta * dtheta_dt;  // remember, here, t is gap_size
 }
 
 void PR2GripperTransmission::getRateFromMaxRateJoint(
