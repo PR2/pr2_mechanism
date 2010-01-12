@@ -56,7 +56,7 @@ public:
   /**  \brief Constructor for the realtime publisher
    *
    * \param node the nodehandle that specifies the namespace (or prefix) that is used to advertise the ROS topic
-   * \param topic the topic name to advertise 
+   * \param topic the topic name to advertise
    * \param queue_size the size of the outgoing ROS buffer
    * \param latched . optional argument (defaults to false) to specify is publisher is latched or not
    */
@@ -64,6 +64,11 @@ public:
     : topic_(topic), node_(node), is_running_(false), keep_running_(false), turn_(REALTIME)
   {
     construct(queue_size, latched);
+  }
+
+  RealtimePublisher()
+    : is_running_(false), keep_running_(false), turn_(REALTIME)
+  {
   }
 
   /// Destructor
@@ -74,6 +79,13 @@ public:
       usleep(100);
 
     publisher_.shutdown();
+  }
+
+  void init(const ros::NodeHandle &node, const std::string &topic, int queue_size, bool latched=false)
+  {
+    topic_ = topic;
+    node_ = node;
+    construct(queue_size, latched);
   }
 
   /// Stop the realtime publisher from sending out more ROS messages
@@ -111,7 +123,7 @@ public:
    *
    * After a successful trylock and after the data is written to the mgs_
    * variable, the lock has to be released for the message to get
-   * published on the specified topic. 
+   * published on the specified topic.
    */
   void unlockAndPublish()
   {
