@@ -278,7 +278,14 @@ bool ControllerManager::loadController(const std::string& name)
 
   // Initializes the controller
   ROS_DEBUG("Initializing controller '%s'", name.c_str());
-  bool initialized = c->initRequest(this, state_, c_node);
+  bool initialized;
+  try{
+    initialized = c->initRequest(this, state_, c_node);
+  }
+  catch(...){
+    ROS_ERROR("Exception thrown while initializing controller %s", name.c_str());
+    initialized = false;
+  }
   if (!initialized)
   {
     to.clear();

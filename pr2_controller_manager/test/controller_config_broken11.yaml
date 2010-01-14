@@ -1,0 +1,7 @@
+type: TestController
+joint_name: head_pan_joint
+root_name: head_pan_link
+tip_name: head_tilt_link
+topic_name: "@#$# \
+
+"

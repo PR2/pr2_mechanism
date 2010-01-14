@@ -296,6 +296,8 @@ TEST_F(TestController, loading)
   EXPECT_FALSE(loadController("controller15"));
   EXPECT_FALSE(loadController("controller16"));
   EXPECT_FALSE(loadController("controller17"));
+  EXPECT_FALSE(loadController("controller18"));
+  EXPECT_FALSE(loadController("controller19"));
 
   // this one is not configured
   EXPECT_FALSE(loadController("controller10"));
