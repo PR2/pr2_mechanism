@@ -101,7 +101,7 @@ public:
 
   int num_encoder_errors_; //!< The number of invalid encoder signal transitions
 
-  double zero_offset_; //!< The difference between the actual reading from the encoder and the calibrated position of the actuator.  This field is write only; you should set it when calibrating the actuator, and then the actuator will take the zero offset into account when setting the position values.
+  double zero_offset_; //!< A bias applied to the position value when reported.  This value is written once after calibration. The reported position is the hardware's actual position minus the zero offset
 };
 
 class ActuatorCommand
@@ -169,14 +169,14 @@ class AccelerometerCommand
 public:
   AccelerometerCommand() : range_(0), bandwidth_(0) {}
   int range_; //!< The range of the values to be returned (0 -> 2g, 1 -> 4g, 2-> 8g)
-  int bandwidth_; //!< Accelerometer bandwidth setting. Value is passed directly to Bosch accelerometer. Read accelerometer datasheet for more information about possible range setting.
+  int bandwidth_; //!< Accelerometer bandwidth setting. Value is passed directly to Bosch accelerometer (BMA 150). Read accelerometer datasheet for more information about possible range setting.
 };
 
 class AccelerometerState
 {
 public:
   std::string frame_id_;  //!< Frame id of accelerometer
-  std::vector<geometry_msgs::Vector3> samples_; //!< A vector of samples taken from the accelerometer since the last iteration of the control loop (oldest samples first).
+  std::vector<geometry_msgs::Vector3> samples_; //!< A vector of samples taken from the accelerometer (in g's) since the last iteration of the control loop (oldest samples first).
 };
 
 /*!
@@ -439,7 +439,7 @@ public:
     return p.second;
   }
 
-  ros::Time current_time_;
+  ros::Time current_time_; //!< The time at which the commands were sent to the hardware
 };
 }
 
