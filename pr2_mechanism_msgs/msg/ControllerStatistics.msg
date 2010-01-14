@@ -21,3 +21,9 @@ duration mean_time
 # the variance on the time the update loop of the controller needs to complete.
 # the variance applies to a sliding time window.
 duration variance_time
+
+# the number of times this controller broke the realtime loop
+int32 num_control_loop_overruns
+
+# the timestamp of the last time this controller broke the realtime loop
+time time_last_control_loop_overrun
