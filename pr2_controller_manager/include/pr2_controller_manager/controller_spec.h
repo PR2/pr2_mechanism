@@ -53,9 +53,11 @@ typedef boost::accumulators::accumulator_set<
 
 struct Statistics {
   TimeStatistics acc;
+  ros::Time time_last_control_loop_overrun;
+  unsigned int num_control_loop_overruns;
   double max;
   boost::circular_buffer<double> max1;
-  Statistics() : max(0), max1(60) {}
+Statistics() : num_control_loop_overruns(0), max(0), max1(60) {}
 };
 
 struct ControllerSpec {

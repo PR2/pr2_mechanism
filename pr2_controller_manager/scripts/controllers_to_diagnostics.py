@@ -32,38 +32,28 @@ import rospy
 from pr2_mechanism_msgs.msg import MechanismStatistics
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 
-def controller_to_diag(cs):
+def controller_to_diag(c):
     d = DiagnosticStatus()
-    d.name = 'Controllers'
-    max_time = rospy.Duration()
-    sum_time = rospy.Duration()
-    if len(cs) == 0:
-        d.values.append(KeyValue('No controllers loaded',''))
-    else:
-        for c in cs:
-            if (c.running):
-                state = 'Running'
-            else:
-                state = 'Stopped'
-            state += '   (Avg time '+str(int(c.mean_time.to_sec()*1e6))+' usec)'
-            sum_time = sum_time + c.mean_time
-            state += '   (Max time '+str(int(c.max_time.to_sec()*1e6))+' usec)'
-            if (max_time < c.max_time):
-                max_time = c.max_time
-            state += '   (Variance time '+str(int(c.variance_time.to_sec()*1e6))+')'
-            state += '   (Uses '+str(int(c.mean_time.to_sec()/0.00001))+'% of cycle time)'
-            d.values.append(KeyValue(c.name, state))
-    if (max_time.to_sec() > 0.001 and not use_sim_time):
-        d.level = 2
-        d.message = 'One or more controllers used more than 1 ms to compute a single cycle'
-    elif (sum_time.to_sec() > 0.001 and not use_sim_time):
-        d.level = 2
-        d.message = 'All controllers combined on average used more than 1 ms to compute a single cycle'
-    else:
-        d.level = 0
-        d.message = 'OK'
-    return d
+    d.name = 'Controller '+c.name
 
+    d.level = 0
+    if (c.running):
+        d.message = '(Running)'
+    else:
+        d.message = '(Stopped)'
+
+    if (not use_sim_time and c.num_control_loop_overruns > 0):
+        d.message += ' !!! Broke Realtime, used '+str(int(c.max_time.to_sec()*1e6))+' micro seconds in update loop'
+        if c.time_last_control_loop_overrun + rospy.Duration(30.0) > rospy.Time.now():
+            d.level = 1
+
+    d.values.append(KeyValue('avg time in update loop',str(int(c.mean_time.to_sec()*1e6))+' usec)'))
+    d.values.append(KeyValue('max time in update loop',str(int(c.max_time.to_sec()*1e6))+' usec)'))
+    d.values.append(KeyValue('variance on time in update loop',str(int(c.variance_time.to_sec()*1e6))))
+    d.values.append(KeyValue('percent of cycle time used',str(int(c.mean_time.to_sec()/0.00001))))
+    d.values.append(KeyValue('number of control loop overruns',str(int(c.num_control_loop_overruns))))
+    d.values.append(KeyValue('timestamp of last control loop overrun',str(int(c.time_last_control_loop_overrun.to_sec()))))
+    return d
 
 rospy.init_node('controller_to_diagnostics')
 use_sim_time = rospy.get_param('use_sim_time', False)
@@ -74,10 +64,19 @@ def state_cb(msg):
     global last_publish_time
     now = rospy.get_rostime()
     if (now - last_publish_time).to_sec() > 1.0:
-        d = DiagnosticArray()
-        d.header.stamp = msg.header.stamp
-        d.status = [controller_to_diag(msg.controller_statistics)]
-        pub_diag.publish(d)
+        if len(msg.controller_statistics) == 0:
+            d = DiagnosticArray()
+            d.header.stamp = msg.header.stamp
+            ds = DiagnosticStatus()
+            ds.name = "Controller: No controllers loaded in controller manager"
+            d.status = [ds]
+            pub_diag.publish(d)
+        else:
+            for c in msg.controller_statistics:
+                d = DiagnosticArray()
+                d.header.stamp = msg.header.stamp
+                d.status = [controller_to_diag(c)]
+                pub_diag.publish(d)
         last_publish_time = now
 
 rospy.Subscriber('mechanism_statistics', MechanismStatistics, state_cb)

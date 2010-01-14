@@ -151,6 +151,10 @@ void ControllerManager::update()
     controllers[scheduling[i]].c->updateRequest();
     ros::Time end = ros::Time::now();
     controllers[scheduling[i]].stats->acc((end - start).toSec());
+    if (end - start > ros::Duration(0.001)){
+      controllers[scheduling[i]].stats->num_control_loop_overruns++;
+      controllers[scheduling[i]].stats->time_last_control_loop_overrun = end;
+    }
   }
   ros::Time end_update = ros::Time::now();
   update_stats_.acc((end_update - start_update).toSec());
@@ -170,13 +174,13 @@ void ControllerManager::update()
     ROS_DEBUG("Realtime loop: start switching controllers");
 
     // stop controllers
-    ROS_DEBUG("Realtime loop: stopping %i controllers", stop_request_.size());
+    ROS_DEBUG("Realtime loop: stopping %i controllers", (int)stop_request_.size());
     for (unsigned int i=0; i<stop_request_.size(); i++)
       if (!stop_request_[i]->stopRequest()) 
         ROS_FATAL("Failed to stop controller in realtime loop. This should never happen.");        
     
     // start controllers
-    ROS_DEBUG("Realtime loop: starting %i controllers", start_request_.size());
+    ROS_DEBUG("Realtime loop: starting %i controllers", (int)start_request_.size());
     for (unsigned int i=0; i<start_request_.size(); i++)
       if (!start_request_[i]->startRequest())
         ROS_FATAL("Failed to stop controller in realtime loop. This should never happen.");        
@@ -465,7 +469,7 @@ bool ControllerManager::switchController(const std::vector<std::string>& start_c
       stop_request_.push_back(ct);
     }
   }
-  ROS_DEBUG("Stop request vector has size %i", stop_request_.size());
+  ROS_DEBUG("Stop request vector has size %i", (int)stop_request_.size());
 
   // list all controllers to start
   for (unsigned int i=0; i<start_controllers.size(); i++)
@@ -490,7 +494,7 @@ bool ControllerManager::switchController(const std::vector<std::string>& start_c
       start_request_.push_back(ct);
     }
   }
-  ROS_DEBUG("Start request vector has size %i", start_request_.size());
+  ROS_DEBUG("Start request vector has size %i", (int)start_request_.size());
 
   // start the atomic controller switching
   switch_strictness_ = strictness;
@@ -622,6 +626,8 @@ void ControllerManager::publishMechanismStatistics()
         out->max_time = ros::Duration(max(controllers[i].stats->acc));
         out->mean_time = ros::Duration(mean(controllers[i].stats->acc));
         out->variance_time = ros::Duration(sqrt(variance(controllers[i].stats->acc)));
+        out->num_control_loop_overruns = controllers[i].stats->num_control_loop_overruns;
+        out->time_last_control_loop_overrun = controllers[i].stats->time_last_control_loop_overrun;
       }
 
       pub_mech_stats_.msg_.header.stamp = ros::Time::now();
@@ -646,7 +652,7 @@ bool ControllerManager::reloadControllerLibrariesSrv(
   std::vector<std::string> controllers;
   getControllerNames(controllers);
   if (!controllers.empty() && !req.force_kill){
-    ROS_ERROR("Controller manager: Cannot reload controller libraries because there are still %i controllers running", controllers.size());
+    ROS_ERROR("Controller manager: Cannot reload controller libraries because there are still %i controllers running", (int)controllers.size());
     resp.ok = false;
     return true;
   }
