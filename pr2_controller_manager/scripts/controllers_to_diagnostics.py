@@ -34,25 +34,25 @@ from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 
 def controller_to_diag(c):
     d = DiagnosticStatus()
-    d.name = 'Controller '+c.name
+    d.name = 'Controller ('+c.name+')'
 
     d.level = 0
     if (c.running):
-        d.message = '(Running)'
+        d.message = 'Running'
     else:
-        d.message = '(Stopped)'
+        d.message = 'Stopped'
 
     if (not use_sim_time and c.num_control_loop_overruns > 0):
         d.message += ' !!! Broke Realtime, used '+str(int(c.max_time.to_sec()*1e6))+' micro seconds in update loop'
         if c.time_last_control_loop_overrun + rospy.Duration(30.0) > rospy.Time.now():
             d.level = 1
 
-    d.values.append(KeyValue('avg time in update loop',str(int(c.mean_time.to_sec()*1e6))+' usec)'))
-    d.values.append(KeyValue('max time in update loop',str(int(c.max_time.to_sec()*1e6))+' usec)'))
-    d.values.append(KeyValue('variance on time in update loop',str(int(c.variance_time.to_sec()*1e6))))
-    d.values.append(KeyValue('percent of cycle time used',str(int(c.mean_time.to_sec()/0.00001))))
-    d.values.append(KeyValue('number of control loop overruns',str(int(c.num_control_loop_overruns))))
-    d.values.append(KeyValue('timestamp of last control loop overrun',str(int(c.time_last_control_loop_overrun.to_sec()))))
+    d.values.append(KeyValue('Avg Time in Update Loop (usec)',str(int(c.mean_time.to_sec()*1e6))))
+    d.values.append(KeyValue('Max Time in update Loop (usec)',str(int(c.max_time.to_sec()*1e6))))
+    d.values.append(KeyValue('Variance on Time in Update Loop',str(int(c.variance_time.to_sec()*1e6))))
+    d.values.append(KeyValue('Percent of Cycle Time Used',str(int(c.mean_time.to_sec()/0.00001))))
+    d.values.append(KeyValue('Number of Control Loop Overruns',str(int(c.num_control_loop_overruns))))
+    d.values.append(KeyValue('Timestamp of Last Control Loop Overrun (sec)',str(int(c.time_last_control_loop_overrun.to_sec()))))
     return d
 
 rospy.init_node('controller_to_diagnostics')
