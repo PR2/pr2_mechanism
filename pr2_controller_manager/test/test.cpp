@@ -76,7 +76,7 @@ public:
       if (msg->status[0].name.substr(0,5) == "Joint")
         joint_diagnostic_counter_++;
 
-      if (msg->status[0].name == "Controllers")
+      if (msg->status[0].name.substr(0,10) == "Controller")
         controller_diagnostic_counter_++;
     }
   }
