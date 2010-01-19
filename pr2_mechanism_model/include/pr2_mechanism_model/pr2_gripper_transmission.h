@@ -59,13 +59,13 @@ public:
 
   bool initXml(TiXmlElement *config, Robot *robot);
 
-  void propagatePosition(std::vector<pr2_hardware_interface::Actuator*>&, 
+  void propagatePosition(std::vector<pr2_hardware_interface::Actuator*>&,
                          std::vector<pr2_mechanism_model::JointState*>&);
-  void propagatePositionBackwards(std::vector<pr2_mechanism_model::JointState*>&, 
+  void propagatePositionBackwards(std::vector<pr2_mechanism_model::JointState*>&,
                                   std::vector<pr2_hardware_interface::Actuator*>&);
-  void propagateEffort(std::vector<pr2_mechanism_model::JointState*>&, 
+  void propagateEffort(std::vector<pr2_mechanism_model::JointState*>&,
                        std::vector<pr2_hardware_interface::Actuator*>&);
-  void propagateEffortBackwards(std::vector<pr2_hardware_interface::Actuator*>&, 
+  void propagateEffortBackwards(std::vector<pr2_hardware_interface::Actuator*>&,
                                 std::vector<pr2_mechanism_model::JointState*>&);
   std::string gap_joint_;
   //
@@ -74,7 +74,11 @@ public:
   //
   double      gap_mechanical_reduction_;
 
-  // store name for passive joints.
+  // The joint_names_ variable is inherited from Transmission.  In
+  // joint_names_, the gap joint is first, followed by all the passive
+  // joints.
+
+  // store name for passive joints.  This matches elements 1 to N of joint_names_.
   std::vector<std::string> passive_joints_;
 
 private:
@@ -83,10 +87,10 @@ private:
                         double &theta,double &dtheta_dMR,double &dt_dtheta,double &dt_dMR,double &gap_size,double &gap_velocity,double &gap_effort);
   void inverseGapStates(double theta,double &MR, double &dMR_dtheta,double &dtheta_dt,double &dMR_dt);
   //std::ofstream myfile;
-  void getRateFromMaxRateJoint(std::vector<pr2_mechanism_model::JointState*>& js, 
+  void getRateFromMaxRateJoint(std::vector<pr2_mechanism_model::JointState*>& js,
                                std::vector<pr2_hardware_interface::Actuator*>& as,
     int &maxRateJointIndex,double &rate);
-  void getAngleRateTorqueFromMinRateJoint(std::vector<pr2_mechanism_model::JointState*>& js, 
+  void getAngleRateTorqueFromMinRateJoint(std::vector<pr2_mechanism_model::JointState*>& js,
                                           std::vector<pr2_hardware_interface::Actuator*>& as,
     int &minRateJointIndex,double &angle,double &rate,double &torque);
   //

@@ -1,0 +1,11 @@
+pr2_controller_manager/bin
+pr2_mechanism_msgs/msg/cpp
+pr2_mechanism_msgs/msg/java
+pr2_mechanism_msgs/msg/lisp
+pr2_mechanism_msgs/msg/oct
+pr2_mechanism_msgs/src
+pr2_mechanism_msgs/srv/cpp
+pr2_mechanism_msgs/srv/java
+pr2_mechanism_msgs/srv/lisp
+pr2_mechanism_msgs/srv/oct
+realtime_tools/src
