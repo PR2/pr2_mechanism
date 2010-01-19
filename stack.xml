@@ -15,6 +15,6 @@
   <depend stack="common_msgs" /> <!-- geometry_msgs, sensor_msgs, diagnostic_msgs -->
   <depend stack="geometry" /> <!-- angles -->
   <depend stack="robot_model" /> <!-- urdf, kdl_parser -->
-  <depend stack="ros" /> <!-- std_msgs, rospy, roscpp -->
+  <depend stack="ros" /> <!-- std_msgs, rosparam, rospy, roscpp -->
 
 </stack>

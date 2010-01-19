@@ -1,14 +1,17 @@
 <package>
 <description brief="PR2 Controller Manager">
 
+<p>
 The controller manager (CM) package provides the infrastructure to
 run controllers in a hard realtime loop. In every cycle of the control
 loop, all controllers loaded into CM will get triggered. The order in in
 which the controllers are triggered is determined by the CM scheduler.
-CM provides ros service calls to load/start/stop/unlaod controllers.
-
+CM provides ROS services to load/start/stop/unload controllers.
+</p>
+<p>
 The controller manager also enforces low level safety limits 
 on the effort/velocity/position of each joint.
+</p>
 
 </description>
 <author>Eric Berger berger@willowgarage.com, Stuart Glaser, Wim Meeussen</author>

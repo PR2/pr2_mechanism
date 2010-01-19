@@ -1,16 +1,20 @@
 <package>
 <description brief="PR2 Mechanism model">
+<p>
   This package contains the robot model that is used by the realtime
   controllers
   inside <a href="http://www.ros.org/wiki/pr2_controller_manager">controller
-  manager</a>. This robot model fucusses on controlling the robot
+  manager</a>. This robot model focuses on controlling the robot
   mechanism in a realtime control loop, and therefore it only contains
   the components of a robot that are relevant in realtime: the robot
   joints (with encoders, transmisisons and actuators) and the
-  kinematic/dynamic model of the robot. The pr2 mechanism model
-  package has been modified many times, and has become kind of
-  messy. Future releases of this package will likely have a very
+  kinematic/dynamic model of the robot. 
+</p>
+<p>
+  The pr2_mechanism_model package is still under very active development.
+  Future releases of this package will likely have a very
   different API than the current release.
+</p>
 </description>
 <author>Eric Berger berger@willowgarage.com, Stuart Glaser, Wim Meeussen</author>
 <license>BSD</license> 

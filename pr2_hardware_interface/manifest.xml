@@ -2,15 +2,15 @@
 <description brief="PR2 Hardware Interface">
   This package contains the C++ interfaces to the PR2 hardware
   components that are controlled over EtherCAT. This includes the
-  motors and encoders needed to control the PR2 mechanism, but also
+  motors and encoders needed to control the PR2 mechanism, as well as
   components like the pressure sensors in the fingertips, camera
-  triggers, etc. All the hardware components in this interface are
+  triggers, etc... All of the hardware components in this interface are
   directly available to the controllers inside the hard realtime
   control loop. 
 </description>
 <author>Eric Berger berger@willowgarage.com</author>
 <license>BSD</license>
-<review status="unreviewed" notes="API review in progress (Eric)"/>
+<review status="Doc reviewed" notes="2010-01-18"/>
 <depend package="roscpp" />
 <depend package="geometry_msgs" />
 <url>http://ros.org/wiki/pr2_hardware_interface</url>
