@@ -168,7 +168,7 @@ class AccelerometerCommand
 {
 public:
   AccelerometerCommand() : range_(0), bandwidth_(0) {}
-  int range_; //!< The range of the values to be returned (0 -> 2g, 1 -> 4g, 2-> 8g)
+  int range_; //!< The range of the values to be returned (range of 0 means within +/- 2g, 1 means within +/-4g, 2 means /- 8g).  Value is reported in m/s/s.
   int bandwidth_; //!< Accelerometer bandwidth setting. Value is passed directly to Bosch accelerometer (BMA 150). Read accelerometer datasheet for more information about possible range setting.
 };
 
@@ -176,7 +176,7 @@ class AccelerometerState
 {
 public:
   std::string frame_id_;  //!< Frame id of accelerometer
-  std::vector<geometry_msgs::Vector3> samples_; //!< A vector of samples taken from the accelerometer (in g's) since the last iteration of the control loop (oldest samples first).
+  std::vector<geometry_msgs::Vector3> samples_; //!< A vector of samples taken from the accelerometer (in m/s/s) since the last iteration of the control loop (oldest samples first).
 };
 
 /*!
