@@ -171,16 +171,12 @@ void ControllerManager::update()
   // there are controllers to start/stop
   if (please_switch_)
   {
-    ROS_DEBUG("Realtime loop: start switching controllers");
-
     // stop controllers
-    ROS_DEBUG("Realtime loop: stopping %i controllers", (int)stop_request_.size());
     for (unsigned int i=0; i<stop_request_.size(); i++)
       if (!stop_request_[i]->stopRequest())
         ROS_FATAL("Failed to stop controller in realtime loop. This should never happen.");
 
     // start controllers
-    ROS_DEBUG("Realtime loop: starting %i controllers", (int)start_request_.size());
     for (unsigned int i=0; i<start_request_.size(); i++)
       if (!start_request_[i]->startRequest())
         ROS_FATAL("Failed to start controller in realtime loop. This should never happen.");
@@ -188,7 +184,6 @@ void ControllerManager::update()
     start_request_.clear();
     stop_request_.clear();
     please_switch_ = false;
-    ROS_DEBUG("Realtime loop: finished switching controllers");
   }
 }
 
