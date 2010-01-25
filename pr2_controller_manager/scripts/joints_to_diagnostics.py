@@ -32,42 +32,21 @@ import rospy
 from pr2_mechanism_msgs.msg import MechanismStatistics
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 
-import math
-
-has_warned_invalid = False
-
 def joint_to_diag(js):
-    ds = DiagnosticStatus()
-    ds.level = DiagnosticStatus.OK
-    ds.message = 'OK'
+    d = DiagnosticStatus()
+    d.level = 0
+    d.message = 'OK'
 
     # Hack to stop gripper joints from being "uncalibrated"
     if not js.is_calibrated and js.name.find("float") < 0 and js.name.find("finger") < 0:
-        ds.level = DiagnosticStatus.WARN
-        ds.message = 'Uncalibrated'
-
-    if math.isnan(js.position) or math.isnan(js.velocity) or \
-            math.isnan(js.measured_effort) or math.isnan(js.commanded_effort):
-        ds.level = DiagnosticStatus.ERROR
-        ds.message = 'NaN in joint data'
-        if not has_warned_invalid:
-            rospy.logerr("NaN value for joint data. pr2_controller_manager restart required.")
-            has_warned_invalid = True
-
-    if math.isinf(js.position) or math.isinf(js.velocity) or \
-            math.isinf(js.measured_effort) or math.isinf(js.commanded_effort):
-        ds.level = DiagnosticStatus.ERROR
-        ds.message = 'Inf in joint data'
-        if not has_warned_invalid:
-            rospy.logerr("Infinite value for joint data. pr2_controller_manager restart required.")
-            has_warned_invalid = True
-
+        d.level = 1
+        d.message = 'Uncalibrated'
     # Comment out because this causes confusing warnings
     #elif js.violated_limits:
-    #    ds.level = 1
-    #    ds.message = 'Joint limits violated'
-    ds.name = "Joint (%s)" % js.name
-    ds.values = [
+    #    d.level = 1
+    #    d.message = 'Joint limits violated'
+    d.name = "Joint (%s)" % js.name
+    d.values = [
         KeyValue('Position', str(js.position)),
         KeyValue('Velocity', str(js.velocity)),
         KeyValue('Measured Effort', str(js.measured_effort)),
@@ -79,8 +58,9 @@ def joint_to_diag(js):
         KeyValue('Max Abs. Velocity', str(js.max_abs_velocity)),
         KeyValue('Max Abs. Effort', str(js.max_abs_effort)),
         KeyValue('Limits Hit', str(js.violated_limits))]
+        
     
-    return ds
+    return d
 
 rospy.init_node('joints_to_diagnostics')
 pub_diag = rospy.Publisher('/diagnostics', DiagnosticArray)
