@@ -45,7 +45,7 @@ using namespace ros;
 
 ControllerManager::ControllerManager(HardwareInterface *hw, const ros::NodeHandle& nh) :
   model_(hw),
-  state_(NULL), 
+  state_(NULL),
   controller_node_(nh),
   cm_node_(nh, "pr2_controller_manager"),
   start_request_(0),
@@ -82,8 +82,8 @@ bool ControllerManager::initXml(TiXmlElement* config)
   for (unsigned int i = 0; i < state_->joint_states_.size(); ++i)
   {
     int type = state_->joint_states_[i].joint_->type;
-    if (type != urdf::Joint::REVOLUTE && 
-        type != urdf::Joint::CONTINUOUS && 
+    if (type != urdf::Joint::REVOLUTE &&
+        type != urdf::Joint::CONTINUOUS &&
         type != urdf::Joint::PRISMATIC){
       ROS_ERROR("Joint state contains joint '%s' of unknown type", state_->joint_states_[i].joint_->name.c_str());
       return false;
@@ -104,7 +104,7 @@ bool ControllerManager::initXml(TiXmlElement* config)
   publish_period_joint_state_ = Duration(1.0/fmax(0.000001, publish_rate_joint_state));
 
   // create controller loader
-  controller_loader_.reset(new pluginlib::ClassLoader<pr2_controller_interface::Controller>("pr2_controller_interface", 
+  controller_loader_.reset(new pluginlib::ClassLoader<pr2_controller_interface::Controller>("pr2_controller_interface",
                                                                                            "pr2_controller_interface::Controller"));
   // Advertise services (this should be the last thing we do in init)
   srv_list_controllers_ = cm_node_.advertiseService("list_controllers", &ControllerManager::listControllersSrv, this);
@@ -176,15 +176,15 @@ void ControllerManager::update()
     // stop controllers
     ROS_DEBUG("Realtime loop: stopping %i controllers", (int)stop_request_.size());
     for (unsigned int i=0; i<stop_request_.size(); i++)
-      if (!stop_request_[i]->stopRequest()) 
-        ROS_FATAL("Failed to stop controller in realtime loop. This should never happen.");        
-    
+      if (!stop_request_[i]->stopRequest())
+        ROS_FATAL("Failed to stop controller in realtime loop. This should never happen.");
+
     // start controllers
     ROS_DEBUG("Realtime loop: starting %i controllers", (int)start_request_.size());
     for (unsigned int i=0; i<start_request_.size(); i++)
       if (!start_request_[i]->startRequest())
-        ROS_FATAL("Failed to stop controller in realtime loop. This should never happen.");        
-    
+        ROS_FATAL("Failed to start controller in realtime loop. This should never happen.");
+
     start_request_.clear();
     stop_request_.clear();
     please_switch_ = false;
@@ -433,7 +433,7 @@ bool ControllerManager::switchController(const std::vector<std::string>& start_c
     ROS_FATAL("The switch controller stop and start list are not empty that the beginning of the swithcontroller call. This should not happen.");
 
   if (strictness == 0){
-    ROS_WARN("Controller Manager: To switch controlelrs you need to specify a strictness level of STRICT or BEST_EFFORT. Defaulting to BEST_EFFORT.");
+    ROS_WARN("Controller Manager: To switch controllers you need to specify a strictness level of STRICT or BEST_EFFORT. Defaulting to BEST_EFFORT.");
     strictness = pr2_mechanism_msgs::SwitchController::Request::BEST_EFFORT;
   }
 
@@ -679,7 +679,7 @@ bool ControllerManager::reloadControllerLibrariesSrv(
   assert(controllers.empty());
 
   // create new controller loader
-  controller_loader_.reset(new pluginlib::ClassLoader<pr2_controller_interface::Controller>("pr2_controller_interface", 
+  controller_loader_.reset(new pluginlib::ClassLoader<pr2_controller_interface::Controller>("pr2_controller_interface",
                                                                                             "pr2_controller_interface::Controller"));
   ROS_INFO("Controller manager: reloaded controller libraries");
   resp.ok = true;
