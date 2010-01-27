@@ -588,7 +588,7 @@ void ControllerManager::publishMechanismStatistics()
         out->timestamp = now;
         out->name = it->first;
         out->encoder_count = in->encoder_count_;
-        out->encoder_offset = in->zero_offset_;
+        out->encoder_offset = (in->zero_offset_ * ((double)(in->encoder_count_))) / (in->position_ + in->zero_offset_);
         out->position = in->position_;
         out->timestamp = ros::Time(in->timestamp_);
         out->device_id = in->device_id_;
