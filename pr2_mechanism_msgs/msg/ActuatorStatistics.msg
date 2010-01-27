@@ -15,10 +15,10 @@ time timestamp
 # the encoder position, represented by the number of encoder ticks
 int32 encoder_count
 
-# The number of encoder ticks that is added to the encoder reading from the encoder
-# hardware, to get to the encoder_count. This number is computed when the referece
+# The angular offset (in radians) that is added to the encoder reading, 
+# to get to the position of the actuator. This number is computed when the referece
 # sensor is triggered during the calibration phase
-int32 encoder_offset
+float64 encoder_offset
 
 # the encoder position in radians
 float64 position
