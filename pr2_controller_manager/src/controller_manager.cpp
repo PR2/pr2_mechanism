@@ -246,8 +246,15 @@ bool ControllerManager::loadController(const std::string& name)
     }
   }
 
+  NodeHandle c_node;
   // Constructs the controller
-  NodeHandle c_node(controller_node_, name);
+  try{
+    c_node = NodeHandle(controller_node_, name);
+  }
+  catch(...){
+    ROS_ERROR("Exception thrown while constructing nodehandle for controller with name '%s'", name.c_str());
+    return false;
+  }
   pr2_controller_interface::Controller *c = NULL;
   std::string type;
   if (c_node.getParam("type", type))
