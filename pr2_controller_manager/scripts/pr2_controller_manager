@@ -41,7 +41,12 @@ if __name__ == '__main__':
     elif args[1] == 'lc' or args[1] == 'list':
         pr2_controller_manager_interface.list_controllers()
     elif args[1] == 'reload-libraries':
-        pr2_controller_manager_interface.reload_libraries(True)
+        print "ARGS", args, args[2:]
+        if '--restore' in args[2:]:
+            print "RE1"
+            pr2_controller_manager_interface.reload_libraries(True, restore = True)
+        else:
+            pr2_controller_manager_interface.reload_libraries(True)
     elif args[1] == 'load':
         for c in args[2:]:
             pr2_controller_manager_interface.load_controller(c)

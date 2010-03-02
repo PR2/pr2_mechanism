@@ -15,16 +15,39 @@ def list_controller_types():
     for t in resp.types:
         print t
 
-def reload_libraries(force_kill):
+def reload_libraries(force_kill, restore = False):
     rospy.wait_for_service('pr2_controller_manager/reload_controller_libraries')
     s = rospy.ServiceProxy('pr2_controller_manager/reload_controller_libraries', ReloadControllerLibraries)
+
+    list_srv = rospy.ServiceProxy('pr2_controller_manager/list_controllers', ListControllers)
+    load_srv = rospy.ServiceProxy('pr2_controller_manager/load_controller', LoadController)
+    switch_srv = rospy.ServiceProxy('pr2_controller_manager/switch_controller', SwitchController)
+
+    print "Restore:", restore
+    if restore:
+        originally = list_srv.call(ListControllersRequest())
+    
     resp = s.call(ReloadControllerLibrariesRequest(force_kill))
     if resp.ok:
         print "Successfully reloaded libraries"
-        return True
+        result = True
     else:
         print "Failed to reload libraries. Do you still have controllers loaded?"
-        return False
+        result = False
+
+    if restore:
+        for c in originally.controllers:
+            load_srv(c)
+        to_start = []
+        for c, s in zip(originally.controllers, originally.state):
+            if s == 'running':
+                to_start.append(c)
+        switch_srv(start_controllers = to_start,
+                   stop_controllers = [],
+                   strictness = SwitchControllerRequest.BEST_EFFORT)
+        print "Controllers restored to original state"
+    return result
+        
 
 def list_controllers():
     rospy.wait_for_service('pr2_controller_manager/list_controllers')
