@@ -85,7 +85,7 @@ def joint_to_diag(js):
         KeyValue('Min Position', str(js.min_position)),
         KeyValue('Max Abs. Velocity', str(js.max_abs_velocity)),
         KeyValue('Max Abs. Effort', str(js.max_abs_effort)),
-        KeyValue('Limits Hit', str(js.violated_limits))]
+        KeyValue('Limits Hit', str(js.violated_limits)) ]
     
     return ds
 
@@ -101,7 +101,7 @@ def state_cb(msg):
         d.header.stamp = msg.header.stamp
         if msg.joint_statistics == []:
             ds = DiagnosticStatus()
-            ds.level = 1
+            ds.level = 0
             ds.message = 'No Joint states published by the controller manager'
             ds.name = "Joints: none"
             d.status = [ds]
