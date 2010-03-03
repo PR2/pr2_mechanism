@@ -30,7 +30,6 @@ on the effort/velocity/position of each joint.
 <depend package="rospy" />
 <depend package="rosparam" />
 <depend package="pluginlib" />
-<depend package="diagnostic_updater" />
 <export>
     <cpp cflags='-I${prefix}/include'
 	 lflags='-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lpr2_controller_manager'/>

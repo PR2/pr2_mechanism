@@ -20,4 +20,3 @@ target_link_libraries(test_robot ${PROJECT_NAME})
 rosbuild_add_gtest_build_flags(test_controllers)
 rosbuild_add_rostest(test/controller_test.launch)
 
-rosbuild_add_executable(pr2_mechanism_diagnostics src/pr2_mechanism_diagnostics.cpp)
