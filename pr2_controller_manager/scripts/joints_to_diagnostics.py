@@ -26,6 +26,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import with_statement
+
 import roslib; roslib.load_manifest('pr2_controller_manager')
 import rospy
 
@@ -33,6 +35,9 @@ from pr2_mechanism_msgs.msg import MechanismStatistics
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 
 import math
+
+import threading
+mutex = threading.Lock()
 
 has_warned_invalid = False
 
@@ -69,10 +74,6 @@ def joint_to_diag(js):
             rospy.logerr("Infinite value for joint data. pr2_controller_manager restart required.")
             has_warned_invalid = True
 
-    # Comment out because this causes confusing warnings
-    #elif js.violated_limits:
-    #    ds.level = 1
-    #    ds.message = 'Joint limits violated'
     ds.name = "Joint (%s)" % js.name
     ds.values = [
         KeyValue('Position', str(js.position)),
@@ -89,26 +90,45 @@ def joint_to_diag(js):
     
     return ds
 
-rospy.init_node('joints_to_diagnostics')
-pub_diag = rospy.Publisher('/diagnostics', DiagnosticArray)
 
-last_publish_time = rospy.Time(0.0)
+rospy.init_node('joints_to_diagnostics')
+
+last_msg = None
+last_update_time = 0
 def state_cb(msg):
-    global last_publish_time
-    now = rospy.get_rostime()
-    if (now - last_publish_time).to_sec() > 1.0:
+    with mutex:
+        global last_msg, last_update_time
+        last_msg = msg
+        last_update_time = rospy.get_time()
+
+def publish_diags():
+    with mutex:
+        global last_msg, last_update_time
+        if last_msg is None:
+            return
+        
+        # Don't publish anything without updates
+        if rospy.get_time() - last_update_time > 3:
+            return
+        
         d = DiagnosticArray()
-        d.header.stamp = msg.header.stamp
-        if msg.joint_statistics == []:
+        d.header.stamp = last_msg.header.stamp
+        if last_msg.joint_statistics == []:
             ds = DiagnosticStatus()
             ds.level = 0
-            ds.message = 'No Joint states published by the controller manager'
+            ds.message = 'No Joint states from controller manager'
             ds.name = "Joints: none"
             d.status = [ds]
         else:
-            d.status = [joint_to_diag(js) for js in msg.joint_statistics]
+            d.status = [joint_to_diag(js) for js in last_msg.joint_statistics]
         pub_diag.publish(d)
-        last_publish_time = now
 
+pub_diag = rospy.Publisher('/diagnostics', DiagnosticArray)
 rospy.Subscriber('mechanism_statistics', MechanismStatistics, state_cb)
-rospy.spin()
+
+my_rate = rospy.Rate(1.0)
+while not rospy.is_shutdown():
+    my_rate.sleep()
+    publish_diags()
+
+
