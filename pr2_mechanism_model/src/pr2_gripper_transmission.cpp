@@ -238,7 +238,7 @@ void PR2GripperTransmission::computeGapStates(
   u                   = (a_*a_+b_*b_-h_*h_
                          -pow(L0_+MR*screw_reduction_/gear_ratio_,2))/(2.0*a_*b_);
   u                   = u < -1.0 ? -1.0 : u > 1.0 ? 1.0 : u;
-  theta               = theta0_ - phi0_ + acos(u);
+  double tmp_theta    = theta0_ - phi0_ + acos(u);
 
   //
   double arg          = 1.0 - pow(u,2);
@@ -249,7 +249,7 @@ void PR2GripperTransmission::computeGapStates(
 
   dtheta_dMR          = -1.0/sqrt(arg) * du_dMR; // derivative of acos
 
-  dt_dtheta           = r_ * cos( theta );
+  dt_dtheta           = r_ * cos( tmp_theta );
   dt_dMR              = dt_dtheta * dtheta_dMR;
   gap_velocity        = MR_dot * dt_dMR;
 
@@ -333,34 +333,6 @@ void PR2GripperTransmission::getRateFromMaxRateJoint(
 }
 
 
-void PR2GripperTransmission::getAngleRateTorqueFromMinRateJoint(
-  std::vector<JointState*>& js, std::vector<Actuator*>& as,
-  int &min_rate_joint_index,double &angle,double &rate,double &torque)
-{
-
-  // obtain the physical location of passive joints in sim, and average them
-  angle  = 0.0;
-  double min_rate   = 1.0e12; // a ridiculously large value
-  torque = 0.0;
-  min_rate_joint_index = js.size();
-
-  // Loops through the passive joints.
-  for (size_t i = 1; i < js.size(); ++i)
-  {
-    if (fabs(js[i]->velocity_) < min_rate)
-    {
-      min_rate = fabs(js[i]->velocity_);
-      min_rate_joint_index = i;
-
-    }
-  }
-  assert(min_rate_joint_index < (int)js.size()); // some joint rate better be smaller than 1.0e12
-
-  angle             = angles::shortest_angular_distance(theta0_,js[min_rate_joint_index]->position_) + theta0_;
-  rate              = js[min_rate_joint_index]->velocity_;
-  torque            = js[min_rate_joint_index]->measured_effort_;
-}
-
 ///////////////////////////////////////////////////////////
 /// assign joint position, velocity, effort from actuator state
 /// all passive joints are assigned by single actuator state through mimic?
@@ -408,6 +380,7 @@ void PR2GripperTransmission::propagatePosition(
   js[0]->measured_effort_ = gap_effort/2.0;
 
   // Determines the states of the passive joints.
+  // we need to do this for each finger, in simulation, each finger has it's state filled out
   for (size_t i = 1; i < js.size(); ++i)
   {
     js[i]->position_       = theta - theta0_;
@@ -424,9 +397,11 @@ void PR2GripperTransmission::propagatePositionBackwards(
   ROS_ASSERT(js.size() == passive_joints_.size() + 1);
 
   // keep the simulation stable by using the minimum rate joint to compute gripper gap rate
-  int min_rate_joint_index;
   double joint_angle, joint_rate, joint_torque;
-  getAngleRateTorqueFromMinRateJoint(js, as, min_rate_joint_index, joint_angle, joint_rate, joint_torque);
+  // use the same passive joint for determining gipper position, so forward/backward are consistent
+  joint_angle             = js[default_passive_joint_index_from_sim]->position_; // js position should be normalized
+  joint_rate              = js[default_passive_joint_index_from_sim]->velocity_;
+  joint_torque            = js[default_passive_joint_index_from_sim]->measured_effort_;
 
   // recover gripper intermediate variable theta from joint angle
   double theta            = angles::shortest_angular_distance(theta0_,joint_angle)+2.0*theta0_;
@@ -434,6 +409,7 @@ void PR2GripperTransmission::propagatePositionBackwards(
   // compute inverse transform for the gap joint, returns MR and dMR_dtheta
   double MR,dMR_dtheta,dtheta_dt,dMR_dt;
   inverseGapStates(theta,MR,dMR_dtheta,dtheta_dt,dMR_dt);
+  //ROS_INFO("prop pos back: %f %f",theta,MR);
 
 
   double gap_effort                   = js[0]->commanded_effort_; // effort at the gap (Newtons)
@@ -463,9 +439,11 @@ void PR2GripperTransmission::propagateEffort(
   //
   // using the min rate joint for the sake of sim stability before true non-dynamics mimic is implemented
   //
-  int min_rate_joint_index;
   double joint_angle, joint_rate, joint_torque;
-  getAngleRateTorqueFromMinRateJoint(js, as, min_rate_joint_index, joint_angle, joint_rate, joint_torque);
+  // use the same passive joint for determining gipper position, so forward/backward are consistent
+  joint_angle             = js[default_passive_joint_index_from_sim]->position_; // js position should be normalized
+  joint_rate              = js[default_passive_joint_index_from_sim]->velocity_;
+  joint_torque            = js[default_passive_joint_index_from_sim]->measured_effort_;
 
   // recover gripper intermediate variable theta from joint angle
   double theta            = angles::shortest_angular_distance(theta0_,joint_angle)+2.0*theta0_;

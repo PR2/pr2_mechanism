@@ -54,7 +54,7 @@ namespace pr2_mechanism_model {
 class PR2GripperTransmission : public Transmission
 {
 public:
-  PR2GripperTransmission() {}
+  PR2GripperTransmission() {default_passive_joint_index_from_sim=1;}
   virtual ~PR2GripperTransmission() {/*myfile.close();*/}
 
   bool initXml(TiXmlElement *config, Robot *robot);
@@ -90,9 +90,10 @@ private:
   void getRateFromMaxRateJoint(std::vector<pr2_mechanism_model::JointState*>& js,
                                std::vector<pr2_hardware_interface::Actuator*>& as,
     int &maxRateJointIndex,double &rate);
-  void getAngleRateTorqueFromMinRateJoint(std::vector<pr2_mechanism_model::JointState*>& js,
-                                          std::vector<pr2_hardware_interface::Actuator*>& as,
-    int &minRateJointIndex,double &angle,double &rate,double &torque);
+
+  // use the same passive joint for determining gipper position, so forward/backward are consistent
+  int default_passive_joint_index_from_sim;
+
   //
   // SOME CONSTANTS
   // the default theta0 when gap size is 0 is needed to assign passive joint angles
