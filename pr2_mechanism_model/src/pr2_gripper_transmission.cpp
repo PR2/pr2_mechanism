@@ -327,7 +327,8 @@ void PR2GripperTransmission::getRateFromMaxRateJoint(
 
     }
   }
-  assert(max_rate_joint_index < (int)js.size());
+  if (max_rate_joint_index >= (int)js.size())
+    ROS_ERROR("PR2 Gripper Transmission could not find a passive joint with minimum rate, mostly likely finger joints have exploded.  js[0:4]->velocity_=(%f,%f,%f,%f,%f)",js[0]->velocity_,js[1]->velocity_,js[2]->velocity_,js[3]->velocity_,js[4]->velocity_);
 
   rate = js[max_rate_joint_index]->velocity_;
 }
