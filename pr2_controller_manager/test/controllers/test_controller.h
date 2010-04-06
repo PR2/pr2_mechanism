@@ -25,6 +25,7 @@ private:
   KDL::Chain kdl_chain_;
   ros::Time time_of_last_cycle_;
   double max_effort_;
+  unsigned int counter_;
 
 public:
   bool init(pr2_mechanism_model::RobotState *robot,

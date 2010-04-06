@@ -84,6 +84,7 @@ bool MyControllerClass::init(pr2_mechanism_model::RobotState *robot,
 /// Controller startup in realtime
 void MyControllerClass::starting()
 {
+  counter_ = 0;
   time_of_last_cycle_ = robot_->getTime();
 }
 
@@ -91,7 +92,9 @@ void MyControllerClass::starting()
 /// Controller update loop in realtime
 void MyControllerClass::update()
 {
-  if (pub_->trylock()){
+  counter_++;
+  if (counter_ > 10 && pub_->trylock()){
+    counter_ = 0;
     pub_->msg_.effort[0] = fabs(joint_state_->commanded_effort_) - max_effort_; // this should never be greater than zero
     pub_->unlockAndPublish();
   }

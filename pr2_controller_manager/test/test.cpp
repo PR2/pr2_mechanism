@@ -525,7 +525,7 @@ TEST_F(TestController, publisher_hz)
     ros::Duration(0.1).sleep();
   callback1_counter_ = 0;
   ros::Duration(5.0).sleep();
-  EXPECT_NEAR(callback1_counter_, 5000, 200);
+  EXPECT_NEAR(callback1_counter_, 500, 50);
 
   sub1.shutdown();
   SUCCEED();
