@@ -261,16 +261,21 @@ void PR2GripperTransmission::computeGapStates(
   //            = MT                   / dt_dMR          * 2*pi
   //
   gap_effort          = MT      / dt_dMR / RAD2MR ;
-  //ROS_WARN("debug: %f %f %f",gap_effort,MT,dt_dMR,RAD2MR);
+  //ROS_WARN("debug forward: %f %f %f : %f %f %f",gap_size,gap_velocity,gap_effort,MT,dt_dMR,RAD2MR);
 }
 
 ///////////////////////////////////////////////////////////
 /// inverse of computeGapStates()
-/// need theta as input
+/// need gap size as input
 /// computes MR, dMR_dtheta, dtheta_dt, dMR_dt
 void PR2GripperTransmission::inverseGapStates(
-  double theta,double &MR,double &dMR_dtheta,double &dtheta_dt,double &dMR_dt)
+  double gap_size,double &MR,double &dMR_dtheta,double &dtheta_dt,double &dMR_dt)
 {
+
+  double sin_theta        = (gap_size - t0_)/r_ + sin(theta0_);
+  sin_theta = sin_theta > 1.0 ? 1.0 : sin_theta < -1.0 ? -1.0 : sin_theta;
+  double theta            = asin(sin_theta);
+
   // limit theta
   //theta = theta > 0 ? theta : 0;
   // force theta to be greater than theta0_
@@ -291,21 +296,23 @@ void PR2GripperTransmission::inverseGapStates(
     dMR_dtheta       = 0.0;
   }
 
-  // compute gap_size from theta
-  double gap_size = t0_ + r_ * ( sin(theta) - sin(theta0_) ); // in mm
-
   // compute inverse jacobians for the transform
   // for this, enforce dMR_dtheta >= 0
+  // if dMR_dtheta < 0, it might be the other root, i.e. negate it: -dMR_dtheta
   // @todo: this affects sim only, need to check this for sim.
-  double tmp_dMR_dtheta = dMR_dtheta >= 0.0 ? dMR_dtheta : 0.0;
+  double tmp_dMR_dtheta = fabs(dMR_dtheta);
 
-  double u           = (gap_size - t0_)/r_ + sin(theta0_);
-  double arg2        = 1.0 - pow(u,2);
+  double arg2        = 1.0 - pow(sin_theta,2);
   arg2               = arg2 > TOL ? arg2 : TOL; //LIMIT: CAP arg2 at TOL artificially
   dtheta_dt          = 1.0 / sqrt( arg2 ) / r_;  // derivative of asin
   dMR_dt             = tmp_dMR_dtheta * dtheta_dt;  // remember, here, t is gap_size
+  //ROS_WARN("debug inverse: %f : %f %f %f ---- %f %f --- %f %f",gap_size,dMR_dt,dtheta_dt,dMR_dtheta,arg,theta,sin_theta,arg2);
 }
 
+
+///////////////////////////////////////////////////////////
+/// loop through passive joints and get rates from max rate joint
+/// not needed with new gripper model
 void PR2GripperTransmission::getRateFromMaxRateJoint(
   std::vector<JointState*>& js, std::vector<Actuator*>& as,
   int &max_rate_joint_index,double &rate)
@@ -352,18 +359,6 @@ void PR2GripperTransmission::propagatePosition(
   /// \brief motor revolustions per second = motor angle rate (rad per second) / (2*pi)
   double MR_dot    = as[0]->state_.velocity_ / gap_mechanical_reduction_ * RAD2MR ;
 
-  ///
-  ///  old MT definition - obsolete
-  ///
-  ///        but we convert it to Nm*(MR/rad)
-  ///        motor torque = actuator_state->last_meausured_effort
-  ///        motor torque = I * theta_ddot
-  ///        MT           = I * MR_ddot  (my definition)
-  ///                     = I * theta_ddot / (2*pi)
-  ///                     = motot torque   / (2*pi)
-  //double MT        = as[0]->state_.last_measured_effort_ / gap_mechanical_reduction_ * RAD2MR ;
-
-
   /// \brief gripper motor torque: received from hardware side in newton-meters
   double MT        = as[0]->state_.last_measured_effort_ / gap_mechanical_reduction_;
 
@@ -376,16 +371,16 @@ void PR2GripperTransmission::propagatePosition(
   computeGapStates(MR,MR_dot,MT,theta,dtheta_dMR, dt_dtheta, dt_dMR,gap_size,gap_velocity,gap_effort);
 
   // Determines the state of the gap joint.
-  js[0]->position_       = gap_size*2.0; // function engineering's transmission give half the total gripper size
-  js[0]->velocity_       = gap_velocity*2.0;
+  js[0]->position_        = gap_size*2.0; // function engineering's transmission give half the total gripper size
+  js[0]->velocity_        = gap_velocity*2.0;
   js[0]->measured_effort_ = gap_effort/2.0;
 
   // Determines the states of the passive joints.
   // we need to do this for each finger, in simulation, each finger has it's state filled out
   for (size_t i = 1; i < js.size(); ++i)
   {
-    js[i]->position_       = theta - theta0_;
-    js[i]->velocity_       = dtheta_dMR * MR_dot;
+    js[i]->position_        = theta - theta0_;
+    js[i]->velocity_        = dtheta_dMR * MR_dot;
     js[i]->measured_effort_ = MT / dtheta_dMR / RAD2MR;
   }
 }
@@ -397,31 +392,62 @@ void PR2GripperTransmission::propagatePositionBackwards(
   ROS_ASSERT(as.size() == 1);
   ROS_ASSERT(js.size() == passive_joints_.size() + 1);
 
+  // transforms
+  double MR,dMR_dtheta,dtheta_dt,dMR_dt;
   // keep the simulation stable by using the minimum rate joint to compute gripper gap rate
-  double joint_angle, joint_rate, joint_torque;
-  // use the same passive joint for determining gipper position, so forward/backward are consistent
-  joint_angle             = js[default_passive_joint_index_from_sim]->position_; // js position should be normalized
-  joint_rate              = js[default_passive_joint_index_from_sim]->velocity_;
-  joint_torque            = js[default_passive_joint_index_from_sim]->measured_effort_;
+  double gap_size, gap_rate, gap_effort;
+  // to stay backwards compatible with new gripper model: determine which joint ot use to get velocity
+  if (js[0]->joint_->child_link_name.empty() && js[0]->joint_->parent_link_name.empty())
+  {
+    // old gripper model has no physical slider joint
+    double joint_angle, joint_rate, joint_torque;
+    int default_passive_joint_index_from_sim = 1;
+    // use the same passive joint for determining gipper position, so forward/backward are consistent
+    joint_angle             = js[default_passive_joint_index_from_sim]->position_; // js position should be normalized
+    joint_rate              = js[default_passive_joint_index_from_sim]->velocity_;
+    joint_torque            = js[default_passive_joint_index_from_sim]->measured_effort_;
+    // recover gripper intermediate variable theta from joint angle
+    double theta            = angles::shortest_angular_distance(theta0_,joint_angle)+2.0*theta0_;
+    // compute gap_size from theta, in this code, gap_size denotes half the gripper opening for consistency with theta
+    gap_size = (t0_ + r_ * (sin(theta) - sin(theta0_)));
+
+    // compute inverse transform for the gap joint, returns MR and dMR_dtheta
+    inverseGapStates(gap_size,MR,dMR_dtheta,dtheta_dt,dMR_dt);
+
+    // compute gap rate
+    if (dtheta_dt != 0.0) gap_rate = joint_rate / dtheta_dt;
+    else                  gap_rate = 0; // should not be
+
+    // compute gap effort
+    gap_effort = js[0]->commanded_effort_;
+  }
+  else
+  {
+    // new gripper model has an actual physical slider joint in simulation
+    // use the new slider joint for determining gipper position, so forward/backward are consistent
+    gap_size              = js[0]->position_/2.0; // js position should be normalized
+    // compute inverse transform for the gap joint, returns MR and dMR_dtheta
+    inverseGapStates(gap_size,MR,dMR_dtheta,dtheta_dt,dMR_dt);
+    gap_rate              = js[0]->velocity_/2.0;
+    gap_effort            = js[0]->measured_effort_;
+  }
+
 
   // recover gripper intermediate variable theta from joint angle
-  double theta            = angles::shortest_angular_distance(theta0_,joint_angle)+2.0*theta0_;
-
-  // compute inverse transform for the gap joint, returns MR and dMR_dtheta
-  double MR,dMR_dtheta,dtheta_dt,dMR_dt;
-  inverseGapStates(theta,MR,dMR_dtheta,dtheta_dt,dMR_dt);
-  //ROS_INFO("prop pos back: %f %f",theta,MR);
+  //double theta            = angles::shortest_angular_distance(theta0_,joint_position)+2.0*theta0_;
 
 
-  double gap_effort                   = js[0]->commanded_effort_; // effort at the gap (Newtons)
   /// should be exact inverse of propagatePosition() call
   as[0]->state_.position_             = MR                        * gap_mechanical_reduction_ / RAD2MR ;
 
-  /// state velocity                  = MR_dot                    * gap_mechanical_reduction_ / rad2mr
-  ///                                 = theta_dot    * dMR_dtheta * gap_mechanical_reduction_ / rad2mr
-  as[0]->state_.velocity_             = joint_rate   * dMR_dtheta * gap_mechanical_reduction_ / RAD2MR ;
+  /// state velocity                  = MR_dot                            * gap_mechanical_reduction_ / rad2mr
+  ///                                 = theta_dot            * dMR_dtheta * gap_mechanical_reduction_ / rad2mr
+  ///                                 = t_dot    * dtheta_dt * dMR_dtheta * gap_mechanical_reduction_ / rad2mr
+  ///                                 = t_dot    * dMR_dt                 * gap_mechanical_reduction_ / rad2mr
+  as[0]->state_.velocity_             = gap_rate * dtheta_dt * dMR_dtheta * gap_mechanical_reduction_ / RAD2MR ;
 
   /// motor torque                    = inverse of getting gap effort from motor torque
+  ///                                 = gap_effort * dt_dMR / (2*pi)  * gap_mechanical_reduction_
   ///                                 = gap_effort * dt_dMR / (2*pi)  * gap_mechanical_reduction_
   ///                                 = gap_effort / dMR_dt * RAD2MR * gap_mechanical_reduction_
   as[0]->state_.last_measured_effort_ = gap_effort / dMR_dt * RAD2MR * gap_mechanical_reduction_;
@@ -440,24 +466,47 @@ void PR2GripperTransmission::propagateEffort(
   //
   // using the min rate joint for the sake of sim stability before true non-dynamics mimic is implemented
   //
-  double joint_angle, joint_rate, joint_torque;
-  // use the same passive joint for determining gipper position, so forward/backward are consistent
-  joint_angle             = js[default_passive_joint_index_from_sim]->position_; // js position should be normalized
-  joint_rate              = js[default_passive_joint_index_from_sim]->velocity_;
-  joint_torque            = js[default_passive_joint_index_from_sim]->measured_effort_;
-
-  // recover gripper intermediate variable theta from joint angle
-  double theta            = angles::shortest_angular_distance(theta0_,joint_angle)+2.0*theta0_;
-
-  // now do the reverse transform
+  // transforms
   double MR,dMR_dtheta,dtheta_dt,dMR_dt;
-  // compute inverse transform for the gap joint, returns MR and dMR_dtheta
-  inverseGapStates(theta,MR,dMR_dtheta,dtheta_dt,dMR_dt);
+  // gap state
+  double gap_size,gap_rate,gap_effort;
+  // to stay backwards compatible with new gripper model: determine which joint ot use to get velocity
+  if (js[0]->joint_->child_link_name.empty() && js[0]->joint_->parent_link_name.empty())
+  {
+    // old gripper model has no physical slider joint
+    double joint_angle, joint_rate, joint_torque;
+    int default_passive_joint_index_from_sim = 1;
+    // use the same passive joint for determining gipper position, so forward/backward are consistent
+    joint_angle             = js[default_passive_joint_index_from_sim]->position_; // js position should be normalized
+    joint_rate              = js[default_passive_joint_index_from_sim]->velocity_;
+    joint_torque            = js[default_passive_joint_index_from_sim]->measured_effort_;
+    // recover gripper intermediate variable theta from joint angle
+    double theta            = angles::shortest_angular_distance(theta0_,joint_angle)+2.0*theta0_;
+    // compute gap_size from theta
+    gap_size = (t0_ + r_ * (sin(theta) - sin(theta0_)));
 
+    // compute inverse transform for the gap joint, returns MR and dMR_dtheta
+    inverseGapStates(gap_size,MR,dMR_dtheta,dtheta_dt,dMR_dt);
 
-  double gap_effort             = js[0]->commanded_effort_; /// Newtons
+    // compute gap rate
+    if (dtheta_dt != 0.0) gap_rate = joint_rate / dtheta_dt;
+    else                  gap_rate = 0; // should not be
+
+    // compute gap effort
+    gap_effort = 2.0*js[0]->commanded_effort_;
+  }
+  else
+  {
+    // use the same passive joint for determining gipper position, so forward/backward are consistent
+    gap_size          = js[0]->position_/2.0; // js position should be normalized
+    // compute inverse transform for the gap joint, returns MR and dMR_dtheta
+    inverseGapStates(gap_size,MR,dMR_dtheta,dtheta_dt,dMR_dt);
+    gap_rate          = js[0]->velocity_/2.0;
+    gap_effort        = js[0]->commanded_effort_;
+  }
+
   /// actuator commanded effort = gap_dffort / dMR_dt / (2*pi)  * gap_mechanical_reduction_
-  as[0]->command_.effort_       = 2.0 * gap_effort / dMR_dt * RAD2MR * gap_mechanical_reduction_; // divide by 2 because torque is transmitted to 2 fingers
+  as[0]->command_.effort_       = gap_effort / dMR_dt * RAD2MR * gap_mechanical_reduction_; // divide by 2 because torque is transmitted to 2 fingers
 }
 
 void PR2GripperTransmission::propagateEffortBackwards(
@@ -483,34 +532,43 @@ void PR2GripperTransmission::propagateEffortBackwards(
   computeGapStates(MR,MR_dot,MT,theta,dtheta_dMR, dt_dtheta, dt_dMR,gap_size,gap_velocity,gap_effort);
 
   // propagate fictitious joint effort backwards
-  js[0]->commanded_effort_ = gap_effort;
+  // since right now we have no way to simulating gripper dynamics exactly,
+  // as an approximation, we'll ramp up gap effort slowly
+  double eps = 0.01;
+  js[0]->commanded_effort_ = ((1.0-eps)*js[0]->commanded_effort_ + eps*gap_effort);
+  //ROS_WARN("joint %s = %f (%f)",js[0]->joint_->name.c_str(),gap_effort,MT);
 
-  for (size_t i = 1; i < js.size(); ++i)
-  {
+  // command finger torques if using old gripper
+  // to stay backwards compatible with new gripper model: determine which joint ot use to get velocity
+  if (js[0]->joint_->child_link_name.empty() && js[0]->joint_->parent_link_name.empty())
+    // old gripper model has no physical slider joint
+    for (size_t i = 1; i < js.size(); ++i)
+    {
 
-    // enforce all gripper positions based on gap position
-    // check to see how off each finger link is
+      // enforce all gripper positions based on gap position
+      // check to see how off each finger link is
 
-    // now do the reverse transform
-    // get individual passive joint error
-    //double joint_theta              = theta0_ + angles::normalize_angle_positive(js[i]->position_);
-    double joint_theta              = angles::shortest_angular_distance(theta0_,js[i]->position_) + 2.0*theta0_;
-    // now do the reverse transform
-    double joint_MR,joint_dMR_dtheta,joint_dtheta_dt,joint_dMR_dt;
-    // compute inverse transform for the gap joint, returns MR and dMR_dtheta
-    inverseGapStates(joint_theta,joint_MR,joint_dMR_dtheta,joint_dtheta_dt,joint_dMR_dt);
+      // now do the reverse transform
+      // get individual passive joint error
+      //double joint_theta              = theta0_ + angles::normalize_angle_positive(js[i]->position_);
+      double joint_theta              = angles::shortest_angular_distance(theta0_,js[i]->position_) + 2.0*theta0_;
+      // now do the reverse transform
+      double joint_MR,joint_dMR_dtheta,joint_dtheta_dt,joint_dMR_dt;
+      // compute inverse transform for the gap joint, returns MR and dMR_dtheta
+      inverseGapStates(joint_theta,joint_MR,joint_dMR_dtheta,joint_dtheta_dt,joint_dMR_dt);
 
 
-    // @todo: due to high transmission ratio, MT is too large for the damping available
-    // with the given time step size in sim, so until implicit damping is implemented,
-    // we'll scale MT with inverse of velocity to some power
-    int max_joint_rate_index;
-    double scale=1.0,rate_threshold=0.5;
-    double max_joint_rate;
-    getRateFromMaxRateJoint(js, as, max_joint_rate_index, max_joint_rate);
-    if (fabs(max_joint_rate)>rate_threshold) scale /= pow(fabs(max_joint_rate/rate_threshold),2.0);
-    //std::cout << "rate " << max_joint_rate << " absrate " << fabs(max_joint_rate) << " scale " << scale << std::endl;
-    // sum joint torques from actuator motor and mimic constraint and convert to joint torques
-    js[i]->commanded_effort_   = scale*MT / dtheta_dMR;
-  }
+      // @todo: due to high transmission ratio, MT is too large for the damping available
+      // with the given time step size in sim, so until implicit damping is implemented,
+      // we'll scale MT with inverse of velocity to some power
+      int max_joint_rate_index;
+      double scale=1.0,rate_threshold=0.5;
+      double max_joint_rate;
+      getRateFromMaxRateJoint(js, as, max_joint_rate_index, max_joint_rate);
+      if (fabs(max_joint_rate)>rate_threshold) scale /= pow(fabs(max_joint_rate/rate_threshold),2.0);
+      //std::cout << "rate " << max_joint_rate << " absrate " << fabs(max_joint_rate) << " scale " << scale << std::endl;
+      // sum joint torques from actuator motor and mimic constraint and convert to joint torques
+      double eps2 = 0.01;
+      js[i]->commanded_effort_ = ((1.0-eps2)*js[i]->commanded_effort_ + eps2*scale*MT/dtheta_dMR);
+    }
 }
