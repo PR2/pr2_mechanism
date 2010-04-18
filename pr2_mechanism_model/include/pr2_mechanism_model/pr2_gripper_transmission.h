@@ -54,7 +54,7 @@ namespace pr2_mechanism_model {
 class PR2GripperTransmission : public Transmission
 {
 public:
-  PR2GripperTransmission() {}
+  PR2GripperTransmission() {default_passive_joint_index_from_sim=1;use_simulated_slider_joint_=false;}
   virtual ~PR2GripperTransmission() {/*myfile.close();*/}
 
   bool initXml(TiXmlElement *config, Robot *robot);
@@ -82,15 +82,23 @@ public:
   std::vector<std::string> passive_joints_;
 
 private:
+  /// \brief skip apply torque to passive joints in simulation.
+  ///  new gripper model has a slider at the gripper tip, so apply force there.
+  bool use_simulated_slider_joint_;
+
   /// \brief compute gap position, velocity and measured effort from actuator states
   void computeGapStates(double MR,double MR_dot,double MT,
                         double &theta,double &dtheta_dMR,double &dt_dtheta,double &dt_dMR,double &gap_size,double &gap_velocity,double &gap_effort);
-  void inverseGapStates(double gap_size,double &MR, double &dMR_dtheta,double &dtheta_dt,double &dMR_dt);
-
+  void inverseGapStates(double theta,double &MR, double &dMR_dtheta,double &dtheta_dt,double &dMR_dt);
+  //std::ofstream myfile;
   void getRateFromMaxRateJoint(std::vector<pr2_mechanism_model::JointState*>& js,
                                std::vector<pr2_hardware_interface::Actuator*>& as,
-                               int &maxRateJointIndex,double &rate);
+    int &maxRateJointIndex,double &rate);
 
+  // use the same passive joint for determining gipper position, so forward/backward are consistent
+  int default_passive_joint_index_from_sim;
+
+  //
   // SOME CONSTANTS
   // the default theta0 when gap size is 0 is needed to assign passive joint angles
   //
@@ -106,7 +114,7 @@ private:
   double r_              ; //   default for alpha2 = 91.50000/1000.0; // convert to meters
 
 #define RAD2MR (1.0/(2.0*M_PI)) // convert radians to motor revolutions
-#define TOL 0.00000001   // limit for denominators
+#define TOL 0.00001   // limit for denominators
 };
 
 } // namespace pr2_mechanism_model
