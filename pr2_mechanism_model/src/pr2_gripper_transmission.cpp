@@ -557,7 +557,7 @@ void PR2GripperTransmission::propagateEffortBackwards(
     //std::cout << "rate " << max_joint_rate << " absrate " << fabs(max_joint_rate) << " scale " << scale << std::endl;
     // sum joint torques from actuator motor and mimic constraint and convert to joint torques
     double eps2=0.01;
-    js[i]->commanded_effort_ = (1.0-eps2)*js[i]->commanded_effort_ + eps2*scale*MT / dtheta_dMR;
-    //ROS_ERROR("prop eff back eff[%d]=%f",i,js[i]->commanded_effort_);
+    js[i]->commanded_effort_ = (1.0-eps2)*js[i]->commanded_effort_ + eps2*scale*MT / dtheta_dMR / RAD2MR /2.0;
+    //ROS_ERROR("prop eff back eff[%d]=%f, %f, %f",i,js[i]->commanded_effort_,MT,dtheta_dMR);
   }
 }
