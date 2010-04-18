@@ -54,7 +54,7 @@ namespace pr2_mechanism_model {
 class PR2GripperTransmission : public Transmission
 {
 public:
-  PR2GripperTransmission() {default_passive_joint_index_from_sim=1;use_simulated_slider_joint_=false;}
+  PR2GripperTransmission() {default_passive_joint_index_from_sim=1;}
   virtual ~PR2GripperTransmission() {/*myfile.close();*/}
 
   bool initXml(TiXmlElement *config, Robot *robot);
@@ -84,7 +84,7 @@ public:
 private:
   /// \brief skip apply torque to passive joints in simulation.
   ///  new gripper model has a slider at the gripper tip, so apply force there.
-  bool use_simulated_slider_joint_;
+  std::vector<std::string> simulated_gripper_joint_;
 
   /// \brief compute gap position, velocity and measured effort from actuator states
   void computeGapStates(double MR,double MR_dot,double MT,
