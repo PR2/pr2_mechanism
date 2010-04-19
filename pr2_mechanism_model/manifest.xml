@@ -11,9 +11,7 @@
   kinematic/dynamic model of the robot. 
 </p>
 <p>
-  The pr2_mechanism_model package is still under very active development.
-  Future releases of this package will likely have a very
-  different API than the current release.
+  The pr2_mechanism_model package is well tested and is released with a stable API.
 </p>
 </description>
 <author>Eric Berger berger@willowgarage.com, Stuart Glaser, Wim Meeussen</author>
