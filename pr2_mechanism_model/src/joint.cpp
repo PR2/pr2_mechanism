@@ -73,17 +73,28 @@ void JointStatistics::reset()
 
 void JointState::enforceLimits()
 {
-  // only enforce joints that specify joint limits and safety code
-  if (!joint_->safety || !joint_->limits)
-    return;
+  double effort_high, effort_low;
 
-  if (isnan(commanded_effort_) || isinf(commanded_effort_))
-    commanded_effort_ = 0.0;
+  getLimits(effort_low, effort_high);
+
+  // limit the commanded effort based on position, velocity and effort limits
+  commanded_effort_ =
+    min( max(commanded_effort_, effort_low), effort_high);
+}
+
+void JointState::getLimits(double &effort_low, double &effort_high)
+{
+  // only enforce joints that specify joint limits and safety code
+  if (!joint_->safety || !joint_->limits) {
+    effort_low = std::numeric_limits<double>::min();
+    effort_high = std::numeric_limits<double>::max();
+    return;
+  }
 
   double vel_high = joint_->limits->velocity;
   double vel_low = -joint_->limits->velocity;
-  double effort_high = joint_->limits->effort;
-  double effort_low = -joint_->limits->effort;
+  effort_high = joint_->limits->effort;
+  effort_low = -joint_->limits->effort;
 
   // enforce position bounds on rotary and prismatic joints that are calibrated
   if (calibrated_ && (joint_->type == urdf::Joint::REVOLUTE || joint_->type == urdf::Joint::PRISMATIC))
@@ -105,11 +116,6 @@ void JointState::enforceLimits()
   effort_low = min(joint_->limits->effort,
                    max(-joint_->limits->effort,
                        -joint_->safety->k_velocity * (velocity_ - vel_low)));
-
-
-  // limit the commanded effort based on position, velocity and effort limits
-  commanded_effort_ =
-    min( max(commanded_effort_, effort_low), effort_high);
 }
 
 

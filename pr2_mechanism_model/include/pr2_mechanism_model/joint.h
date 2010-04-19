@@ -48,7 +48,7 @@ class JointState;
 class JointStatistics
 {
  public:
-  JointStatistics():odometer_(0.0), max_abs_velocity_(0.0), max_abs_effort_(0.0), 
+  JointStatistics():odometer_(0.0), max_abs_velocity_(0.0), max_abs_effort_(0.0),
     violated_limits_(false), initialized_(false){}
 
   void update(JointState* s);
@@ -70,14 +70,17 @@ class JointStatistics
 class JointState
 {
 public:
-  /// Modify the commanded_effort_ of the joint state so that the joint limits are satisfied  
+  /// Modify the commanded_effort_ of the joint state so that the joint limits are satisfied
   void enforceLimits();
+
+  /// Returns the safety effort limits given the current position and velocity.
+  void getLimits(double &effort_low, double &effort_high);
 
   /// A pointer to the corresponding urdf::Joint from the urdf::Model
   boost::shared_ptr<const urdf::Joint> joint_;
 
   /// The joint position in radians or meters (read-only variable)
-  double position_;  
+  double position_;
 
   /// The joint velocity in randians/sec or meters/sec (read-only variable)
   double velocity_;
