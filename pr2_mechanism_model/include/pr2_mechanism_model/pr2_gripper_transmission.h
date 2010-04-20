@@ -82,6 +82,10 @@ public:
   std::vector<std::string> passive_joints_;
 
 private:
+  /// \brief skip apply torque to passive joints in simulation.
+  ///  new gripper model has a slider at the gripper tip, so apply force there.
+  std::vector<std::string> simulated_gripper_joint_;
+
   /// \brief compute gap position, velocity and measured effort from actuator states
   void computeGapStates(double MR,double MR_dot,double MT,
                         double &theta,double &dtheta_dMR,double &dt_dtheta,double &dt_dMR,double &gap_size,double &gap_velocity,double &gap_effort);
