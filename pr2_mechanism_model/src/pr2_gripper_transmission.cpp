@@ -226,34 +226,8 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config, Robot *robot)
     passive_joints_.push_back(joint_name);
   }
 
-  // Check if simulated gripper joint exists
-  for (TiXmlElement *j = config->FirstChildElement("simulated_gripper_joint"); j; j = j->NextSiblingElement("simulated_gripper_joint"))
-  {
-    if (!simulated_gripper_joint_.empty())
-    {
-      ROS_ERROR("PR2GripperTransmission: has more than one simulated gripper joint name");
-      return false;
-    }
-
-    const char *joint_name = j->Attribute("name");
-    if (!joint_name)
-    {
-      ROS_ERROR("PR2GripperTransmission did not specify simulated gripper joint name");
-      return false;
-    }
-    const boost::shared_ptr<const urdf::Joint> joint = robot->robot_model_.getJoint(joint_name);
-
-    if (!joint)
-    {
-      ROS_ERROR("PR2GripperTransmission could not find simulated gripper joint named \"%s\"", joint_name);
-      return false;
-    }
-
-    // add joint name to list
-    joint_names_.push_back(joint_name);  // Adds the simulated gripper joint after the passive joints
-    simulated_gripper_joint_.push_back(joint_name);
-    //ROS_DEBUG("PR2GripperTransmission: simulated gripper joint named \"%s\"", joint_name);
-  }
+  // if simulated gripper prismatic joint exists, use it
+  if (config->FirstChildElement("use_simulated_gripper_joint")) use_simulated_gripper_joint = true;
 
   return true;
 }
@@ -392,7 +366,7 @@ void PR2GripperTransmission::propagatePosition(
 {
 
   ROS_ASSERT(as.size() == 1);
-  ROS_ASSERT(js.size() == 1 + passive_joints_.size() + simulated_gripper_joint_.size()); // passive joints, simulated gripper joint and 1 gap joint
+  ROS_ASSERT(js.size() == 1 + passive_joints_.size()); // passive joints and 1 gap joint
 
   /// \brief motor revolutions = encoder value * gap_mechanical_reduction_ * RAD2MR
   ///        motor revolutions =      motor angle(rad)                     / (2*pi)
@@ -446,16 +420,16 @@ void PR2GripperTransmission::propagatePositionBackwards(
   std::vector<JointState*>& js, std::vector<Actuator*>& as)
 {
   ROS_ASSERT(as.size() == 1);
-  ROS_ASSERT(js.size() == 1 + passive_joints_.size() + simulated_gripper_joint_.size());
+  ROS_ASSERT(js.size() == 1 + passive_joints_.size());
 
   // keep the simulation stable by using the minimum rate joint to compute gripper gap rate
   double MR,dMR_dtheta,dtheta_dt,dMR_dt;
   double joint_angle, joint_rate;
-  if (!simulated_gripper_joint_.empty())
+  if (use_simulated_gripper_joint)
   {
     // new gripper model has an actual physical slider joint in simulation
     // use the new slider joint for determining gipper position, so forward/backward are consistent
-    double gap_size         = js[passive_joints_.size()+1]->position_/2.0; // js position should be normalized
+    double gap_size         = js[0]->position_/2.0; // js position should be normalized
     // get theta for jacobian calculation
     double sin_theta        = (gap_size - t0_)/r_ + sin(theta0_);
     sin_theta = sin_theta > 1.0 ? 1.0 : sin_theta < -1.0 ? -1.0 : sin_theta;
@@ -463,7 +437,7 @@ void PR2GripperTransmission::propagatePositionBackwards(
 
     // compute inverse transform for the gap joint, returns MR and dMR_dtheta
     inverseGapStates(theta,MR,dMR_dtheta,dtheta_dt,dMR_dt);
-    double gap_rate         = js[passive_joints_.size()+1]->velocity_/2.0;
+    double gap_rate         = js[0]->velocity_/2.0;
     joint_rate              = gap_rate * dtheta_dt;
   }
   else
@@ -498,7 +472,7 @@ void PR2GripperTransmission::propagateEffort(
   std::vector<JointState*>& js, std::vector<Actuator*>& as)
 {
   ROS_ASSERT(as.size() == 1);
-  ROS_ASSERT(js.size() == 1 + passive_joints_.size() + simulated_gripper_joint_.size());
+  ROS_ASSERT(js.size() == 1 + passive_joints_.size());
 
   //
   // in hardware, the position of passive joints are set by propagatePosition, so they should be identical and
@@ -532,7 +506,7 @@ void PR2GripperTransmission::propagateEffortBackwards(
   std::vector<Actuator*>& as, std::vector<JointState*>& js)
 {
   ROS_ASSERT(as.size() == 1);
-  ROS_ASSERT(js.size() == 1 + passive_joints_.size() + simulated_gripper_joint_.size());
+  ROS_ASSERT(js.size() == 1 + passive_joints_.size());
 
   //
   // below transforms from encoder value to gap size, based on 090224_link_data.xls provided by Functions Engineering
@@ -550,12 +524,11 @@ void PR2GripperTransmission::propagateEffortBackwards(
   // compute gap position, velocity, measured_effort from actuator states
   computeGapStates(MR,MR_dot,MT,theta,dtheta_dMR, dt_dtheta, dt_dMR,gap_size,gap_velocity,gap_effort);
 
-  if (!simulated_gripper_joint_.empty())
+  if (use_simulated_gripper_joint)
   {
     // propagate fictitious joint effort backwards
     double eps=0.01;
     js[0]->commanded_effort_  = (1.0-eps)*js[0]->commanded_effort_ + eps*gap_effort;
-    js[passive_joints_.size()+1]->commanded_effort_  = (1.0-eps)*js[passive_joints_.size()+1]->commanded_effort_ + eps*gap_effort;
     //ROS_ERROR("prop eff back eff=%f",js[0]->commanded_effort_);
   }
   else
