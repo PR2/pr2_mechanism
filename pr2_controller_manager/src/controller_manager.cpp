@@ -261,6 +261,23 @@ bool ControllerManager::loadController(const std::string& name)
   {
     ROS_DEBUG("Constructing controller '%s' of type '%s'", name.c_str(), type.c_str());
     try {
+      // Backwards compatibility for using non-namespaced controller types
+      if (!controller_loader_->isClassAvailable(type))
+      {
+        std::vector<std::string> classes = controller_loader_->getDeclaredClasses();
+        for(unsigned int i = 0; i < classes.size(); ++i)
+        {
+          if(type == controller_loader_->getName(classes[i]))
+          {
+            ROS_WARN("The deprecated controller type %s was not found.  Using the namespaced version %s instead.  "
+                     "Please update your configuration to use the namespaced version.",
+                     type.c_str(), classes[i].c_str());
+            type = classes[i];
+            break;
+          }
+        }
+      }
+
       c = controller_loader_->createClassInstance(type, true);
     }
     catch (const std::runtime_error &ex)
