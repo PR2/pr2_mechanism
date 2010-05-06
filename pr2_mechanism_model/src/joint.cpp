@@ -86,7 +86,7 @@ void JointState::getLimits(double &effort_low, double &effort_high)
 {
   // only enforce joints that specify joint limits and safety code
   if (!joint_->safety || !joint_->limits) {
-    effort_low = std::numeric_limits<double>::min();
+    effort_low = -std::numeric_limits<double>::max();
     effort_high = std::numeric_limits<double>::max();
     return;
   }
