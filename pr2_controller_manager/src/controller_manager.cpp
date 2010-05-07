@@ -32,6 +32,7 @@
 #include "pr2_controller_manager/scheduler.h"
 #include <algorithm>
 #include <boost/thread/thread.hpp>
+#include <boost/thread/condition.hpp>
 #include <sstream>
 #include "ros/console.h"
 
