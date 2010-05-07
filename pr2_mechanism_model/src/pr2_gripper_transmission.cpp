@@ -428,7 +428,7 @@ void PR2GripperTransmission::propagatePosition(
   // Determines the state of the gap joint.
   js[0]->position_       = gap_size*2.0; // function engineering's transmission give half the total gripper size
   js[0]->velocity_       = gap_velocity*2.0;
-  js[0]->measured_effort_ = gap_effort;
+  js[0]->measured_effort_ = gap_effort/2.0;
   //ROS_ERROR("prop pos eff=%f",js[0]->measured_effort_);
 
   // Determines the states of the passive joints.
@@ -490,7 +490,7 @@ void PR2GripperTransmission::propagatePositionBackwards(
   /// motor torque                    = inverse of getting gap effort from motor torque
   ///                                 = gap_effort * dt_dMR / (2*pi)  * gap_mechanical_reduction_
   ///                                 = gap_effort / dMR_dt * RAD2MR * gap_mechanical_reduction_
-  as[0]->state_.last_measured_effort_ = gap_effort / dMR_dt * RAD2MR * gap_mechanical_reduction_;
+  as[0]->state_.last_measured_effort_ = 2.0*gap_effort / dMR_dt * RAD2MR * gap_mechanical_reduction_;
 
 }
 
@@ -525,7 +525,7 @@ void PR2GripperTransmission::propagateEffort(
   //ROS_ERROR("prop eff eff=%f",gap_effort);
 
   /// actuator commanded effort = gap_dffort / dMR_dt / (2*pi)  * gap_mechanical_reduction_
-  as[0]->command_.effort_       = gap_effort / dMR_dt * RAD2MR * gap_mechanical_reduction_;
+  as[0]->command_.effort_       = 2.0*gap_effort / dMR_dt * RAD2MR * gap_mechanical_reduction_;
 }
 
 void PR2GripperTransmission::propagateEffortBackwards(
@@ -554,7 +554,7 @@ void PR2GripperTransmission::propagateEffortBackwards(
   {
     // propagate fictitious joint effort backwards
     double eps=0.01;
-    js[0]->commanded_effort_  = (1.0-eps)*js[0]->commanded_effort_ + eps*gap_effort;
+    js[0]->commanded_effort_  = (1.0-eps)*js[0]->commanded_effort_ + eps*gap_effort/2.0;
     js[passive_joints_.size()+1]->commanded_effort_  = (1.0-eps)*js[passive_joints_.size()+1]->commanded_effort_ + eps*gap_effort;
     //ROS_ERROR("prop eff back eff=%f",js[0]->commanded_effort_);
   }
