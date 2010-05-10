@@ -52,6 +52,7 @@
 #include <pr2_mechanism_msgs/SwitchController.h>
 #include <pr2_mechanism_msgs/MechanismStatistics.h>
 #include <sensor_msgs/JointState.h>
+#include <boost/thread/condition.hpp>
 
 
 namespace pr2_controller_manager{
