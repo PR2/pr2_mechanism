@@ -40,13 +40,14 @@
 
 #include <string>
 #include <ros/node_handle.h>
+#include <boost/utility.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
 
 namespace realtime_tools {
 
 template <class Msg>
-class RealtimePublisher
+class RealtimePublisher : boost::noncopyable
 {
 
 public:
@@ -92,10 +93,11 @@ public:
   void stop()
   {
     keep_running_ = false;
+    boost::unique_lock<boost::mutex> lock(msg_mutex_);
     updated_cond_.notify_one();  // So the publishing loop can exit
   }
 
-  /**  \brief Try to get the data lock form realtime
+  /**  \brief Try to get the data lock from realtime
    *
    * To publish data from the realtime loop, you need to run trylock to
    * attempt to get unique access to the msg_ variable. Trylock returns
@@ -193,8 +195,8 @@ private:
   std::string topic_;
   ros::NodeHandle node_;
   ros::Publisher publisher_;
-  bool is_running_;
-  bool keep_running_;
+  volatile bool is_running_;
+  volatile bool keep_running_;
 
   boost::thread thread_;
 
