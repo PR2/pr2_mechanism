@@ -334,14 +334,18 @@ public:
 
     std::map<std::string, ControllerStats*>::iterator c_it;
     unsigned int num_controllers = 0;
+    std::vector<std::string> erase_controllers;
     for (c_it = controller_stats.begin(); c_it != controller_stats.end(); ++c_it)
     {
       if (c_it->second->shouldDiscard())
-        controller_stats.erase(c_it);
+	erase_controllers.push_back(c_it->first);
 
       array.status.push_back(*(c_it->second->toDiagStat()));
       num_controllers++;
     }
+    for (unsigned int i=0; i<erase_controllers.size(); i++)
+      controller_stats.erase(erase_controllers[i]);
+
     if (num_controllers == 0){
       diagnostic_updater::DiagnosticStatusWrapper stat;
       stat.name = "Controller: No controllers loaded in controller manager";
