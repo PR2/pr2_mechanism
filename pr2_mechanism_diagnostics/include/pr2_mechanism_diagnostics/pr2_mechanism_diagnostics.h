@@ -126,7 +126,10 @@ public:
 
     if (!disable_warnings_ && num_overruns > 0)
     {
-      stat->summary(diagnostic_msgs::DiagnosticStatus::WARN, "!!! Broke Realtime, used more than 1000 micro seconds in update loop");
+      if ((ros::Time::now() - last_overrun_time).toSec() < 30)
+        stat->summary(diagnostic_msgs::DiagnosticStatus::WARN, "!!! Broke Realtime, used more than 1000 micro seconds in update loop");
+      else
+        stat->summary(diagnostic_msgs::DiagnosticStatus::OK, "!!! Broke Realtime, used more than 1000 micro seconds in update loop");
     }
        
     stat->add("Avg Update Time (usec)", (int)(mean_time.toSec() * 1e6));
@@ -359,7 +362,6 @@ public:
   }
 
   bool ok() const { return n_.ok(); }
-
 };
 
 }
