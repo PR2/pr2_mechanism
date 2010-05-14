@@ -67,6 +67,7 @@ public:
   ros::ServiceClient load_srv_, unload_srv_, switch_srv_, list_srv_;
   std::string callback1_name_, callback4_name_;
   unsigned int callback1_counter_, callback_js_counter_, callback_ms_counter_;
+  std::vector<ros::Time> callback1_timing_;
   unsigned int joint_diagnostic_counter_, controller_diagnostic_counter_;
   double callback1_effort_;
 
@@ -94,6 +95,9 @@ public:
 
   void callback1(const sensor_msgs::JointStateConstPtr& msg)
   {
+    if (callback1_counter_ < 1000){
+      callback1_timing_[callback1_counter_] = ros::Time::now();
+    }
     callback1_name_ = msg->name[0];
     callback1_effort_ = msg->effort[0];
     callback1_counter_++;
@@ -208,6 +212,7 @@ public:
 protected:
   /// constructor
   TestController()
+    : callback1_timing_(1000)
   {
   }
 
@@ -467,6 +472,9 @@ TEST_F(TestController, service_and_realtime_publisher)
   EXPECT_EQ(controllerState("controller1"), _running);
   EXPECT_EQ(controllerState("controller4"), _stopped);
 
+  callback1_timing_.resize(1000);
+  callback1_counter_ = 0;
+
   // connect to topic
   ros::Subscriber sub1 = node_.subscribe<sensor_msgs::JointState>("controller1/my_topic", 100, 
                                                                   boost::bind(&TestController_service_and_realtime_publisher_Test::callback1, this, _1));
@@ -522,9 +530,17 @@ TEST_F(TestController, publisher_hz)
   ros::Time start = ros::Time::now();
   ros::Duration timeout(5.0);
   while (callback1_counter_ == 0 && ros::Time::now() - start < timeout)
-    ros::Duration(0.1).sleep();
+    ros::Duration(0.01).sleep();
   callback1_counter_ = 0;
   ros::Duration(5.0).sleep();
+  // gathering debugging info
+  if (callback1_counter_ < 450){
+    unsigned int nr = callback1_counter_;
+    ROS_ERROR("Only received %u callbacks between start time %f and end time %f", nr, start.toSec(), ros::Time::now().toSec());
+    for (unsigned int i=0; i<nr-1; i++){
+      ROS_ERROR("  - %u:  time %f,  delta time %f", i, callback1_timing_[i].toSec(), (callback1_timing_[i+1]-callback1_timing_[i]).toSec());
+    }
+  }  
   EXPECT_NEAR(callback1_counter_, 500, 50);
 
   sub1.shutdown();

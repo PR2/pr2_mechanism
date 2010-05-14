@@ -22,7 +22,6 @@
   </node>
 
 <!-- Diagnostics -->
-  <node pkg="pr2_controller_manager" type="controllers_to_diagnostics.py" name="controller_diagnostics" />
-  <node pkg="pr2_controller_manager" type="joints_to_diagnostics.py" name="joint_state_logging" />
+  <node pkg="pr2_mechanism_diagnostics" type="pr2_mechanism_diagnostics" name="pr2_mechanism_diagnostics" />
 
 </launch>
