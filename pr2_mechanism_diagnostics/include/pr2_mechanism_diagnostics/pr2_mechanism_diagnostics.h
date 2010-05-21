@@ -349,11 +349,11 @@ public:
     for (unsigned int i=0; i<erase_controllers.size(); i++)
       controller_stats.erase(erase_controllers[i]);
 
-    if (num_controllers == 0){
-      diagnostic_updater::DiagnosticStatusWrapper stat;
-      stat.name = "Controller: No controllers loaded in controller manager";
-      array.status.push_back(stat);
-    }
+    //if (num_controllers == 0){
+    //  diagnostic_updater::DiagnosticStatusWrapper stat;
+    //  stat.name = "Controller: No controllers loaded in controller manager";
+    //   array.status.push_back(stat);
+    // }
 
     array.header.stamp = ros::Time::now();
 

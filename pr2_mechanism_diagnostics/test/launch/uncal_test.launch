@@ -1,0 +1,7 @@
+<launch>
+
+  <include file="$(find pr2_mechanism_diagnostics)/test/launch/mech_diag_test_main.launch" />
+
+  <param name="mech_diag/cal" type="bool" value="false" />
+  
+</launch>

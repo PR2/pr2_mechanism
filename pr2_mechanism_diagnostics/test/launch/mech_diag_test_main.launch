@@ -1,0 +1,8 @@
+<launch>
+  <node pkg="pr2_mechanism_diagnostics" type="pr2_mechanism_diagnostics" name="pr2_mechanism_diagnostics" />
+
+  <node pkg="pr2_mechanism_diagnostics" type="pub_mech_stats.py" name="mech_stats_pub" />
+
+  <test pkg="pr2_mechanism_diagnostics" type="mech_diag_test.py" name="test_mech_stats" test-name="mech_stats_test" />
+
+</launch>

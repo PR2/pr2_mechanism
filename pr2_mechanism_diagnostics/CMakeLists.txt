@@ -30,3 +30,8 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #target_link_libraries(example ${PROJECT_NAME})
 
 rosbuild_add_executable(pr2_mechanism_diagnostics src/pr2_mechanism_diagnostics.cpp)
+
+rosbuild_add_rostest(test/launch/mech_diag_test_main.launch)
+rosbuild_add_rostest(test/launch/overrun_test.launch)
+rosbuild_add_rostest(test/launch/uncal_test.launch)
+rosbuild_add_rostest(test/launch/nan_test.launch)
