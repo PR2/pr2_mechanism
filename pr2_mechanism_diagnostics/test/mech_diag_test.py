@@ -46,7 +46,7 @@ import sys
 import threading
 from time import sleep
 
-WAIT_TIME = 10
+WAIT_TIME = 5
 
 class TestMechDiag(unittest.TestCase):
     def __init__(self, *args):
@@ -86,20 +86,20 @@ class TestMechDiag(unittest.TestCase):
                 self.assert_(False, "No joint data in diagnostics")
             for key, val in self._joints.iteritems():
                 if self._nan:
-                    self.assert_(val.level == 2, "Joint %s was not ERROR, but was NaN" % val.name)
+                    self.assert_(val.level == 2, "Joint %s was not ERROR, but was NaN. Level %d" % (val.name, val.level))
                 elif self._cal:
-                    self.assert_(val.level == 0, "Joint %s was not OK" % val.name)
+                    self.assert_(val.level == 0, "Joint %s was not OK. Level %d" % (val.name, val.level))
                 else:
-                    self.assert_(val.level == 1, "Joint %s was not warning, but was uncalibrated" % val.name)
+                    self.assert_(val.level == 1, "Joint %s was not warning, but was uncalibrated. Level %d" % (val.name, val.level))
 
             if len(self._controllers.items()) == 0:
                 self.assert_(False, "No controller data in diagnostics")
 
             for key, val in self._controllers.iteritems():
                 if self._overrun:
-                    self.assert_(val.level == 1, "Controller %s was not WARN, but was overrun" % val.name)
+                    self.assert_(val.level == 1, "Controller %s was not WARN, but was overrun. Level %d" % (val.name, val.level))
                 else:
-                    self.assert_(val.level == 0, "Controller %s was not OK" % val.name)
+                    self.assert_(val.level == 0, "Controller %s was not OK. Level %d" % (val.name, val.level))
                     
 if __name__ == '__main__':
     rospy.init_node('test_mech_diag_nominal')

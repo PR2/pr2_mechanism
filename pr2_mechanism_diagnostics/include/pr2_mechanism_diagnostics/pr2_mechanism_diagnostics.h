@@ -35,8 +35,8 @@
 ///\author Kevin Watts
 ///\brief Publishes diagnostics for controllers, joints
 
-#ifndef _PR2_MECHANISM_DIAGNOSTICS_H_
-#define _PR2_MECHANISM_DIAGNOSTICS_H_
+#ifndef _PR2_MECHANISM_DIAGNOSTICS_H_MECH_DIAG_
+#define _PR2_MECHANISM_DIAGNOSTICS_H_MECH_DIAG_
 
 #include <ros/ros.h>
 #include <pr2_mechanism_msgs/MechanismStatistics.h>
@@ -46,16 +46,18 @@
 #include <float.h>
 #include <limits>
 #include <boost/shared_ptr.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 namespace pr2_mechanism_diagnostics
 {
 
-///\todo Switch to boost::math::isnormal()
-///\brief Returns true if value is NaN
 template<typename T>
-inline bool isNan(T value)
+inline bool is_valid(T t)
 {
-  return value != value;
+  if (t == 0)
+    return true;
+
+  return boost::math::isnormal(t);
 }
 
 class ControllerStats
@@ -86,61 +88,12 @@ public:
     
   ~ControllerStats() {}
 
-  bool update(const pr2_mechanism_msgs::ControllerStatistics &cs)
-  {
-    if (name == "")
-      name = cs.name;
-
-    if (name != cs.name)
-    {
-      ROS_ERROR("Controller statistics was updated with a different name! Old name: %s, new name: %s.", name.c_str(), cs.name.c_str());
-      return false;
-    }
-
-    timestamp = cs.timestamp;
-    running = cs.running;
-    max_time = cs.max_time;
-    mean_time = cs.mean_time;
-    variance_time = cs.variance_time;
-    num_overruns = cs.num_control_loop_overruns;
-    last_overrun_time = cs.time_last_control_loop_overrun;
-
-    updateTime = ros::Time::now();
-
-    return true;
-  }
+  bool update(const pr2_mechanism_msgs::ControllerStatistics &cs);
 
   bool shouldDiscard() const { return (ros::Time::now() - updateTime).toSec() > 3; }
 
 
-  boost::shared_ptr<diagnostic_updater::DiagnosticStatusWrapper> toDiagStat()
-  {
-    boost::shared_ptr<diagnostic_updater::DiagnosticStatusWrapper> stat(new diagnostic_updater::DiagnosticStatusWrapper);
-
-    stat->name = "Controller (" + name + ")";
-
-    if (running)
-      stat->summary(diagnostic_msgs::DiagnosticStatus::OK, "Running");
-    else
-      stat->summary(diagnostic_msgs::DiagnosticStatus::OK, "Stopped");
-
-    if (!disable_warnings_ && num_overruns > 0)
-    {
-      if ((ros::Time::now() - last_overrun_time).toSec() < 30)
-        stat->summary(diagnostic_msgs::DiagnosticStatus::WARN, "!!! Broke Realtime, used more than 1000 micro seconds in update loop");
-      else
-        stat->summary(diagnostic_msgs::DiagnosticStatus::OK, "!!! Broke Realtime, used more than 1000 micro seconds in update loop");
-    }
-       
-    stat->add("Avg Update Time (usec)", (int)(mean_time.toSec() * 1e6));
-    stat->add("Max Update Time (usec)", (int)(max_time.toSec() * 1e6));
-    stat->add("Variance Update Time (usec)", (int) (variance_time.toSec() * 1e6));
-    stat->add("Percent of Cycle Time Used", (int) (mean_time.toSec() / 0.00001));
-    stat->add("Number of Control Loop Overruns", num_overruns);
-    stat->add("Timestamp of Last Overrun (sec)", last_overrun_time.toSec());
-
-    return stat;
-  }
+  boost::shared_ptr<diagnostic_updater::DiagnosticStatusWrapper> toDiagStat();
 
 };
 
@@ -191,45 +144,14 @@ public:
 
   ~JointStats() { }
 
-  bool update(const pr2_mechanism_msgs::JointStatistics &js)
-  {
-    if (name == "")
-      name = js.name;
-      
-
-    if (name != js.name)
-    {
-      ROS_ERROR("Joint statistics was updated with a different name! Old name: %s, new name: %s.", name.c_str(), js.name.c_str());
-      return false;
-    }
-
-    if (needs_reset)
-      reset_vals();
-
-    max_pos_val     = std::max(max_pos_val, js.max_position);
-    min_pos_val     = std::min(max_pos_val, js.min_position);
-    max_abs_vel_val = std::max(max_abs_vel_val, js.max_abs_velocity);
-    max_abs_eff_val = std::max(max_abs_eff_val, js.max_abs_effort);
-
-    position = js.position;
-    velocity = js.velocity;
-    measured_effort = js.measured_effort;
-    commanded_effort = js.commanded_effort;
-    is_calibrated = js.is_calibrated;
-    violated_limits = js.violated_limits;
-    odometer = js.odometer;
-    
-    updateTime = ros::Time::now();
-    
-    return true;
-  }
+  bool update(const pr2_mechanism_msgs::JointStatistics &js);
 
   boost::shared_ptr<diagnostic_updater::DiagnosticStatusWrapper> toDiagStat()
   {
     boost::shared_ptr<diagnostic_updater::DiagnosticStatusWrapper> stat(new diagnostic_updater::DiagnosticStatusWrapper);
-
+    
     stat->name = "Joint (" + name + ")";
-
+    
     if (is_calibrated)
       stat->summary(diagnostic_msgs::DiagnosticStatus::OK, "OK");
     else
@@ -239,42 +161,52 @@ public:
     if (updateSec > 3)
       stat->summary(diagnostic_msgs::DiagnosticStatus::ERROR, "No updates");
     
-    if (isNan(position) || isNan(velocity) || isNan(measured_effort) || isNan(commanded_effort))
-      stat->summary(diagnostic_msgs::DiagnosticStatus::ERROR, "NaN Values");
+    if (!is_valid(position) || !is_valid(velocity) || 
+        !is_valid(measured_effort) || !is_valid(commanded_effort))
+    {
+      stat->summary(diagnostic_msgs::DiagnosticStatus::ERROR, "NaN Values in Joint State");
+    }
     
     stat->add("Position", position);
     stat->add("Velocity", velocity);
     stat->add("Measured Effort", measured_effort);
     stat->add("Commanded Effort", commanded_effort);
+    
+    stat->add("Calibrated", is_calibrated);
+        
+    stat->add("Odometer", odometer);
 
     if (is_calibrated)
-      stat->add("Calibrated", "True");
+    {
+      stat->add("Max Position", max_pos_val);
+      stat->add("Min Position", min_pos_val);
+      stat->add("Max Abs. Velocity", max_abs_vel_val);
+      stat->add("Max Abs. Effort", max_abs_eff_val);
+    }
     else
-      stat->add("Calibrated", "False");
+    {
+      stat->add("Max Position", "N/A");
+      stat->add("Min Position", "N/A");
+      stat->add("Max Abs. Velocity", "N/A");
+      stat->add("Max Abs. Effort", "N/A");
+    }
 
-    stat->add("Odometer", odometer);
-    stat->add("Max Position", max_pos_val);
-    stat->add("Min Position", min_pos_val);
-    stat->add("Max Abs. Velocity", max_abs_vel_val);
-    stat->add("Max Abs. Effort", max_abs_eff_val);
-
-    if (violated_limits)
-      stat->add("Limits Hit", "True");
-    else
-      stat->add("Limits Hit", "False");
-
+    stat->add("Limits Hit", violated_limits);
+    
+    
     needs_reset = true;
-
+    
     return stat;
   }
+
 };
 
 class CtrlJntDiagnosticPublisher
 {
 private:
-  std::map<std::string, JointStats*> joint_stats;
+  std::map<std::string, boost::shared_ptr<JointStats> > joint_stats;
 
-  std::map<std::string, ControllerStats *> controller_stats;
+  std::map<std::string, boost::shared_ptr<ControllerStats> > controller_stats;
 
   ros::NodeHandle n_;
   ros::Subscriber mech_st_sub_;
@@ -289,7 +221,7 @@ private:
     for (it = mechMsg->joint_statistics.begin(); it != mechMsg->joint_statistics.end(); ++it)
     {
       if (joint_stats.count(it->name) == 0)
-        joint_stats[it->name] = new JointStats();
+        joint_stats[it->name] = boost::shared_ptr<JointStats>(new JointStats());
 
       joint_stats[it->name]->update(*it);
     }
@@ -298,7 +230,7 @@ private:
     for (c_it = mechMsg->controller_statistics.begin(); c_it != mechMsg->controller_statistics.end(); ++c_it)
     {
       if (controller_stats.count(c_it->name) == 0)
-        controller_stats[c_it->name] = new ControllerStats(use_sim_time_ || disable_controller_warnings_);
+        controller_stats[c_it->name] = boost::shared_ptr<ControllerStats>(new ControllerStats(use_sim_time_ || disable_controller_warnings_));
       
       controller_stats[c_it->name]->update(*c_it);
     }
@@ -316,26 +248,17 @@ public:
     n_.param("disable_controller_warnings", disable_controller_warnings_, false);
   }
 
-  ~CtrlJntDiagnosticPublisher() 
-  {
-    std::map<std::string, JointStats*>::iterator it;
-    for (it = joint_stats.begin(); it != joint_stats.end(); ++it)
-      delete it->second;
-
-    std::map<std::string, ControllerStats*>::iterator c_it;
-    for (c_it = controller_stats.begin(); c_it != controller_stats.end(); ++c_it)
-      delete c_it->second;
-  }
+  ~CtrlJntDiagnosticPublisher() { }
 
   void publishDiag()
   {
     diagnostic_msgs::DiagnosticArray array;
     
-    std::map<std::string, JointStats*>::iterator it;
+    std::map<std::string, boost::shared_ptr<JointStats> >::iterator it;
     for (it = joint_stats.begin(); it != joint_stats.end(); ++it)
       array.status.push_back(*(it->second->toDiagStat()));
 
-    std::map<std::string, ControllerStats*>::iterator c_it;
+    std::map<std::string, boost::shared_ptr<ControllerStats> >::iterator c_it;
     unsigned int num_controllers = 0;
     std::vector<std::string> erase_controllers;
     for (c_it = controller_stats.begin(); c_it != controller_stats.end(); ++c_it)
@@ -349,6 +272,7 @@ public:
     for (unsigned int i=0; i<erase_controllers.size(); i++)
       controller_stats.erase(erase_controllers[i]);
 
+    //\todo Fix unit test to stop this
     //if (num_controllers == 0){
     //  diagnostic_updater::DiagnosticStatusWrapper stat;
     //  stat.name = "Controller: No controllers loaded in controller manager";

@@ -39,6 +39,91 @@
 using namespace pr2_mechanism_diagnostics;
 using namespace std;
 
+bool ControllerStats::update(const pr2_mechanism_msgs::ControllerStatistics &cs)
+{
+    if (name == "")
+      name = cs.name;
+
+    if (name != cs.name)
+    {
+      ROS_ERROR("Controller statistics was updated with a different name! Old name: %s, new name: %s.", name.c_str(), cs.name.c_str());
+      return false;
+    }
+
+    timestamp = cs.timestamp;
+    running = cs.running;
+    max_time = cs.max_time;
+    mean_time = cs.mean_time;
+    variance_time = cs.variance_time;
+    num_overruns = cs.num_control_loop_overruns;
+    last_overrun_time = cs.time_last_control_loop_overrun;
+
+    updateTime = ros::Time::now();
+
+    return true;
+}
+
+boost::shared_ptr<diagnostic_updater::DiagnosticStatusWrapper> ControllerStats::toDiagStat()
+{
+  boost::shared_ptr<diagnostic_updater::DiagnosticStatusWrapper> stat(new diagnostic_updater::DiagnosticStatusWrapper);
+  
+  stat->name = "Controller (" + name + ")";
+  
+  if (running)
+    stat->summary(diagnostic_msgs::DiagnosticStatus::OK, "Running");
+  else
+    stat->summary(diagnostic_msgs::DiagnosticStatus::OK, "Stopped");
+  
+  if (!disable_warnings_ && num_overruns > 0)
+  {
+    if ((ros::Time::now() - last_overrun_time).toSec() < 30)
+      stat->summary(diagnostic_msgs::DiagnosticStatus::WARN, "!!! Broke Realtime, used more than 1000 micro seconds in update loop");
+    else
+      stat->summary(diagnostic_msgs::DiagnosticStatus::OK, "!!! Broke Realtime, used more than 1000 micro seconds in update loop");
+  }
+  
+  stat->add("Avg Update Time (usec)", (int)(mean_time.toSec() * 1e6));
+  stat->add("Max Update Time (usec)", (int)(max_time.toSec() * 1e6));
+  stat->add("Variance Update Time (usec)", (int) (variance_time.toSec() * 1e6));
+  stat->add("Percent of Cycle Time Used", (int) (mean_time.toSec() / 0.00001));
+  stat->add("Number of Control Loop Overruns", num_overruns);
+  stat->add("Timestamp of Last Overrun (sec)", last_overrun_time.toSec());
+  
+  return stat;
+}
+
+bool JointStats::update(const pr2_mechanism_msgs::JointStatistics &js)
+{
+  if (name == "")
+    name = js.name;
+  
+  
+  if (name != js.name)
+  {
+    ROS_ERROR("Joint statistics was updated with a different name! Old name: %s, new name: %s.", name.c_str(), js.name.c_str());
+    return false;
+  }
+  
+  if (needs_reset)
+    reset_vals();
+  
+  max_pos_val     = std::max(max_pos_val, js.max_position);
+  min_pos_val     = std::min(max_pos_val, js.min_position);
+  max_abs_vel_val = std::max(max_abs_vel_val, js.max_abs_velocity);
+  max_abs_eff_val = std::max(max_abs_eff_val, js.max_abs_effort);
+
+  position = js.position;
+  velocity = js.velocity;
+  measured_effort = js.measured_effort;
+  commanded_effort = js.commanded_effort;
+  is_calibrated = js.is_calibrated;
+  violated_limits = js.violated_limits;
+  odometer = js.odometer;
+  
+  updateTime = ros::Time::now();
+  
+  return true;
+}
 
 int main(int argc, char **argv)
 {
