@@ -51,6 +51,7 @@
 namespace pr2_mechanism_diagnostics
 {
 
+///\brief Returns false if a value is infinity, NaN, etc
 template<typename T>
 inline bool is_valid(T t)
 {

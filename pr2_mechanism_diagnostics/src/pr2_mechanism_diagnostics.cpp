@@ -107,10 +107,14 @@ bool JointStats::update(const pr2_mechanism_msgs::JointStatistics &js)
   if (needs_reset)
     reset_vals();
   
-  max_pos_val     = std::max(max_pos_val, js.max_position);
-  min_pos_val     = std::min(max_pos_val, js.min_position);
-  max_abs_vel_val = std::max(max_abs_vel_val, js.max_abs_velocity);
-  max_abs_eff_val = std::max(max_abs_eff_val, js.max_abs_effort);
+  if (js.is_calibrated)
+  {
+    max_pos_val     = std::max(max_pos_val, js.max_position);
+    min_pos_val     = std::min(max_pos_val, js.min_position);
+    max_abs_vel_val = std::max(max_abs_vel_val, js.max_abs_velocity);
+    max_abs_eff_val = std::max(max_abs_eff_val, js.max_abs_effort);
+  }
+  
 
   position = js.position;
   velocity = js.velocity;
