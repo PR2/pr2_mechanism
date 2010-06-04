@@ -153,7 +153,7 @@ public:
  * The pressure sensors are not configurable under software control, thus
  * the PressureSensorCommand class is empty.
  *
- * The state of thre pressure sensorts is reported back in the 
+ * The state of thre pressure sensorts is reported back in the
  * PressureSensorState class.  Each finger tip reports back 22 16-bit values.
  */
 class PressureSensor
@@ -181,7 +181,7 @@ public:
 
 /*!
  * \class Accelerometer
- * Some of the PR2's motor controller boards (MCBs) contain 3 axis 
+ * Some of the PR2's motor controller boards (MCBs) contain 3 axis
  * accelerometers.
  *
  * The AccelerometerCommand class allows the user to configure the
@@ -271,7 +271,7 @@ public:
 
 /*!
  * \class Projector
- * The PR2 has a textured-light projector for better stereo imaging. While 
+ * The PR2 has a textured-light projector for better stereo imaging. While
  * this textured light improves the quality of 3D reconstruction from stereo
  * images, it is not desirable to have the projector running for other imagers
  * on PR2.  The PR2's projector has a complicated system of controlling
@@ -296,11 +296,30 @@ public:
   ProjectorCommand command_;
 };
 
+class AnalogInCommand
+{
+};
+
+class AnalogInState
+{
+public:
+  std::vector<double> state_;
+};
+
+class AnalogIn
+{
+public:
+  std::string name_;
+  AnalogInState state_;
+  AnalogInCommand command_;
+};
+
 typedef std::map<std::string, Actuator*> ActuatorMap;
 typedef std::map<std::string, PressureSensor*> PressureSensorMap;
 typedef std::map<std::string, Accelerometer*> AccelerometerMap;
 typedef std::map<std::string, DigitalOut*> DigitalOutMap;
 typedef std::map<std::string, Projector*> ProjectorMap;
+typedef std::map<std::string, AnalogIn*> AnalogInMap;
 
 /*!
  * \class HardwareInterface
@@ -318,7 +337,7 @@ typedef std::map<std::string, Projector*> ProjectorMap;
  *  # command - A class which is used to send commands to this component
  *  # status - A class which is used to return the status of this component
  *
- * Drivers that provide one or more of these components register the 
+ * Drivers that provide one or more of these components register the
  * corresponding class for that component by name with the HardwareInterface.
  * For a given component type, names must be unique.
  *
@@ -334,6 +353,7 @@ public:
   AccelerometerMap accelerometers_;
   DigitalOutMap digital_outs_;
   ProjectorMap projectors_;
+  AnalogInMap analog_ins_;
   /*! \brief Get a pointer to the actuator by name
    *
    *  \param name The name of the actuator
@@ -382,6 +402,16 @@ public:
   Projector* getProjector(const std::string &name) const {
     ProjectorMap::const_iterator it = projectors_.find(name);
     return it != projectors_.end() ? it->second : NULL;
+  }
+
+  /*! \brief Get a pointer to the analog-in device by name
+   *
+   *  \param name The name of the analog-in device
+   *  \return A pointer to an AnalogIn.  Returns NULL if name is not valid.
+   */
+  AnalogIn* getAnalogIn(const std::string &name) const {
+    AnalogInMap::const_iterator it = analog_ins_.find(name);
+    return it != analog_ins_.end() ? it->second : NULL;
   }
 
   /*! \brief Add an actuator to the hardware interface
@@ -436,6 +466,17 @@ public:
   bool addProjector(Projector *projector) {
     std::pair<ProjectorMap::iterator, bool> p;
     p = projectors_.insert(ProjectorMap::value_type(projector->name_, projector));
+    return p.second;
+  }
+
+  /*! \brief Add an analog-in device to the hardware interface
+   *
+   *  \param analog_in A pointer to the AnalogIn
+   *  \return true if successful, false if name is a duplicate
+   */
+  bool addAnalogIn(AnalogIn *analog_in) {
+    std::pair<AnalogInMap::iterator, bool> p;
+    p = analog_ins_.insert(AnalogInMap::value_type(analog_in->name_, analog_in));
     return p.second;
   }
 
