@@ -24,6 +24,8 @@
 <depend package="kdl_parser" />
 <depend package="pluginlib" />
 <depend package="angles" />
+<depend package="std_msgs" />
+<depend package="filters" />
 <url>http://ros.org/wiki/pr2_mechanism_model</url>
 <export>
   <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lpr2_mechanism_model -Wl,-rpath,${prefix}/lib"/>

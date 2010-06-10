@@ -17,6 +17,12 @@
   </description>
   </class>
 
+  <class name="SimpleOffsetTransmission" type="pr2_mechanism_model::SimpleOffsetTransmission" base_class_type="pr2_mechanism_model::Transmission">
+  <description>
+  This is a rectangle plugin
+  </description>
+  </class>
+
   <class name="GripperTransmission" type="pr2_mechanism_model::GripperTransmission" base_class_type="pr2_mechanism_model::Transmission">
   <description>
   This is a rectangle plugin
