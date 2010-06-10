@@ -73,10 +73,24 @@ bool Robot::initXml(TiXmlElement *root)
     try{
       t = type ? transmission_loader.createClassInstance(type) : NULL;
     }
-    catch(...){
+    catch(pluginlib::LibraryLoadException ex)
+    {
+      ROS_ERROR("LibraryLoadException for transmission of type %s", type);
+      ROS_ERROR("%s", ex.what());
+      return false;
+    }
+    catch(pluginlib::CreateClassException ex)
+    {
+      ROS_ERROR("CreateClassException for transmission of type %s", type);
+      ROS_ERROR("%s", ex.what());
+      return false;
+    }
+    catch(...)
+    {
       ROS_ERROR("Could not construct transmission of type %s", type);
       return false;
     }
+
     if (!t)
       ROS_ERROR("Unknown transmission type: %s", type);
     else if (!t->initXml(xit, this)){
@@ -84,7 +98,10 @@ bool Robot::initXml(TiXmlElement *root)
       delete t;
     }
     else // Success!
+    {
+      ROS_INFO("Successfully Loaded Transmission [%s]", t->name_.c_str());
       transmissions_.push_back(t);
+    }
   }
 
   return true;
