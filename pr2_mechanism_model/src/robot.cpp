@@ -98,10 +98,7 @@ bool Robot::initXml(TiXmlElement *root)
       delete t;
     }
     else // Success!
-    {
-      ROS_INFO("Successfully Loaded Transmission [%s]", t->name_.c_str());
       transmissions_.push_back(t);
-    }
   }
 
   return true;
