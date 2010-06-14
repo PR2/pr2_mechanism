@@ -608,6 +608,9 @@ void ControllerManager::publishMechanismStatistics()
       unsigned int i = 0;
       for (ActuatorMap::const_iterator it = model_.hw_->actuators_.begin(); it != model_.hw_->actuators_.end(); ++i, ++it)
       {
+
+//        ROS_ERROR("%s ... %s: %d ... \n", __FILE__, __FUNCTION__, __LINE__);
+
         pr2_mechanism_msgs::ActuatorStatistics *out = &pub_mech_stats_.msg_.actuator_statistics[i];
         ActuatorState *in = &(it->second->state_);
         out->timestamp = now;
@@ -615,6 +618,10 @@ void ControllerManager::publishMechanismStatistics()
         out->encoder_count = in->encoder_count_;
         out->encoder_offset = in->zero_offset_;
         out->position = in->position_;
+       
+//        if (out->position)
+//            ROS_ERROR("pos = %f", out->position);
+        
         out->timestamp = ros::Time(in->timestamp_);
         out->device_id = in->device_id_;
         out->encoder_velocity = in->encoder_velocity_;
@@ -634,7 +641,18 @@ void ControllerManager::publishMechanismStatistics()
         out->last_measured_effort = in->last_measured_effort_;
         out->motor_voltage = in->motor_voltage_;
         out->num_encoder_errors = in->num_encoder_errors_;
+
+        /* Currently these (force, temperature, duty_cycle) fields used and filled only by Shadow Hand */
+        out->force_sensor_1 = in->force_sensor_1_;
+        out->force_sensor_2 = in->force_sensor_2_;
+        out->force_sensor_3 = in->force_sensor_3_;
+        out->temperature_val = in->temperature_val_;
+        out->last_commanded_duty_cycle = in->last_commanded_duty_cycle_;
+        out->last_executed_duty_cycle = in->last_executed_duty_cycle_;
+        out->last_measured_duty_cycle = in->last_measured_duty_cycle_;
       }
+            
+//      ROS_ERROR("\n");
 
       // controller state
       std::vector<ControllerSpec> &controllers = controllers_lists_[used_by_realtime_];

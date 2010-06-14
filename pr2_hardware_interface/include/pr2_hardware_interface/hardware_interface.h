@@ -102,6 +102,16 @@ public:
   int num_encoder_errors_; //!< The number of invalid encoder signal transitions
 
   double zero_offset_; //!< A bias applied to the position value when reported.  This value is written once after calibration. The reported position is the hardware's actual position minus the zero offset
+
+  //!< Currently these (force, temperature, duty_cycle) fields used and filled only by Shadow Hand
+  int force_sensor_1_;
+  int force_sensor_2_;
+  int force_sensor_3_;
+  int temperature_val_; //!< In Degree Celcius
+  int last_commanded_duty_cycle_; //!< The duty-cycle computed based on the effort specified in the ActuatorCommand
+  int last_executed_duty_cycle_; //!< The actual duty-cycle requested after safety limits were enforced
+  int last_measured_duty_cycle_; //!< The measured duty-cycle
+
 };
 
 class ActuatorCommand

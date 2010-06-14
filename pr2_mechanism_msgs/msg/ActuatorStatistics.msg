@@ -66,3 +66,15 @@ float64 motor_voltage
 # the number of detected encoder problems 
 int32 num_encoder_errors
 
+# Shadow Hand Joint; three force values, two are from sensor and one is software generated
+int16 force_sensor_1
+int16 force_sensor_2
+int16 force_sensor_3
+
+# Shadow Hand Motor temperature in Celcius
+int16 temperature_val
+
+# Shadow Hand Motor; Duty Cycles (commanded, executed and measured values)
+int16 last_commanded_duty_cycle
+int16 last_executed_duty_cycle
+int16 last_measured_duty_cycle
