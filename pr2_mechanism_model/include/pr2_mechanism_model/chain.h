@@ -116,6 +116,9 @@ public:
    */
   JointState* getJoint(unsigned int actuated_joint_i);
 
+  /// Returns the number of actuated joints in the chain
+  int size() const { return joints_.size(); }
+
 private:
   pr2_mechanism_model::RobotState *robot_state_;
   KDL::Chain kdl_chain_;
