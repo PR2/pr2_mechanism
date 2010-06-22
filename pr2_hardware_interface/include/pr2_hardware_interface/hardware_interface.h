@@ -167,9 +167,11 @@ public:
 class AccelerometerCommand
 {
 public:
-  AccelerometerCommand() : range_(0), bandwidth_(0) {}
+  enum {RANGE_2G=0, RANGE_4G=1, RANGE_8G=2}; //! Enums for possible accelerometer range settings.
+  enum {BANDWIDTH_1500HZ=6, BANDWIDTH_750HZ=5, BANDWIDTH_375HZ=4, BANDWIDTH_190HZ=3, BANDWIDTH_100HZ=2, BANDWIDTH_50HZ=1, BANDWIDTH_25HZ=0}; //! Enums for possible accelerometer bandwidth settings.
+  AccelerometerCommand() : range_(RANGE_2G), bandwidth_(BANDWIDTH_1500HZ) {}
   int range_; //!< The range of the values to be returned (range of 0 means within +/- 2g, 1 means within +/-4g, 2 means /- 8g).  Value is reported in m/s/s.
-  int bandwidth_; //!< Accelerometer bandwidth setting. Value is passed directly to Bosch accelerometer (BMA 150). Read accelerometer datasheet for more information about possible range setting.
+  int bandwidth_; //!< Accelerometer bandwidth setting. Value is passed directly to Bosch accelerometer (BMA 150). The maximum bandwidth of 1500Hz is appropriate in almost all cases.  Instead of changing bandwidth value, use software filter to remove high frequencies from accelerometer data.  This way, other accerometer users are not affected.  Read accelerometer datasheet for more information about possible bandwidth setting.  
 };
 
 class AccelerometerState
