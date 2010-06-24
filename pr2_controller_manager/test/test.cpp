@@ -74,11 +74,14 @@ public:
   void callbackDiagnostic(const diagnostic_msgs::DiagnosticArrayConstPtr& msg)
   {
     if (!msg->status.empty()){
-      if (msg->status[0].name.substr(0,5) == "Joint")
-        joint_diagnostic_counter_++;
-
-      if (msg->status[0].name.substr(0,10) == "Controller")
-        controller_diagnostic_counter_++;
+      bool found_joint = false;
+      bool found_controller = false;
+      for (unsigned int i=0; i<msg->status.size(); i++){
+        if (!found_joint && msg->status[i].name.substr(0,5) == "Joint")
+          joint_diagnostic_counter_++;
+        if (!found_controller && msg->status[i].name.substr(0,10) == "Controller")
+          controller_diagnostic_counter_++;
+      }
     }
   }
 
