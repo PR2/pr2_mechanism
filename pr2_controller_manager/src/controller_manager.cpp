@@ -77,8 +77,8 @@ bool ControllerManager::initXml(TiXmlElement* config)
   motors_previously_halted_ = state_->isHalted();
 
   // pre-allocate for realtime publishing
-  pub_mech_stats_.msg_.set_controller_statistics_size(0);
-  pub_mech_stats_.msg_.set_actuator_statistics_size(model_.hw_->actuators_.size());
+  pub_mech_stats_.msg_.controller_statistics.resize(0);
+  pub_mech_stats_.msg_.actuator_statistics.resize(model_.hw_->actuators_.size());
   int joints_size = 0;
   for (unsigned int i = 0; i < state_->joint_states_.size(); ++i)
   {
@@ -91,11 +91,11 @@ bool ControllerManager::initXml(TiXmlElement* config)
     }
     ++joints_size;
   }
-  pub_mech_stats_.msg_.set_joint_statistics_size(joints_size);
-  pub_joint_state_.msg_.set_name_size(joints_size);
-  pub_joint_state_.msg_.set_position_size(joints_size);
-  pub_joint_state_.msg_.set_velocity_size(joints_size);
-  pub_joint_state_.msg_.set_effort_size(joints_size);
+  pub_mech_stats_.msg_.joint_statistics.resize(joints_size);
+  pub_joint_state_.msg_.name.resize(joints_size);
+  pub_joint_state_.msg_.position.resize(joints_size);
+  pub_joint_state_.msg_.velocity.resize(joints_size);
+  pub_joint_state_.msg_.effort.resize(joints_size);
 
   // get the publish rate for mechanism state
   double publish_rate_joint_state, publish_rate_mechanism_stats;
@@ -334,7 +334,7 @@ bool ControllerManager::loadController(const std::string& name)
 
   // Resize controller state vector
   pub_mech_stats_.lock();
-  pub_mech_stats_.msg_.set_controller_statistics_size(to.size());
+  pub_mech_stats_.msg_.controller_statistics.resize(to.size());
   for (size_t i=0; i<to.size(); i++)
     pub_mech_stats_.msg_.controller_statistics[i].name = to[i].name;
 
@@ -424,7 +424,7 @@ bool ControllerManager::unloadController(const std::string &name)
   // Resize controller state vector
   ROS_DEBUG("Resizing controller state vector");
   pub_mech_stats_.lock();
-  pub_mech_stats_.msg_.set_controller_statistics_size(to.size());
+  pub_mech_stats_.msg_.controller_statistics.resize(to.size());
   for (size_t i=0; i<to.size(); i++)
     pub_mech_stats_.msg_.controller_statistics[i].name = to[i].name;
 
@@ -546,10 +546,10 @@ void ControllerManager::publishJointState()
         int type = state_->joint_states_[i].joint_->type;
         if (type == urdf::Joint::REVOLUTE || type == urdf::Joint::CONTINUOUS || type == urdf::Joint::PRISMATIC)
         {
-          assert(j < pub_joint_state_.msg_.get_name_size());
-          assert(j < pub_joint_state_.msg_.get_position_size());
-          assert(j < pub_joint_state_.msg_.get_velocity_size());
-          assert(j < pub_joint_state_.msg_.get_effort_size());
+          assert(j < pub_joint_state_.msg_.name.size());
+          assert(j < pub_joint_state_.msg_.position.size());
+          assert(j < pub_joint_state_.msg_.velocity.size());
+          assert(j < pub_joint_state_.msg_.effort.size());
           pr2_mechanism_model::JointState *in = &state_->joint_states_[i];
           pub_joint_state_.msg_.name[j] = state_->joint_states_[i].joint_->name;
           pub_joint_state_.msg_.position[j] = in->position_;
@@ -583,7 +583,7 @@ void ControllerManager::publishMechanismStatistics()
         int type = state_->joint_states_[i].joint_->type;
         if (type == urdf::Joint::REVOLUTE || type == urdf::Joint::CONTINUOUS || type == urdf::Joint::PRISMATIC)
         {
-          assert(j < pub_mech_stats_.msg_.get_joint_statistics_size());
+          assert(j < pub_mech_stats_.msg_.joint_statistics.size());
           pr2_mechanism_model::JointState *in = &state_->joint_states_[i];
           pr2_mechanism_msgs::JointStatistics *out = &pub_mech_stats_.msg_.joint_statistics[j];
           out->timestamp = now;
@@ -713,15 +713,15 @@ bool ControllerManager::listControllerTypesSrv(
   pr2_mechanism_msgs::ListControllerTypes::Request &req,
   pr2_mechanism_msgs::ListControllerTypes::Response &resp)
 {
+  // pretend to use the request
+  (void) req;
+
   // lock services
   ROS_DEBUG("list types service called");
   boost::mutex::scoped_lock guard(services_lock_);
   ROS_DEBUG("list types service locked");
 
-  (void) req;
-  std::vector<std::string> types = controller_loader_->getDeclaredClasses();
-
-  resp.set_types_vec(types);
+  resp.types = controller_loader_->getDeclaredClasses();
 
   ROS_DEBUG("list types service finished");
   return true;
@@ -732,6 +732,9 @@ bool ControllerManager::listControllersSrv(
   pr2_mechanism_msgs::ListControllers::Request &req,
   pr2_mechanism_msgs::ListControllers::Response &resp)
 {
+  // pretend to use the request
+  (void) req;
+
   // lock services
   ROS_DEBUG("list controller service called");
   boost::mutex::scoped_lock guard(services_lock_);
@@ -740,12 +743,11 @@ bool ControllerManager::listControllersSrv(
   std::vector<std::string> controllers;
   std::vector<size_t> schedule;
 
-  (void) req;
   getControllerNames(controllers);
   getControllerSchedule(schedule);
   assert(controllers.size() == schedule.size());
-  resp.set_controllers_size(controllers.size());
-  resp.set_state_size(controllers.size());
+  resp.controllers.resize(controllers.size());
+  resp.state.resize(controllers.size());
 
   for (size_t i=0; i<schedule.size(); i++){
     // add controller state
