@@ -18,5 +18,9 @@ rosbuild_add_executable(test_robot test/robot.cpp)
 rosbuild_link_boost(test_robot system)
 target_link_libraries(test_robot ${PROJECT_NAME})
 rosbuild_add_gtest_build_flags(test_controllers)
-rosbuild_add_rostest(test/controller_test.launch)
+
+rosbuild_check_for_vm(vm)
+if(NOT vm)
+  rosbuild_add_rostest(test/controller_test.launch)
+endif(NOT vm)
 
