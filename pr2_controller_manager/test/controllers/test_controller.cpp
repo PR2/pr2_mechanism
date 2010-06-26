@@ -126,6 +126,7 @@ bool MyControllerClass::serviceCallback(pr2_mechanism_msgs::LoadController::Requ
 }
 
 /// Register controller to pluginlib
-PLUGINLIB_REGISTER_CLASS(TestController,
+PLUGINLIB_DECLARE_CLASS(pr2_controller_manager,
+                         TestController,
                          my_controller_ns::MyControllerClass,
                          pr2_controller_interface::Controller)

@@ -1,4 +1,4 @@
-type: TestController
+type: pr2_controller_manager/TestController
 joint_name: head_pan_joint
 tip_name: head_tilt_link
 topic_name: my_topic
