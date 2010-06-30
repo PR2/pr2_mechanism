@@ -38,6 +38,6 @@
   <include file="$(find pr2_description)/robots/upload_pr2.launch" />
 
   <!-- test -->
-  <test test-name="test_controller_manager" pkg="pr2_controller_manager" type="test_controllers" />
+  <test test-name="test_controller_manager" pkg="pr2_controller_manager" type="test_controllers" time-limit="200" />
 
 </launch>
