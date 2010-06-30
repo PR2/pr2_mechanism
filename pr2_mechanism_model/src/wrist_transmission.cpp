@@ -42,9 +42,9 @@
 using namespace pr2_mechanism_model;
 using namespace pr2_hardware_interface;
 
-PLUGINLIB_REGISTER_CLASS(WristTransmission,
-                         pr2_mechanism_model::WristTransmission,
-                         pr2_mechanism_model::Transmission)
+PLUGINLIB_DECLARE_CLASS(pr2_mechanism_model, WristTransmission,
+                        pr2_mechanism_model::WristTransmission,
+                        pr2_mechanism_model::Transmission)
 
 
 bool WristTransmission::initXml(TiXmlElement *elt, Robot *robot)
@@ -195,3 +195,4 @@ void WristTransmission::setReductions(std::vector<double>& ar, std::vector<doubl
   actuator_reduction_ = ar;
   joint_reduction_ = jr;
 }
+

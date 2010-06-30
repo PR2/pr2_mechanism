@@ -58,7 +58,7 @@
 using namespace pr2_hardware_interface;
 using namespace pr2_mechanism_model;
 
-PLUGINLIB_REGISTER_CLASS(PR2GripperTransmission,
+PLUGINLIB_DECLARE_CLASS(pr2_mechanism_model, PR2GripperTransmission,
                          pr2_mechanism_model::PR2GripperTransmission,
                          pr2_mechanism_model::Transmission)
 
@@ -465,7 +465,6 @@ void PR2GripperTransmission::propagatePositionBackwards(
   ///                                 = gap_effort * dt_dMR / (2*pi)  * gap_mechanical_reduction_
   ///                                 = gap_effort / dMR_dt * RAD2MR * gap_mechanical_reduction_
   as[0]->state_.last_measured_effort_ = 2.0*gap_effort / dMR_dt * RAD2MR * gap_mechanical_reduction_;
-
 }
 
 void PR2GripperTransmission::propagateEffort(
@@ -563,3 +562,4 @@ void PR2GripperTransmission::propagateEffortBackwards(
       //ROS_ERROR("prop eff back eff[%d]=%f, %f, %f",i,js[i]->commanded_effort_,MT,dtheta_dMR);
     }
 }
+

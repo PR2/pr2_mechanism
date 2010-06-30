@@ -42,7 +42,7 @@
 using namespace pr2_mechanism_model;
 using namespace pr2_hardware_interface;
 
-PLUGINLIB_REGISTER_CLASS(SimpleTransmission, 
+PLUGINLIB_DECLARE_CLASS(pr2_mechanism_model, SimpleTransmission, 
                          pr2_mechanism_model::SimpleTransmission, 
                          pr2_mechanism_model::Transmission)
 
@@ -80,6 +80,7 @@ bool SimpleTransmission::initXml(TiXmlElement *elt, Robot *robot)
   actuator_names_.push_back(actuator_name);
 
   mechanical_reduction_ = atof(elt->FirstChildElement("mechanicalReduction")->GetText());
+
   return true;
 }
 
@@ -118,3 +119,4 @@ void SimpleTransmission::propagateEffortBackwards(
   assert(js.size() == 1);
   js[0]->commanded_effort_ = as[0]->command_.effort_ * mechanical_reduction_;
 }
+
