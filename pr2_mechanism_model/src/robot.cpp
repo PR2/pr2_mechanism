@@ -68,11 +68,32 @@ bool Robot::initXml(TiXmlElement *root)
   for (xit = root->FirstChildElement("transmission"); xit;
        xit = xit->NextSiblingElement("transmission"))
   {
-    const char *type = xit->Attribute("type");
-    Transmission *t;
-    try{
-      t = type ? transmission_loader.createClassInstance(type) : NULL;
+    std::string type(xit->Attribute("type"));
+    Transmission *t = NULL;
+    try {
+      // Backwards compatibility for using non-namespaced controller types
+      if (!transmission_loader.isClassAvailable(type))
+      {
+        std::vector<std::string> classes = transmission_loader.getDeclaredClasses();
+        for(unsigned int i = 0; i < classes.size(); ++i)
+        {
+          if(type == transmission_loader.getName(classes[i]))
+          {
+            ROS_WARN("The deprecated transmission type %s was not found.  Using the namespaced version %s instead.  "
+                     "Please update your urdf file to use the namespaced version.",
+                     type.c_str(), classes[i].c_str());
+            type = classes[i];
+            break;
+          }
+        }
+      }
+      t = transmission_loader.createClassInstance(type);
     }
+    catch (const std::runtime_error &ex)
+    {
+      ROS_ERROR("Could not load class %s: %s", type.c_str(), ex.what());
+    }
+    /*
     catch(pluginlib::LibraryLoadException ex)
     {
       ROS_ERROR("LibraryLoadException for transmission of type %s", type);
@@ -90,9 +111,10 @@ bool Robot::initXml(TiXmlElement *root)
       ROS_ERROR("Could not construct transmission of type %s", type);
       return false;
     }
+    */
 
     if (!t)
-      ROS_ERROR("Unknown transmission type: %s", type);
+      ROS_ERROR("Unknown transmission type: %s", type.c_str());
     else if (!t->initXml(xit, this)){
       ROS_ERROR("Failed to initialize transmission");
       delete t;
