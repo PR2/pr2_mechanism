@@ -90,6 +90,8 @@ def main():
 
     rospy.init_node('spawner', anonymous=True)
     rospy.wait_for_service('pr2_controller_manager/load_controller')
+    rospy.wait_for_service('pr2_controller_manager/switch_controller')
+    rospy.wait_for_service('pr2_controller_manager/unload_controller')
 
     global wait_for_topic_result  # Python scoping sucks
     if wait_for_topic:
