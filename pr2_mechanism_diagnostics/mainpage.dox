@@ -2,25 +2,10 @@
 \mainpage
 \htmlinclude manifest.html
 
-\b pr2_mechanism_diagnostics is ... 
+\b pr2_mechanism_diagnostics produces the diagnostics output for joints and controllers from pr2_mechanism_msgs/MechanismStatistics messages. 
 
-<!-- 
-Provide an overview of your package.
--->
+There is no code API for this package. 
 
-
-\section codeapi Code API
-
-<!--
-Provide links to specific auto-generated API documentation within your
-package that is of particular interest to a reader. Doxygen will
-document pretty much every part of your code, so do your best here to
-point the reader to the actual API.
-
-If your codebase is fairly large or has different sets of APIs, you
-should use the doxygen 'group' tag to keep these APIs together. For
-example, the roscpp documentation has 'libros' group.
--->
 
 
 */

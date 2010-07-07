@@ -2,7 +2,7 @@
 #
 # Software License Agreement (BSD License)
 #
-# Copyright (c) 2009, Willow Garage, Inc.
+# Copyright (c) 2010, Willow Garage, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -73,6 +73,10 @@ class TestMechDiag(unittest.TestCase):
                 if stat.name.startswith('Joint'):
                     self._joints[stat.name] = stat
                 if stat.name.startswith('Controller'):
+                    # Ignore special "No controllers" status
+                    if stat.name.find('No controllers') > 0:
+                        continue
+
                     self._controllers[stat.name] = stat
 
     def test_mech_diag(self):
@@ -103,5 +107,10 @@ class TestMechDiag(unittest.TestCase):
                     
 if __name__ == '__main__':
     rospy.init_node('test_mech_diag_nominal')
+    if True:
+        rostest.run(PKG, sys.argv[0], TestMechDiag, sys.argv)
+    else:
+        suite = unittest.TestSuite()
+        suite.addTest(TestMechDiag('test_mech_diag'))
 
-    rostest.run(PKG, sys.argv[0], TestMechDiag, sys.argv)
+        unittest.TextTestRunner(verbosity = 2).run(suite)
