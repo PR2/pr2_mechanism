@@ -48,8 +48,9 @@ class JointState;
 class JointStatistics
 {
  public:
-  JointStatistics():odometer_(0.0), max_abs_velocity_(0.0), max_abs_effort_(0.0),
-    violated_limits_(false), initialized_(false){}
+  JointStatistics():odometer_(0.0), min_position_(0), max_position_(0),
+                    max_abs_velocity_(0.0), max_abs_effort_(0.0),
+                    violated_limits_(false), initialized_(false){}
 
   void update(JointState* s);
   void reset();
