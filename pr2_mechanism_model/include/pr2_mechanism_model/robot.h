@@ -37,7 +37,7 @@
  *
  * State path:
  *               +---------------+
- * Actuators --> | Transmissions | --> Joints 
+ * Actuators --> | Transmissions | --> Joints
  *               +---------------+
  *
  * Author: Stuart Glaser
@@ -56,14 +56,20 @@
 
 class TiXmlElement;
 
+// Forward declared to avoid extra includes
+namespace pluginlib {
+template <class T> class ClassLoader;
+}
+
 namespace pr2_mechanism_model
 {
 
-/** \brief This class provides the controllers with an interface to the robot model. 
- *  
+
+/** \brief This class provides the controllers with an interface to the robot model.
+ *
  * Most controllers that need the robot model should use the 'robot_model_', which is
- * a kinematic/dynamic model of the robot, represented by a KDL Tree structure. 
- * 
+ * a kinematic/dynamic model of the robot, represented by a KDL Tree structure.
+ *
  * Some specialized controllers (such as the calibration controllers) can get access
  * to actuators, transmissions and special joint parameters.
  */
@@ -108,16 +114,19 @@ public:
 
   /// a pointer to the pr2 hardware interface. Only for advanced users
   pr2_hardware_interface::HardwareInterface* hw_;
+
+private:
+  boost::shared_ptr<pluginlib::ClassLoader<pr2_mechanism_model::Transmission> > transmission_loader_;
 };
 
 
 
 /** \brief This class provides the controllers with an interface to the robot state
- *  
+ *
  * Most controllers that need the robot state should use the joint states, to get
  * access to the joint position/velocity/effort, and to command the effort a joint
  * should apply. Controllers can get access to the hard realtime clock through getTime()
- * 
+ *
  * Some specialized controllers (such as the calibration controllers) can get access
  * to actuator states, and transmission states.
  */

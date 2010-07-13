@@ -62,8 +62,11 @@ bool Robot::initXml(TiXmlElement *root)
     return false;
   }
 
+  // Creates the plugin loader for transmissions.
+  transmission_loader_.reset(new pluginlib::ClassLoader<pr2_mechanism_model::Transmission>(
+                               "pr2_mechanism_model", "pr2_mechanism_model::Transmission"));
+
   // Constructs the transmissions by parsing custom xml.
-  pluginlib::ClassLoader<pr2_mechanism_model::Transmission> transmission_loader("pr2_mechanism_model", "pr2_mechanism_model::Transmission");
   TiXmlElement *xit = NULL;
   for (xit = root->FirstChildElement("transmission"); xit;
        xit = xit->NextSiblingElement("transmission"))
@@ -72,12 +75,12 @@ bool Robot::initXml(TiXmlElement *root)
     Transmission *t = NULL;
     try {
       // Backwards compatibility for using non-namespaced controller types
-      if (!transmission_loader.isClassAvailable(type))
+      if (!transmission_loader_->isClassAvailable(type))
       {
-        std::vector<std::string> classes = transmission_loader.getDeclaredClasses();
+        std::vector<std::string> classes = transmission_loader_->getDeclaredClasses();
         for(unsigned int i = 0; i < classes.size(); ++i)
         {
-          if(type == transmission_loader.getName(classes[i]))
+          if(type == transmission_loader_->getName(classes[i]))
           {
             ROS_WARN("The deprecated transmission type %s was not found.  Using the namespaced version %s instead.  "
                      "Please update your urdf file to use the namespaced version.",
@@ -87,20 +90,20 @@ bool Robot::initXml(TiXmlElement *root)
           }
         }
       }
-      t = transmission_loader.createClassInstance(type);
+      t = transmission_loader_->createClassInstance(type);
     }
     catch (const std::runtime_error &ex)
     {
       ROS_ERROR("Could not load class %s: %s", type.c_str(), ex.what());
     }
     /*
-    catch(pluginlib::LibraryLoadException ex)
+    catch(pluginlib::LibraryLoadException &ex)
     {
       ROS_ERROR("LibraryLoadException for transmission of type %s", type);
       ROS_ERROR("%s", ex.what());
       return false;
     }
-    catch(pluginlib::CreateClassException ex)
+    catch(pluginlib::CreateClassException &ex)
     {
       ROS_ERROR("CreateClassException for transmission of type %s", type);
       ROS_ERROR("%s", ex.what());
