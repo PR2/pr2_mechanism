@@ -255,6 +255,10 @@ bool ControllerManager::loadController(const std::string& name)
   try{
     c_node = NodeHandle(controller_node_, name);
   }
+  catch(std::exception &e) {
+    ROS_ERROR("Exception thrown while constructing nodehandle for controller with name '%s':\n%s", name.c_str(), e.what());
+    return false;
+  }
   catch(...){
     ROS_ERROR("Exception thrown while constructing nodehandle for controller with name '%s'", name.c_str());
     return false;
