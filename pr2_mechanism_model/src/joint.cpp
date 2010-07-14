@@ -55,7 +55,11 @@ void JointStatistics::update(JointState* jnt)
     max_abs_effort_ = fmax(fabs(jnt->measured_effort_), max_abs_effort_);
   }
   else
+  {
     initialized_ = true;
+    min_position_ = jnt->position_;
+    max_position_ = jnt->position_;
+  }
   old_position_ = jnt->position_;
 }
 
