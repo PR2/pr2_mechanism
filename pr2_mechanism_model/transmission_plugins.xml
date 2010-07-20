@@ -1,32 +1,8 @@
 <library path="lib/libpr2_mechanism_model">
-  <class name="pr2_mechanism_model/NonlinearTransmission" type="pr2_mechanism_model::NonlinearTransmission" base_class_type="pr2_mechanism_model::Transmission">
-  <description>
-  This is a rectangle plugin
-  </description>
-  </class>
 
-  <class name="pr2_mechanism_model/PR2GripperTransmission" type="pr2_mechanism_model::PR2GripperTransmission" base_class_type="pr2_mechanism_model::Transmission">
-  <description>
-  This is a rectangle plugin
-  </description>
-  </class>
-
-  <class name="pr2_mechanism_model/SimpleTransmission" type="pr2_mechanism_model::SimpleTransmission" base_class_type="pr2_mechanism_model::Transmission">
-  <description>
-  This is a rectangle plugin
-  </description>
-  </class>
-
-  <class name="pr2_mechanism_model/GripperTransmission" type="pr2_mechanism_model::GripperTransmission" base_class_type="pr2_mechanism_model::Transmission">
-  <description>
-  This is a rectangle plugin
-  </description>
-  </class>
-
-  <class name="pr2_mechanism_model/WristTransmission" type="pr2_mechanism_model::WristTransmission" base_class_type="pr2_mechanism_model::Transmission">
-  <description>
-  This is a rectangle plugin
-  </description>
-  </class>
+  <class name="pr2_mechanism_model/PR2GripperTransmission" type="pr2_mechanism_model::PR2GripperTransmission" base_class_type="pr2_mechanism_model::Transmission" />
+  <class name="pr2_mechanism_model/SimpleTransmission" type="pr2_mechanism_model::SimpleTransmission" base_class_type="pr2_mechanism_model::Transmission" />
+  <class name="pr2_mechanism_model/GripperTransmission" type="pr2_mechanism_model::GripperTransmission" base_class_type="pr2_mechanism_model::Transmission" />
+  <class name="pr2_mechanism_model/WristTransmission" type="pr2_mechanism_model::WristTransmission" base_class_type="pr2_mechanism_model::Transmission" />
 
 </library>
