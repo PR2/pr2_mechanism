@@ -98,9 +98,12 @@ public:
   /// Bool to indicate if the joint has been calibrated or not
   bool calibrated_;
 
+  /// The position of the optical flag that was used to calibrate this joint
+  double reference_position_;
+
   /// Constructor
   JointState() : position_(0.0), velocity_(0.0), measured_effort_(0.0),
-                 commanded_effort_(0.0), calibrated_(false){}
+    commanded_effort_(0.0), calibrated_(false), reference_position_(0.0){}
 };
 
 enum
