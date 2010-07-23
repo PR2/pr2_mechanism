@@ -89,7 +89,7 @@ void SimpleTransmission::propagatePosition(
 {
   assert(as.size() == 1);
   assert(js.size() == 1);
-  js[0]->position_ = as[0]->state_.position_ / mechanical_reduction_;
+  js[0]->position_ = (as[0]->state_.position_ / mechanical_reduction_) + js[0]->reference_position_;
   js[0]->velocity_ = as[0]->state_.velocity_ / mechanical_reduction_;
   js[0]->measured_effort_ = as[0]->state_.last_measured_effort_ * mechanical_reduction_;
 }
@@ -99,7 +99,7 @@ void SimpleTransmission::propagatePositionBackwards(
 {
   assert(as.size() == 1);
   assert(js.size() == 1);
-  as[0]->state_.position_ = js[0]->position_ * mechanical_reduction_;
+  as[0]->state_.position_ = (js[0]->position_ - js[0]->reference_position_) * mechanical_reduction_;
   as[0]->state_.velocity_ = js[0]->velocity_ * mechanical_reduction_;
   as[0]->state_.last_measured_effort_ = js[0]->measured_effort_ / mechanical_reduction_;
 }

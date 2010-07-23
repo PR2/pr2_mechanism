@@ -145,11 +145,13 @@ void WristTransmission::propagatePosition(
   assert(as.size() == 2);
   assert(js.size() == 2);
 
-  js[0]->position_ = (as[0]->state_.position_ / actuator_reduction_[0] - as[1]->state_.position_ / actuator_reduction_[1])/(2*joint_reduction_[0]);
+  js[0]->position_ = ((as[0]->state_.position_ / actuator_reduction_[0] - as[1]->state_.position_ / actuator_reduction_[1])/
+		      (2*joint_reduction_[0])) + js[0]->reference_position_;
   js[0]->velocity_ = (as[0]->state_.velocity_ / actuator_reduction_[0] - as[1]->state_.velocity_ / actuator_reduction_[1])/(2*joint_reduction_[0]);
   js[0]->measured_effort_ = joint_reduction_[0]*(as[0]->state_.last_measured_effort_ * actuator_reduction_[0] - as[1]->state_.last_measured_effort_ * actuator_reduction_[1]);
 
-  js[1]->position_ = (-as[0]->state_.position_ / actuator_reduction_[0] - as[1]->state_.position_ / actuator_reduction_[1])/(2*joint_reduction_[1]);
+  js[1]->position_ = ((-as[0]->state_.position_ / actuator_reduction_[0] - as[1]->state_.position_ / actuator_reduction_[1])/
+		      (2*joint_reduction_[1]))+js[1]->reference_position_;
   js[1]->velocity_ = (-as[0]->state_.velocity_ / actuator_reduction_[0] - as[1]->state_.velocity_ / actuator_reduction_[1])/(2*joint_reduction_[1]);
   js[1]->measured_effort_ = joint_reduction_[1]*(-as[0]->state_.last_measured_effort_ * actuator_reduction_[0] - as[1]->state_.last_measured_effort_ * actuator_reduction_[1]);
 }
@@ -160,11 +162,13 @@ void WristTransmission::propagatePositionBackwards(
   assert(as.size() == 2);
   assert(js.size() == 2);
 
-  as[0]->state_.position_ = ((js[0]->position_*joint_reduction_[0] - js[1]->position_*joint_reduction_[1]) * actuator_reduction_[0]);
+  as[0]->state_.position_ = (((js[0]->position_-js[0]->reference_position_)*joint_reduction_[0] - 
+			      (js[1]->position_-js[1]->reference_position_)*joint_reduction_[1]) * actuator_reduction_[0]);
   as[0]->state_.velocity_ = ((js[0]->velocity_*joint_reduction_[0] - js[1]->velocity_*joint_reduction_[1]) * actuator_reduction_[0]);
   as[0]->state_.last_measured_effort_ = (js[0]->measured_effort_/joint_reduction_[0] - js[1]->measured_effort_/joint_reduction_[1]) /(2.0*actuator_reduction_[0]);
 
-  as[1]->state_.position_ = ((-js[0]->position_*joint_reduction_[0] - js[1]->position_*joint_reduction_[1]) * actuator_reduction_[1]);
+  as[1]->state_.position_ = ((-(js[0]->position_-js[0]->reference_position_)*joint_reduction_[0] - 
+			      (js[1]->position_-js[1]->reference_position_)*joint_reduction_[1]) * actuator_reduction_[1]);
   as[1]->state_.velocity_ = ((-js[0]->velocity_*joint_reduction_[0] - js[1]->velocity_*joint_reduction_[1]) * actuator_reduction_[1]);
   as[1]->state_.last_measured_effort_ = (-js[0]->measured_effort_/joint_reduction_[0] - js[1]->measured_effort_/joint_reduction_[1]) /(2.0*actuator_reduction_[1]);
 }
