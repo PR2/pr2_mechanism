@@ -313,6 +313,10 @@ bool ControllerManager::loadController(const std::string& name)
   try{
     initialized = c->initRequest(this, state_, c_node);
   }
+  catch(std::exception &e){
+    ROS_ERROR("Exception thrown while initializing controller %s.\n%s", name.c_str(), e.what());
+    initialized = false;
+  }
   catch(...){
     ROS_ERROR("Exception thrown while initializing controller %s", name.c_str());
     initialized = false;
