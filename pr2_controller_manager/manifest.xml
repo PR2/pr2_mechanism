@@ -21,6 +21,7 @@ on the effort/velocity/position of each joint.
 <depend package="pr2_hardware_interface"/>
 <depend package="pr2_mechanism_model"/>
 <depend package="pr2_mechanism_diagnostics"/>
+<depend package="pr2_description"/>
 <depend package="pr2_controller_interface"/>
 <depend package="pr2_mechanism_msgs" />
 <depend package="diagnostic_msgs" />
