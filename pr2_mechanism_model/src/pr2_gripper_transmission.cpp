@@ -54,6 +54,7 @@
 #include <algorithm>
 #include <numeric>
 #include <angles/angles.h>
+#include <boost/lexical_cast.hpp>
 
 using namespace pr2_hardware_interface;
 using namespace pr2_mechanism_model;
@@ -102,7 +103,15 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config, Robot *robot)
       ROS_ERROR("PR2GripperTransmission's joint \"%s\" has no coefficient: mechanical reduction.", joint_name);
       return false;
     }
-    gap_mechanical_reduction_ = atof(joint_reduction);
+    try
+    {
+      gap_mechanical_reduction_ = boost::lexical_cast<double>(joint_reduction);
+    }
+    catch (boost::bad_lexical_cast &e)
+    {
+      ROS_ERROR("joint_reduction (%s) is not a float",joint_reduction);
+      return false;
+    }
 
     // get the screw drive reduction
     const char *screw_reduction_str = j->Attribute("screw_reduction");
@@ -112,8 +121,16 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config, Robot *robot)
       ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: screw drive reduction, using default for PR2 alpha2.", joint_name);
     }
     else
-      screw_reduction_ = atof(screw_reduction_str);
-    //ROS_INFO("screw drive reduction. %f", screw_reduction_);
+      try
+      {
+        screw_reduction_ = boost::lexical_cast<double>(screw_reduction_str);
+      }
+      catch (boost::bad_lexical_cast &e)
+      {
+        ROS_ERROR("screw_reduction (%s) is not a float",screw_reduction_str);
+        return false;
+      }
+
 
     // get the gear_ratio
     const char *gear_ratio_str = j->Attribute("gear_ratio");
@@ -123,8 +140,15 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config, Robot *robot)
       ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: gear_ratio, using default for PR2 alpha2.", joint_name);
     }
     else
-      gear_ratio_ = atof(gear_ratio_str);
-    //ROS_INFO("gear_ratio. %f", gear_ratio_);
+      try
+      {
+        gear_ratio_ = boost::lexical_cast<double>(gear_ratio_str);
+      }
+      catch (boost::bad_lexical_cast &e)
+      {
+        ROS_ERROR("gear_ratio (%s) is not a float",gear_ratio_str);
+        return false;
+      }
 
     // get the theta0 coefficient
     const char *theta0_str = j->Attribute("theta0");
@@ -135,6 +159,15 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config, Robot *robot)
     }
     else
       theta0_ = atof(theta0_str);
+      try
+      {
+        theta0_ = boost::lexical_cast<double>(theta0_str);
+      }
+      catch (boost::bad_lexical_cast &e)
+      {
+        ROS_ERROR("theta0 (%s) is not a float",theta0_str);
+        return false;
+      }
     // get the phi0 coefficient
     const char *phi0_str = j->Attribute("phi0");
     if (phi0_str == NULL)
@@ -144,6 +177,15 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config, Robot *robot)
     }
     else
       phi0_ = atof(phi0_str);
+      try
+      {
+        phi0_ = boost::lexical_cast<double>(phi0_str);
+      }
+      catch (boost::bad_lexical_cast &e)
+      {
+        ROS_ERROR("phi0 (%s) is not a float",phi0_str);
+        return false;
+      }
     // get the t0 coefficient
     const char *t0_str = j->Attribute("t0");
     if (t0_str == NULL)
@@ -153,6 +195,15 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config, Robot *robot)
     }
     else
       t0_ = atof(t0_str);
+      try
+      {
+        t0_ = boost::lexical_cast<double>(t0_str);
+      }
+      catch (boost::bad_lexical_cast &e)
+      {
+        ROS_ERROR("t0 (%s) is not a float",t0_str);
+        return false;
+      }
     // get the L0 coefficient
     const char *L0_str = j->Attribute("L0");
     if (L0_str == NULL)
@@ -162,6 +213,15 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config, Robot *robot)
     }
     else
       L0_ = atof(L0_str);
+      try
+      {
+        L0_ = boost::lexical_cast<double>(L0_str);
+      }
+      catch (boost::bad_lexical_cast &e)
+      {
+        ROS_ERROR("L0 (%s) is not a float",L0_str);
+        return false;
+      }
     // get the h coefficient
     const char *h_str = j->Attribute("h");
     if (h_str == NULL)
@@ -171,6 +231,15 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config, Robot *robot)
     }
     else
       h_ = atof(h_str);
+      try
+      {
+        h_ = boost::lexical_cast<double>(h_str);
+      }
+      catch (boost::bad_lexical_cast &e)
+      {
+        ROS_ERROR("h (%s) is not a float",h_str);
+        return false;
+      }
     // get the a coefficient
     const char *a_str = j->Attribute("a");
     if (a_str == NULL)
@@ -180,6 +249,15 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config, Robot *robot)
     }
     else
       a_ = atof(a_str);
+      try
+      {
+        a_ = boost::lexical_cast<double>(a_str);
+      }
+      catch (boost::bad_lexical_cast &e)
+      {
+        ROS_ERROR("a (%s) is not a float",a_str);
+        return false;
+      }
     // get the b coefficient
     const char *b_str = j->Attribute("b");
     if (b_str == NULL)
@@ -189,6 +267,15 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config, Robot *robot)
     }
     else
       b_ = atof(b_str);
+      try
+      {
+        b_ = boost::lexical_cast<double>(b_str);
+      }
+      catch (boost::bad_lexical_cast &e)
+      {
+        ROS_ERROR("b (%s) is not a float",b_str);
+        return false;
+      }
     // get the r coefficient
     const char *r_str = j->Attribute("r");
     if (r_str == NULL)
@@ -198,6 +285,15 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config, Robot *robot)
     }
     else
       r_ = atof(r_str);
+      try
+      {
+        r_ = boost::lexical_cast<double>(r_str);
+      }
+      catch (boost::bad_lexical_cast &e)
+      {
+        ROS_ERROR("r (%s) is not a float",r_str);
+        return false;
+      }
   }
 
   // Print all coefficients
