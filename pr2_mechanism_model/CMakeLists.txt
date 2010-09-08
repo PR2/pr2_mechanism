@@ -11,7 +11,9 @@ rosbuild_add_library( pr2_mechanism_model
   src/chain.cpp
   src/simple_transmission.cpp
   src/pr2_gripper_transmission.cpp
-  src/wrist_transmission.cpp)
+  src/wrist_transmission.cpp
+  src/pr2_belt_transmission.cpp
+)
 
 
 rosbuild_add_gtest(test/test_chain test/test_chain.cpp)

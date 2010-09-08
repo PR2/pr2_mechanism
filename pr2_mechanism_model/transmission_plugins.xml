@@ -4,5 +4,7 @@
   <class name="pr2_mechanism_model/SimpleTransmission" type="pr2_mechanism_model::SimpleTransmission" base_class_type="pr2_mechanism_model::Transmission" />
   <class name="pr2_mechanism_model/GripperTransmission" type="pr2_mechanism_model::GripperTransmission" base_class_type="pr2_mechanism_model::Transmission" />
   <class name="pr2_mechanism_model/WristTransmission" type="pr2_mechanism_model::WristTransmission" base_class_type="pr2_mechanism_model::Transmission" />
+  <class name="pr2_mechanism_model/PR2BeltCompensatorTransmission" type="pr2_mechanism_model::PR2BeltCompensatorTransmission"
+         base_class_type="pr2_mechanism_model::Transmission" />
 
 </library>
