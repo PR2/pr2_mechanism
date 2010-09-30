@@ -35,74 +35,57 @@
 ///\author Kevin Watts
 ///\brief Publishes diagnostics for controllers, joints from pr2_mechanism_msgs/MechanismStatistics message
 
-#ifndef _PR2_MECHANISM_DIAGNOSTICS_H_MECH_DIAG_
-#define _PR2_MECHANISM_DIAGNOSTICS_H_MECH_DIAG_
+#ifndef _PR2_MECHANISM_DIAGNOSTICS_H_CTRL_DIAG_
+#define _PR2_MECHANISM_DIAGNOSTICS_H_CTRL_DIAG_
 
 #include <ros/ros.h>
 #include <pr2_mechanism_msgs/MechanismStatistics.h>
-#include <diagnostic_msgs/DiagnosticArray.h>
+#include <pr2_mechanism_msgs/ControllerStatistics.h>
 #include <diagnostic_updater/DiagnosticStatusWrapper.h>
-#include <vector>
-#include <float.h>
 #include <boost/shared_ptr.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
-#include "pr2_mechanism_model/robot.h"
-#include "pr2_mechanism_diagnostics/joint_diagnostics.h"
-#include "pr2_mechanism_diagnostics/controller_diagnostics.h"
-#include "std_srvs/Empty.h"
 
 namespace pr2_mechanism_diagnostics
 {
 
 /**
- * Publishes diagnostics data from pr2_mechanism_msgs/MechanismStatistics
- * for joints and controllers.
+ * Tracks data from controllers and publishes to diagnostics
+ * Updates with pr2_mechanism_msgs/ControllerStatistics data
+ * 
+ * Controllers that don't update in more than 3 seconds will be discarded.
+ * Controllers that have overran the 1000us limit will report a warning
+ * for the 30 seconds after the most recent overrun.
  */
-class CtrlJntDiagnosticPublisher
+class ControllerStats
 {
 private:
-  std::map<std::string, boost::shared_ptr<JointStats> > joint_stats;
-  std::map<std::string, boost::shared_ptr<ControllerStats> > controller_stats;
-
-  ros::NodeHandle n_;
-  ros::Subscriber mech_st_sub_;
-  ros::Publisher diag_pub_;
-  ros::ServiceServer reset_srv_;
-
-  bool use_sim_time_;
-  bool disable_controller_warnings_;
-
-  std::vector<boost::shared_ptr<TransmissionListener> > trans_listeners_;
-  bool trans_status_;
-
-  void loadTransCheckers(urdf::Model &robot, std::map<std::string, std::string> &joints_to_actuators);
-
-  void loadTransmissions(TiXmlElement *robot, std::map<std::string, std::string> &joints_to_actuators);
+  ros::Time updateTime;
   
-  void mechCallback(const pr2_mechanism_msgs::MechanismStatistics::ConstPtr& mechMsg);
+  std::string name;
+  ros::Time timestamp;
+  bool running;
+  ros::Duration max_time;
+  ros::Duration mean_time;
+  ros::Duration variance_time;
+  int num_overruns;
+  ros::Time last_overrun_time;
 
-  bool reset_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
-  {
-    for (uint i = 0; i < trans_listeners_.size(); ++i)
-      trans_listeners_[i]->reset();
-
-    trans_status_ = true;
-    return true;
-  }
-
+  bool disable_warnings_;
 
 public:
-  CtrlJntDiagnosticPublisher(); 
+  ControllerStats(std::string nam, bool disable_warnings); 
+    
+  ~ControllerStats() {}
 
-  ~CtrlJntDiagnosticPublisher() { }
-  
-  bool initTransCheck();
-  
-  void publishDiag(); /**< Publish diagnostics from joints, controllers */
+  bool update(const pr2_mechanism_msgs::ControllerStatistics &cs);
 
-  bool ok() const { return n_.ok(); } 
+  /**<! True if we should discard stale controller value */
+  bool shouldDiscard() const { return (ros::Time::now() - updateTime).toSec() > 3; }
+
+  boost::shared_ptr<diagnostic_updater::DiagnosticStatusWrapper> toDiagStat() const;
+
 };
+
 
 }
 
-#endif // _PR2_MECHANISM_DIAGNOSTICS_H_MECH_DIAG_
+#endif // _PR2_MECHANISM_DIAGNOSTICS_H_CTRL_DIAG_

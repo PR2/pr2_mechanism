@@ -1,0 +1,16 @@
+<launch>
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find pr2_mechanism_diagnostics)/test/urdf/upperarm.urdf.xacro'" />
+  
+  
+  <node pkg="pr2_mechanism_diagnostics" type="pr2_mechanism_diagnostics_node" name="pr2_mechanism_diagnostcs" >
+    <param name="init_trans_check"  value="true" />
+  </node>
+
+
+  <test test-name="trans_error_flex" time-limit="30" 
+        pkg="pr2_mechanism_diagnostics" 
+        name="trans_error_flex" 
+        type="trans_error_test.py" >
+    <param name="flex_error" value="true" type="bool" />
+  </test>
+</launch>

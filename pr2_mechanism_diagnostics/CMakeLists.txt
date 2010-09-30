@@ -22,16 +22,22 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #rosbuild_gensrv()
 
 #common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
+rosbuild_add_library(${PROJECT_NAME} 
+  src/controller_diagnostics.cpp 
+  src/joint_diagnostics.cpp)
+
 #target_link_libraries(${PROJECT_NAME} another_library)
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} math)
 #rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(example ${PROJECT_NAME})
 
-rosbuild_add_executable(pr2_mechanism_diagnostics src/pr2_mechanism_diagnostics.cpp)
+
+rosbuild_add_executable(pr2_mechanism_diagnostics_node src/pr2_mechanism_diagnostics.cpp)
+target_link_libraries(pr2_mechanism_diagnostics_node ${PROJECT_NAME})
 
 rosbuild_add_rostest(test/launch/mech_diag_test_main.launch)
 rosbuild_add_rostest(test/launch/overrun_test.launch)
 rosbuild_add_rostest(test/launch/uncal_test.launch)
 rosbuild_add_rostest(test/launch/nan_test.launch)
+
+rosbuild_add_rostest(test/launch/trans_error_test.launch)
