@@ -43,8 +43,10 @@ using namespace std;
 
 // Diagnostic publisher
 CtrlJntDiagnosticPublisher::CtrlJntDiagnosticPublisher() :
+  pnh_("~"),
   use_sim_time_(false),
   disable_controller_warnings_(false),
+  check_transmissions_(false),
   trans_status_(true)
 { 
   mech_st_sub_ = n_.subscribe("mechanism_statistics", 1000, &CtrlJntDiagnosticPublisher::mechCallback, this);
@@ -52,8 +54,7 @@ CtrlJntDiagnosticPublisher::CtrlJntDiagnosticPublisher() :
   
   n_.param("/use_sim_time", use_sim_time_, false);
 
-  ros::NodeHandle pnh("~");
-  pnh.param("disable_controller_warnings", disable_controller_warnings_, false);
+  pnh_.param("disable_controller_warnings", disable_controller_warnings_, false);
 }
 
 
@@ -93,12 +94,15 @@ bool CtrlJntDiagnosticPublisher::initTransCheck()
 
   loadTransCheckers(urdf_bot, jnts_to_motors);
 
-  reset_srv_ = n_.advertiseService("reset_trans_check", &CtrlJntDiagnosticPublisher::reset_cb, this);
 
+  reset_srv_ = pnh_.advertiseService("reset_trans_check", &CtrlJntDiagnosticPublisher::reset_cb, this);
+
+  trans_status_pub_ = pnh_.advertise<std_msgs::Bool>("transmission_status", 1, true);
+
+  check_transmissions_ = true;
   return true;
 }
 
-// TODO: Need to ignore casters somehow
 void CtrlJntDiagnosticPublisher::loadTransCheckers(urdf::Model &robot, map<string, string> &joints_to_actuators)
 {
   map<string, boost::shared_ptr<urdf::Joint> >::iterator it;
@@ -108,6 +112,12 @@ void CtrlJntDiagnosticPublisher::loadTransCheckers(urdf::Model &robot, map<strin
     if (!joints_to_actuators.count(jnt_name))
     {
       ROS_DEBUG("Joint \"%s\" wasn't found in joints to actuators map.", jnt_name.c_str());
+      continue;
+    }
+    
+    if (!it->second->calibration)
+    {
+      ROS_DEBUG("Joint \"%s\" doesn't have calibration. Ignoring tranmission status.", jnt_name.c_str());
       continue;
     }
 
@@ -264,6 +274,7 @@ void CtrlJntDiagnosticPublisher::publishDiag()
     array.status.push_back(stat);
   }
 
+  // Update with transmissions
   bool status = true;
   for (uint i = 0; i < trans_listeners_.size(); ++i)
   {
@@ -271,9 +282,12 @@ void CtrlJntDiagnosticPublisher::publishDiag()
     status = status && trans_listeners_[i]->checkOK();
   }
 
-  if (!status && trans_status_)
+  array.header.stamp = ros::Time::now();
+  diag_pub_.publish(array);
+
+  // Halt motors if transmissions are broken
+  if (check_transmissions_ && !status && trans_status_)
   {
-    // Halt motors
     std_srvs::Empty::Request req;
     std_srvs::Empty::Response resp;
     ros::service::call("pr2_etherCAT/halt_motors", req, resp);
@@ -281,10 +295,14 @@ void CtrlJntDiagnosticPublisher::publishDiag()
     trans_status_ = status;
   }
 
-  array.header.stamp = ros::Time::now();
-  diag_pub_.publish(array);
+  // Publish transmission status
+  if (check_transmissions_)
+  {
+    std_msgs::Bool t_stat;
+    t_stat.data = trans_status_;
+    trans_status_pub_.publish(t_stat);
+  }
 }
-
 
 
 int main(int argc, char **argv)

@@ -50,6 +50,7 @@
 #include "pr2_mechanism_diagnostics/joint_diagnostics.h"
 #include "pr2_mechanism_diagnostics/controller_diagnostics.h"
 #include "std_srvs/Empty.h"
+#include "std_msgs/Bool.h"
 
 namespace pr2_mechanism_diagnostics
 {
@@ -64,14 +65,16 @@ private:
   std::map<std::string, boost::shared_ptr<JointStats> > joint_stats;
   std::map<std::string, boost::shared_ptr<ControllerStats> > controller_stats;
 
-  ros::NodeHandle n_;
+  ros::NodeHandle n_, pnh_;
   ros::Subscriber mech_st_sub_;
   ros::Publisher diag_pub_;
+  ros::Publisher trans_status_pub_;
   ros::ServiceServer reset_srv_;
 
   bool use_sim_time_;
   bool disable_controller_warnings_;
 
+  bool check_transmissions_;
   std::vector<boost::shared_ptr<TransmissionListener> > trans_listeners_;
   bool trans_status_;
 

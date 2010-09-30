@@ -15,6 +15,7 @@ The `pr2_mechanism_diagnostics` node subscribes to `mechanism_statistics` and pu
   <depend package="pr2_mechanism_model" />
   <depend package="angles" />
   <depend package="std_srvs" />
+    <depend package="std_msgs" />
   <depend package="xacro" />
   
 </package>

@@ -37,6 +37,9 @@
 #include <limits>
 #include "angles/angles.h"
 
+#include <boost/accumulators/statistics/max.hpp>
+#include <boost/accumulators/statistics/min.hpp>
+
 using namespace pr2_mechanism_diagnostics;
 using namespace std;
 
@@ -50,6 +53,7 @@ using namespace std;
  * 
  *****/
 
+#define GRACE_HITS 5
 
 // Transmission Listener
 TransmissionListener::TransmissionListener() :
@@ -60,7 +64,18 @@ TransmissionListener::TransmissionListener() :
   has_up_(false),
   has_down_(false),
   status_(true),
-  last_reading_(true)
+  last_trans_status_(true),
+  error_cnt_(0),
+  num_errors_(0),
+  num_hits_(0),
+  num_errors_since_reset_(0),
+  rx_cnt_(0),
+  last_rising_(0.0),
+  last_falling_(0.0),
+  last_bad_reading_(0.0),
+  last_position_(0.0),
+  is_calibrated_(false),
+  has_updated_(false)
 { }
 
 bool TransmissionListener::initUrdf(const boost::shared_ptr<urdf::Joint> jnt, const string &actuator_name)
@@ -104,58 +119,6 @@ bool TransmissionListener::initUrdf(const boost::shared_ptr<urdf::Joint> jnt, co
   return true;
 }
 
-bool TransmissionListener::initParams(const ros::NodeHandle &nh)
-{
-  if (!nh.getParam("joint", joint_name_))
-  {
-    ROS_ERROR("Unable to find parameter \"joint\"");
-    return false;
-  }
-  
-  if (!nh.getParam("actuator", actuator_name_))
-  {
-    ROS_ERROR("Unable to find parameter \"actuator\"");
-    return false;
-  }
-  
-  if (!nh.getParam("deadband", deadband_))
-  {
-    ROS_ERROR("Unable to find parameter \"deadband\"");
-    return false;
-  }
-  
-  has_up_ = nh.getParam("up_ref", up_ref_);
-  has_down_ = nh.getParam("down_ref", up_ref_);
-  
-  if (!has_up_ && !has_down_)
-  {
-    ROS_ERROR("Either up or down reference must be specified for joint %s", joint_name_.c_str());
-    return false;
-  }
-    
-  double tmp = 0;
-  has_wrap_ = nh.getParam("wrap", tmp);
-  
-  if (has_wrap_ && (!has_up_ || !has_down_))
-  {
-    ROS_ERROR("For continuous joints, both \"up_ref\" and \"down_ref\" must be specified. Error on joint %s", 
-              joint_name_.c_str());
-    return false;
-  }
-  
-  if (!has_wrap_ && (!nh.hasParam("max") || !nh.hasParam("min")))
-  {
-    ROS_ERROR("For non-continuous joints, either \"max\" and \"min\" must be specified. Error on joint %s", 
-              joint_name_.c_str());
-    return false;
-  }
-  
-  nh.getParam("max", max_);
-  nh.getParam("min", min_);
-
-  return true;
-}
-
 // Look for joint, actuator
 // Check bounds
 bool TransmissionListener::update(const pr2_mechanism_msgs::MechanismStatistics::ConstPtr& mechMsg)
@@ -191,10 +154,18 @@ bool TransmissionListener::update(const pr2_mechanism_msgs::MechanismStatistics:
     return false;
   }
 
-  /*
+  rx_cnt_++;
+  last_rising_ = as->last_calibration_rising_edge;
+  last_falling_ = as->last_calibration_falling_edge;
+  last_cal_reading_ = as->calibration_reading;
+  last_position_ = js->position;
+  is_calibrated_ = js->is_calibrated;
+  position_obs_(last_position_);
+
+  /* Don't check bounds because we have no max/min
   if (!checkBounds(js))
   {
-    last_reading_ = false;
+    last_trans_status_ = false;
     status_ = false;
     return false;
   }
@@ -202,11 +173,25 @@ bool TransmissionListener::update(const pr2_mechanism_msgs::MechanismStatistics:
 
   bool rv = checkFlag(js, as);
 
-  last_reading_ = rv;
+  last_trans_status_ = rv;
   if (!rv)
+  {
+    num_hits_++;
+    last_bad_reading_ = last_position_;
+    error_cnt_++;
+  }
+  else
+    error_cnt_ = 0;
+  
+  if (error_cnt_ > GRACE_HITS)
+  {
+    num_errors_++;
+    num_errors_since_reset_++;
     status_ = false;
+  }
 
-  return rv;
+  has_updated_ = true;
+  return true;
 }
 
 bool TransmissionListener::checkBounds(const pr2_mechanism_msgs::JointStatistics *js) const
@@ -327,11 +312,14 @@ boost::shared_ptr<diagnostic_updater::DiagnosticStatusWrapper> TransmissionListe
   
   stat->name = "Transmission (" + joint_name_ + ")";
       
+  if (!has_updated_)
+    stat->mergeSummary(diagnostic_msgs::DiagnosticStatus::ERROR, "No Updates");
+
   if (!status_)
     stat->mergeSummary(diagnostic_msgs::DiagnosticStatus::ERROR, "Broken Transmission");
 
   stat->add("Transmission Status", status_ ? "OK" : "Broken");
-  stat->add("Current Reading", last_reading_ ? "OK" : "Broken");
+  stat->add("Current Reading", last_trans_status_ ? "OK" : "Broken");
   
   stat->add("Joint", joint_name_);
   stat->add("Actuator", actuator_name_);
@@ -346,11 +334,28 @@ boost::shared_ptr<diagnostic_updater::DiagnosticStatusWrapper> TransmissionListe
     stat->add("Down Position", "N/A");
 
   stat->add("Wrapped", has_wrap_ ? "True" : "False");
-  stat->add("Max Limit", max_);
-  stat->add("Min Limit", min_);
+  //stat->add("Max Limit", max_);
+  //stat->add("Min Limit", min_);
  
   // Todo: Start tracking state....
+  stat->add("Mech State RX Count", rx_cnt_);
+  stat->add("Is Calibrated", is_calibrated_ ? "True" : "False");
+  stat->add("Calibration Reading", last_cal_reading_);
+  stat->add("Joint Position", last_position_);
+  stat->add("Total Errors", num_errors_);
+  stat->add("Errors Since Reset", num_errors_since_reset_);
+  stat->add("Total Bad Readings", num_hits_);
+  float max_obs_val = boost::accumulators::max( position_obs_ );
+  float min_obs_val = boost::accumulators::min( position_obs_ );
+  stat->add("Max Obs. Position", max_obs_val );
+  stat->add("Min Obs. Position", min_obs_val );
+  //stat->add("Min Obs. Position", boost::accumulators::min( min_obs_ ));
   
+  stat->add("Last Rising Edge", last_rising_);
+  stat->add("Last Falling Edge", last_falling_);
+  stat->add("Last Bad Reading", last_bad_reading_);
+  
+
   return stat;
 }
 
