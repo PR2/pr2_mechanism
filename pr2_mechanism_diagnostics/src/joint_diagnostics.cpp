@@ -232,17 +232,24 @@ bool TransmissionListener::checkFlag(const pr2_mechanism_msgs::JointStatistics *
   {
     if (abs(jnt_position - up_ref_) < deadband_)
       return true; // Too close to deadband
-    if (abs((2 * M_PI - jnt_position) - up_ref_) < deadband_)
-      return true; // Close to DB on other side of wrap
   }
-
-  // Check deadband for down ref
   if (has_down_)
   {
     if (abs(jnt_position - down_ref_) < deadband_)
       return true; // Too close to deadband
-    if (abs((2 * M_PI - jnt_position) - down_ref_) < deadband_)
-      return true; // Close to DB on other side of wrap
+  }
+
+  // Check that we're OK on other side of normalized angle
+  if (has_up_ && has_down_ && has_wrap_)
+  {
+    if (abs((  2 * M_PI - jnt_position) - up_ref_)   < deadband_)
+      return true;
+    if (abs((- 2 * M_PI + jnt_position) - up_ref_)   < deadband_)
+      return true;
+    if (abs((  2 * M_PI - jnt_position) - down_ref_) < deadband_)
+      return true;
+    if (abs((- 2 * M_PI + jnt_position) - down_ref_) < deadband_)
+      return true;
   }
   
   if (has_up_ && has_down_)
