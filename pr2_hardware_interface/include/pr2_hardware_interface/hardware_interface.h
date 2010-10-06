@@ -97,6 +97,8 @@ public:
   double last_executed_effort_; //!< The torque applied after safety limits were enforced (in Nm)
   double last_measured_effort_; //!< The measured torque (in Nm)
 
+  double max_effort_; //!< Absolute torque limit for actuator (derived from motor current limit). (in Nm)
+
   double motor_voltage_; //!< Motor voltage (in volts)
 
   int num_encoder_errors_; //!< The number of invalid encoder signal transitions
@@ -254,6 +256,7 @@ public:
   double last_commanded_current_;
   double last_executed_current_;
   double last_measured_current_;
+  double max_current_;  //!< Current limit (Amps).  Minimum of board and LED limits. 
   uint8_t &A_;
   uint8_t &B_;
   uint8_t &I_;
