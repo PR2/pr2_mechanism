@@ -11,12 +11,12 @@
   <license>BSD</license>  
   <review status="Doc reviewed" notes="2009-11-13"/>
   <url>http://ros.org/wiki/pr2_mechanism</url>
-  <depend stack="common" /> <!-- tinyxml, pluginlib -->
+  <depend stack="common" /> <!-- xacro, tinyxml, pluginlib -->
   <depend stack="common_msgs" /> <!-- sensor_msgs, geometry_msgs, diagnostic_msgs -->
   <depend stack="diagnostics" /> <!-- diagnostic_updater -->
   <depend stack="geometry" /> <!-- angles -->
   <depend stack="pr2_common" /> <!-- pr2_description -->
   <depend stack="robot_model" /> <!-- robot_state_publisher, urdf, kdl_parser -->
-  <depend stack="ros" /> <!-- std_msgs, rosparam, rospy, roscpp -->
+  <depend stack="ros" /> <!-- std_msgs, rosparam, rospy, roscpp, std_srvs -->
 
 </stack>
