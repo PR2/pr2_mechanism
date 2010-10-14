@@ -9,39 +9,8 @@
   <include filename="$(find pr2_description)/urdf/materials.urdf.xacro" />
   <include filename="$(find pr2_description)/urdf/upper_arm_v0/upper_arm.urdf.xacro" />
 
-  <link name="base_link">
-    <inertial>
-      <mass value="1000" />
-      <origin xyz="0 0 0" rpy="0 0 0"/> 
-      <inertia ixx="1000" ixy="0" ixz="0" iyy="1000" iyz="0" izz="1000" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" /> 
-      <geometry>
-        <box size=".01 .01 .01" />
-      </geometry>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0.0 0.0 0.0" />
-      <geometry>
-        <box size=".01 .01 .01" />
-      </geometry>
-    </collision>
-  </link>
-  <gazebo reference="base_link" >
-    <material>Gazebo/White</material>
-  </gazebo>
-  <gazebo>
-    <joint:hinge name="base_fixed_joint">
-      <body1>base_link</body1>
-      <body2>world</body2>
-      <anchor>base_link</anchor>
-      <lowStop>0</lowStop>
-      <highStop>0</highStop>
-      <axis>0 0 1</axis>
-    </joint:hinge>
-  </gazebo>
-  
+  <link name="base_link" />
+
   <!-- generic simulator_gazebo plugins for starting mechanism control, ros time, ros battery -->
   <include filename="$(find pr2_description)/gazebo/gazebo.urdf.xacro" />
     
