@@ -38,5 +38,5 @@ rosbuild_add_rostest(test/launch/overrun_test.launch)
 rosbuild_add_rostest(test/launch/uncal_test.launch)
 rosbuild_add_rostest(test/launch/nan_test.launch)
 
-rosbuild_add_rostest(test/launch/trans_error_test.launch)
-rosbuild_add_rostest(test/launch/wrist_trans_error.launch)
+#rosbuild_add_rostest(test/launch/trans_error_test.launch)
+#rosbuild_add_rostest(test/launch/wrist_trans_error.launch)
