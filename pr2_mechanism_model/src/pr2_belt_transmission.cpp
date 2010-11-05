@@ -234,7 +234,7 @@ void PR2BeltCompensatorTransmission::propagatePosition(
     / (1.0 + 0.5*dt*lam);
   joint_pos = last_joint_pos_ + 0.5*dt*(joint_vel + last_joint_vel_);
 
-  js[0]->position_ = joint_pos;
+  js[0]->position_ = joint_pos + js[0]->reference_position_;
   js[0]->velocity_ = joint_vel;
   js[0]->measured_effort_ = as[0]->state_.last_measured_effort_ * mechanical_reduction_;
 
@@ -264,7 +264,7 @@ void PR2BeltCompensatorTransmission::propagatePositionBackwards(
 {
   assert(as.size() == 1);
   assert(js.size() == 1);
-  as[0]->state_.position_ = js[0]->position_ * mechanical_reduction_;
+  as[0]->state_.position_ = (js[0]->position_ - js[0]->reference_position_) * mechanical_reduction_;
   as[0]->state_.velocity_ = js[0]->velocity_ * mechanical_reduction_;
   as[0]->state_.last_measured_effort_ = js[0]->measured_effort_ / mechanical_reduction_;
 }
