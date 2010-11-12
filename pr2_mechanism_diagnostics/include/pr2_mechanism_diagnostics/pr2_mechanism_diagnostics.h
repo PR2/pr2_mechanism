@@ -68,38 +68,16 @@ private:
   ros::NodeHandle n_, pnh_;
   ros::Subscriber mech_st_sub_;
   ros::Publisher diag_pub_;
-  ros::Publisher trans_status_pub_;
-  ros::ServiceServer reset_srv_;
 
   bool use_sim_time_;
   bool disable_controller_warnings_;
-
-  bool check_transmissions_;
-  std::vector<boost::shared_ptr<TransmissionListener> > trans_listeners_;
-  bool trans_status_;
-
-  void loadTransCheckers(urdf::Model &robot, std::map<std::string, std::string> &joints_to_actuators);
-
-  void loadTransmissions(TiXmlElement *robot, std::map<std::string, std::string> &joints_to_actuators);
   
   void mechCallback(const pr2_mechanism_msgs::MechanismStatistics::ConstPtr& mechMsg);
-
-  bool reset_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
-  {
-    for (uint i = 0; i < trans_listeners_.size(); ++i)
-      trans_listeners_[i]->reset();
-
-    trans_status_ = true;
-    return true;
-  }
-
 
 public:
   CtrlJntDiagnosticPublisher(); 
 
   ~CtrlJntDiagnosticPublisher() { }
-  
-  bool initTransCheck();
   
   void publishDiag(); /**< Publish diagnostics from joints, controllers */
 
