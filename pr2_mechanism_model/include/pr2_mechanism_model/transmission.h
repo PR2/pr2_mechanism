@@ -57,9 +57,6 @@ public:
   /// Initializes the transmission from XML data
   virtual bool initXml(TiXmlElement *config, Robot *robot) = 0;
 
-  /// Initializes the transmission from XML data
-  virtual bool initXml(TiXmlElement *config) { abort(); }  // In future versions, this method is mandatory in subclasses
-
   /// Uses encoder data to fill out joint position and velocities
   virtual void propagatePosition(std::vector<pr2_hardware_interface::Actuator*>&,
                                  std::vector<pr2_mechanism_model::JointState*>&) = 0;
@@ -94,6 +91,9 @@ public:
    * joint_names_.
    */
   std::vector<std::string> joint_names_;
+
+  /// Initializes the transmission from XML data
+  virtual bool initXml(TiXmlElement *config) { abort(); }  // In future versions, this method is mandatory in subclasses
 };
 
 } // namespace pr2_mechanism_model
