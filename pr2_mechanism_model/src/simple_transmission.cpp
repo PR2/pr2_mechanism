@@ -42,8 +42,8 @@
 using namespace pr2_mechanism_model;
 using namespace pr2_hardware_interface;
 
-PLUGINLIB_DECLARE_CLASS(pr2_mechanism_model, SimpleTransmission, 
-                         pr2_mechanism_model::SimpleTransmission, 
+PLUGINLIB_DECLARE_CLASS(pr2_mechanism_model, SimpleTransmission,
+                         pr2_mechanism_model::SimpleTransmission,
                          pr2_mechanism_model::Transmission)
 
 
@@ -84,6 +84,34 @@ bool SimpleTransmission::initXml(TiXmlElement *elt, Robot *robot)
   return true;
 }
 
+bool SimpleTransmission::initXml(TiXmlElement *elt)
+{
+  const char *name = elt->Attribute("name");
+  name_ = name ? name : "";
+
+  TiXmlElement *jel = elt->FirstChildElement("joint");
+  const char *joint_name = jel ? jel->Attribute("name") : NULL;
+  if (!joint_name)
+  {
+    ROS_ERROR("SimpleTransmission did not specify joint name");
+    return false;
+  }
+  joint_names_.push_back(joint_name);
+
+  TiXmlElement *ael = elt->FirstChildElement("actuator");
+  const char *actuator_name = ael ? ael->Attribute("name") : NULL;
+  if (!actuator_name)
+  {
+    ROS_ERROR("SimpleTransmission could not find actuator named \"%s\"", actuator_name);
+    return false;
+  }
+  actuator_names_.push_back(actuator_name);
+
+  mechanical_reduction_ = atof(elt->FirstChildElement("mechanicalReduction")->GetText());
+
+  return true;
+}
+
 void SimpleTransmission::propagatePosition(
   std::vector<Actuator*>& as, std::vector<JointState*>& js)
 {
@@ -109,6 +137,7 @@ void SimpleTransmission::propagateEffort(
 {
   assert(as.size() == 1);
   assert(js.size() == 1);
+  as[0]->command_.enable_ = true;
   as[0]->command_.effort_ = js[0]->commanded_effort_ / mechanical_reduction_;
 }
 

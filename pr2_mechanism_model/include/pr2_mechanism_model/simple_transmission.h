@@ -51,16 +51,17 @@ public:
   ~SimpleTransmission() {}
 
   bool initXml(TiXmlElement *config, Robot *robot);
+  bool initXml(TiXmlElement *config);
 
   double mechanical_reduction_;
 
-  void propagatePosition(std::vector<pr2_hardware_interface::Actuator*>&, 
+  void propagatePosition(std::vector<pr2_hardware_interface::Actuator*>&,
                          std::vector<pr2_mechanism_model::JointState*>&);
-  void propagatePositionBackwards(std::vector<pr2_mechanism_model::JointState*>&, 
+  void propagatePositionBackwards(std::vector<pr2_mechanism_model::JointState*>&,
                                   std::vector<pr2_hardware_interface::Actuator*>&);
-  void propagateEffort(std::vector<pr2_mechanism_model::JointState*>&, 
+  void propagateEffort(std::vector<pr2_mechanism_model::JointState*>&,
                        std::vector<pr2_hardware_interface::Actuator*>&);
-  void propagateEffortBackwards(std::vector<pr2_hardware_interface::Actuator*>&, 
+  void propagateEffortBackwards(std::vector<pr2_hardware_interface::Actuator*>&,
                                 std::vector<pr2_mechanism_model::JointState*>&);
 };
 

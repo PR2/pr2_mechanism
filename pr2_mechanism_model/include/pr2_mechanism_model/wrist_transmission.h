@@ -71,6 +71,7 @@ public:
   ~WristTransmission() {}
 
   bool initXml(TiXmlElement *config, Robot *robot);
+  bool initXml(TiXmlElement *config);
 
   std::vector<double> actuator_reduction_;
   std::vector<double> joint_reduction_;

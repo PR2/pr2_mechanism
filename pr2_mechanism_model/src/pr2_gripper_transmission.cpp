@@ -328,6 +328,161 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config, Robot *robot)
   return true;
 }
 
+bool PR2GripperTransmission::initXml(TiXmlElement *config)
+{
+  const char *name = config->Attribute("name");
+  name_ = name ? name : "";
+  //myfile.open("transmission_data.txt");
+  TiXmlElement *ael = config->FirstChildElement("actuator");
+  const char *actuator_name = ael ? ael->Attribute("name") : NULL;
+  if (!actuator_name)
+  {
+    ROS_ERROR("PR2GripperTransmission could not find actuator named \"%s\"", actuator_name);
+    return false;
+  }
+  actuator_names_.push_back(actuator_name);
+
+  for (TiXmlElement *j = config->FirstChildElement("gap_joint"); j; j = j->NextSiblingElement("gap_joint"))
+  {
+    const char *joint_name = j->Attribute("name");
+    if (!joint_name)
+    {
+      ROS_ERROR("PR2GripperTransmission did not specify joint name");
+      return false;
+    }
+    gap_joint_ = std::string(joint_name);
+    joint_names_.push_back(joint_name);  // The first joint is the gap joint
+
+    // get the mechanical reduction
+    const char *joint_reduction = j->Attribute("mechanical_reduction");
+    if (!joint_reduction)
+    {
+      ROS_ERROR("PR2GripperTransmission's joint \"%s\" has no coefficient: mechanical reduction.", joint_name);
+      return false;
+    }
+    gap_mechanical_reduction_ = atof(joint_reduction);
+
+    // get the screw drive reduction
+    const char *screw_reduction_str = j->Attribute("screw_reduction");
+    if (screw_reduction_str == NULL)
+    {
+      screw_reduction_ = 2.0/1000.0;
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: screw drive reduction, using default for PR2 alpha2.", joint_name);
+    }
+    else
+      screw_reduction_ = atof(screw_reduction_str);
+    //ROS_INFO("screw drive reduction. %f", screw_reduction_);
+
+    // get the gear_ratio
+    const char *gear_ratio_str = j->Attribute("gear_ratio");
+    if (gear_ratio_str == NULL)
+    {
+      gear_ratio_ = 29.16;
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: gear_ratio, using default for PR2 alpha2.", joint_name);
+    }
+    else
+      gear_ratio_ = atof(gear_ratio_str);
+    //ROS_INFO("gear_ratio. %f", gear_ratio_);
+
+    // get the theta0 coefficient
+    const char *theta0_str = j->Attribute("theta0");
+    if (theta0_str == NULL)
+    {
+      theta0_ = 2.97571*M_PI/180.0;
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: theta0, using default for PR2 alpha2.", joint_name);
+    }
+    else
+      theta0_ = atof(theta0_str);
+    // get the phi0 coefficient
+    const char *phi0_str = j->Attribute("phi0");
+    if (phi0_str == NULL)
+    {
+      phi0_ = 29.98717*M_PI/180.0;
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: phi0, using default for PR2 alpha2.", joint_name);
+    }
+    else
+      phi0_ = atof(phi0_str);
+    // get the t0 coefficient
+    const char *t0_str = j->Attribute("t0");
+    if (t0_str == NULL)
+    {
+      t0_ = -0.19543/1000.0;
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: t0, using default for PR2 alpha2.", joint_name);
+    }
+    else
+      t0_ = atof(t0_str);
+    // get the L0 coefficient
+    const char *L0_str = j->Attribute("L0");
+    if (L0_str == NULL)
+    {
+      L0_ = 34.70821/1000.0;
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: L0, using default for PR2 alpha2.", joint_name);
+    }
+    else
+      L0_ = atof(L0_str);
+    // get the h coefficient
+    const char *h_str = j->Attribute("h");
+    if (h_str == NULL)
+    {
+      h_ = 5.200/1000.0;
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: h, using default for PR2 alpha2.", joint_name);
+    }
+    else
+      h_ = atof(h_str);
+    // get the a coefficient
+    const char *a_str = j->Attribute("a");
+    if (a_str == NULL)
+    {
+      a_ = 67.56801/1000.0;
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: a, using default for PR2 alpha2.", joint_name);
+    }
+    else
+      a_ = atof(a_str);
+    // get the b coefficient
+    const char *b_str = j->Attribute("b");
+    if (b_str == NULL)
+    {
+      b_ = 48.97193/1000.0;
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: b, using default for PR2 alpha2.", joint_name);
+    }
+    else
+      b_ = atof(b_str);
+    // get the r coefficient
+    const char *r_str = j->Attribute("r");
+    if (r_str == NULL)
+    {
+      r_ = 91.50000/1000.0;
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: r, using default for PR2 alpha2.", joint_name);
+    }
+    else
+      r_ = atof(r_str);
+  }
+
+  // Print all coefficients
+  ROS_DEBUG("Gripper transmission parameters for %s: a=%f, b=%f, r=%f, h=%f, L0=%f, t0=%f, theta0=%f, phi0=%f, gear_ratio=%f, screw_red=%f",
+            name_.c_str(), a_, b_, r_, h_, L0_, t0_, theta0_, phi0_, gear_ratio_, screw_reduction_);
+
+  // Get passive joint informations
+  for (TiXmlElement *j = config->FirstChildElement("passive_joint"); j; j = j->NextSiblingElement("passive_joint"))
+  {
+    const char *joint_name = j->Attribute("name");
+    if (!joint_name)
+    {
+      ROS_ERROR("PR2GripperTransmission did not specify joint name");
+      return false;
+    }
+
+    // add joint name to list
+    joint_names_.push_back(joint_name);  // Adds the passive joints after the gap joint
+    passive_joints_.push_back(joint_name);
+  }
+
+  // if simulated gripper prismatic joint exists, use it
+  if (config->FirstChildElement("use_simulated_gripper_joint")) use_simulated_gripper_joint = true;
+
+  return true;
+}
+
 ///////////////////////////////////////////////////////////
 /// given actuator states (motor revolustion, joint torques), compute gap properties.
 void PR2GripperTransmission::computeGapStates(
@@ -594,6 +749,7 @@ void PR2GripperTransmission::propagateEffort(
   //ROS_ERROR("prop eff eff=%f",gap_effort);
 
   /// actuator commanded effort = gap_dffort / dMR_dt / (2*pi)  * gap_mechanical_reduction_
+  as[0]->command_.enable_ = true;
   as[0]->command_.effort_       = 2.0*gap_effort / dMR_dt * RAD2MR * gap_mechanical_reduction_;
 }
 

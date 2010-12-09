@@ -58,6 +58,7 @@ public:
   virtual ~PR2GripperTransmission() {/*myfile.close();*/}
 
   bool initXml(TiXmlElement *config, Robot *robot);
+  bool initXml(TiXmlElement *config);
 
   void propagatePosition(std::vector<pr2_hardware_interface::Actuator*>&,
                          std::vector<pr2_mechanism_model::JointState*>&);

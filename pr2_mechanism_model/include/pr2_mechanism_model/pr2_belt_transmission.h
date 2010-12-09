@@ -50,6 +50,7 @@ public:
   ~PR2BeltCompensatorTransmission() {}
 
   bool initXml(TiXmlElement *config, Robot *robot);
+  bool initXml(TiXmlElement *config);
 
   void propagatePosition(std::vector<pr2_hardware_interface::Actuator*>&,
                          std::vector<pr2_mechanism_model::JointState*>&);
@@ -61,7 +62,6 @@ public:
                                 std::vector<pr2_mechanism_model::JointState*>&);
 
 private:
-  pr2_mechanism_model::Robot *robot_;
   ros::Time last_time_;
   double dt;
 

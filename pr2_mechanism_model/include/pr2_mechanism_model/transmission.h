@@ -57,20 +57,23 @@ public:
   /// Initializes the transmission from XML data
   virtual bool initXml(TiXmlElement *config, Robot *robot) = 0;
 
+  /// Initializes the transmission from XML data
+  virtual bool initXml(TiXmlElement *config) { abort(); }  // In future versions, this method is mandatory in subclasses
+
   /// Uses encoder data to fill out joint position and velocities
-  virtual void propagatePosition(std::vector<pr2_hardware_interface::Actuator*>&, 
+  virtual void propagatePosition(std::vector<pr2_hardware_interface::Actuator*>&,
                                  std::vector<pr2_mechanism_model::JointState*>&) = 0;
 
   /// Uses the joint position to fill out the actuator's encoder.
-  virtual void propagatePositionBackwards(std::vector<pr2_mechanism_model::JointState*>&, 
+  virtual void propagatePositionBackwards(std::vector<pr2_mechanism_model::JointState*>&,
                                           std::vector<pr2_hardware_interface::Actuator*>&) = 0;
 
   /// Uses commanded joint efforts to fill out commanded motor currents
-  virtual void propagateEffort(std::vector<pr2_mechanism_model::JointState*>&, 
+  virtual void propagateEffort(std::vector<pr2_mechanism_model::JointState*>&,
                                std::vector<pr2_hardware_interface::Actuator*>&) = 0;
 
   /// Uses the actuator's commanded effort to fill out the torque on the joint.
-  virtual void propagateEffortBackwards(std::vector<pr2_hardware_interface::Actuator*>&, 
+  virtual void propagateEffortBackwards(std::vector<pr2_hardware_interface::Actuator*>&,
                                         std::vector<pr2_mechanism_model::JointState*>&) = 0;
 
   /// the name of the transmission

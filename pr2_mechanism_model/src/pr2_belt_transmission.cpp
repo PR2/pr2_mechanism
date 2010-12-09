@@ -44,7 +44,6 @@ namespace pr2_mechanism_model {
 
 bool PR2BeltCompensatorTransmission::initXml(TiXmlElement *elt, Robot *robot)
 {
-  robot_ = robot;
   const char *name = elt->Attribute("name");
   name_ = name ? name : "";
 
@@ -139,7 +138,93 @@ bool PR2BeltCompensatorTransmission::initXml(TiXmlElement *elt, Robot *robot)
   delta_motor_vel_ = 0;
   last_motor_damping_force_ = 0;
 
-  last_time_ = robot_->getTime();
+  last_time_ = robot->getTime();
+  return true;
+}
+
+bool PR2BeltCompensatorTransmission::initXml(TiXmlElement *elt)
+{
+  const char *name = elt->Attribute("name");
+  name_ = name ? name : "";
+
+  TiXmlElement *jel = elt->FirstChildElement("joint");
+  const char *joint_name = jel ? jel->Attribute("name") : NULL;
+  if (!joint_name)
+  {
+    ROS_ERROR("PR2BeltCompensatorTransmission did not specify joint name");
+    return false;
+  }
+
+  joint_names_.push_back(joint_name);
+
+  TiXmlElement *ael = elt->FirstChildElement("actuator");
+  const char *actuator_name = ael ? ael->Attribute("name") : NULL;
+  actuator_names_.push_back(actuator_name);
+
+  mechanical_reduction_ = atof(elt->FirstChildElement("mechanicalReduction")->GetText());
+
+  TiXmlElement *c = elt->FirstChildElement("compensator");
+  if (!c)
+  {
+    ROS_ERROR("No compensator element given for transmission %s", name_.c_str());
+    return false;
+  }
+
+  double k_belt;
+  const char *k_belt_str = c->Attribute("k_belt");
+  if (!k_belt_str) {
+    ROS_ERROR("No k_belt given for transmission %s", name_.c_str());
+    return false;
+  }
+  k_belt = atof(k_belt_str);
+
+  double mass_motor;
+  const char *mass_motor_str = c->Attribute("mass_motor");
+  if (!mass_motor_str) {
+    ROS_ERROR("No mass_motor given for transmission %s", name_.c_str());
+    return false;
+  }
+  mass_motor = atof(mass_motor_str);
+
+  trans_compl_ = (k_belt > 0.0 ? 1.0 / k_belt : 0.0);
+  trans_tau_ = sqrt(mass_motor * trans_compl_);
+
+  const char *kd_motor_str = c->Attribute("kd_motor");
+  if (!kd_motor_str) {
+    ROS_ERROR("No kd_motor given for transmission %s", name_.c_str());
+    return false;
+  }
+  Kd_motor_ = atof(kd_motor_str);
+
+  const char *lambda_motor_str = c->Attribute("lambda_motor");
+  if (!lambda_motor_str) {
+    ROS_ERROR("No lambda_motor given for transmission %s", name_.c_str());
+    return false;
+  }
+  lambda_motor_ = atof(lambda_motor_str);
+
+  const char *lambda_joint_str = c->Attribute("lambda_joint");
+  if (!lambda_joint_str) {
+    ROS_ERROR("No lambda_joint given for transmission %s", name_.c_str());
+    return false;
+  }
+  lambda_joint_ = atof(lambda_joint_str);
+
+  const char *lambda_combined_str = c->Attribute("lambda_combined");
+  if (!lambda_combined_str) {
+    ROS_ERROR("No lambda_combined given for transmission %s", name_.c_str());
+    return false;
+  }
+  lambda_combo_ = atof(lambda_combined_str);
+
+  // Initializes the filters
+  last_motor_pos_ = last_motor_vel_ = 0;
+  last_jnt1_pos_ = last_jnt1_vel_ = last_jnt1_acc_ = 0;
+  last_defl_pos_ = last_defl_vel_ = last_defl_acc_ = 0;
+  last_joint_pos_ = last_joint_vel_ = 0;
+  delta_motor_vel_ = 0;
+  last_motor_damping_force_ = 0;
+
   return true;
 }
 
@@ -148,7 +233,7 @@ void PR2BeltCompensatorTransmission::propagatePosition(
 {
   assert(as.size() == 1);
   assert(js.size() == 1);
-  ros::Time time = robot_->getTime();
+  ros::Time time(as[0]->state_.timestamp_);
   dt = (time - last_time_).toSec();
   last_time_ = time;
 
