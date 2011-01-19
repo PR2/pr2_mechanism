@@ -4,7 +4,7 @@ The `pr2_mechanism_diagnostics` node subscribes to `mechanism_statistics` and pu
   </description>
   <author>Kevin Watts</author>
   <license>BSD</license>
-  <review status="unreviewed" notes=""/>
+  <review status="doc reviewed" notes=""/>
   <url>http://ros.org/wiki/pr2_mechanism_diagnostics</url>
   <depend package="roscpp"/>
   <depend package="urdf"/>
