@@ -61,6 +61,7 @@
 #include "pr2_mechanism_model/transmission.h"
 #include "pr2_mechanism_model/joint.h"
 #include "pr2_hardware_interface/hardware_interface.h"
+#include "pr2_mechanism_model/joint_calibration_simulator.h"
 
 namespace pr2_mechanism_model {
 
@@ -91,6 +92,8 @@ public:
                                 std::vector<pr2_mechanism_model::JointState*>&);
   void setReductions(std::vector<double>& ar, std::vector<double>& jr);
 
+private:
+  JointCalibrationSimulator joint_calibration_simulator_[2];
 };
 
 } // namespace pr2_mechanism_model

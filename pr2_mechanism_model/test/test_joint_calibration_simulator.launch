@@ -1,0 +1,4 @@
+<launch>
+  <test test-name="test_joint_calibration_simulator" pkg="pr2_mechanism_model" type="test_joint_calibration_simulator" args="$(find pr2_mechanism_model)/test/robot.xml" />
+</launch>
+ 

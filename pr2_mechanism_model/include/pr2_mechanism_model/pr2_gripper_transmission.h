@@ -48,6 +48,7 @@
 #include "pr2_mechanism_model/transmission.h"
 #include "pr2_mechanism_model/robot.h"
 //#include <fstream>
+#include "pr2_mechanism_model/joint_calibration_simulator.h"
 
 namespace pr2_mechanism_model {
 
@@ -115,6 +116,8 @@ private:
 
 #define RAD2MR (1.0/(2.0*M_PI)) // convert radians to motor revolutions
 #define TOL 0.00001   // limit for denominators
+
+  JointCalibrationSimulator joint_calibration_simulator_;
 };
 
 } // namespace pr2_mechanism_model

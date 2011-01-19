@@ -36,6 +36,7 @@
 #include <pr2_mechanism_model/joint.h>
 #include <pr2_mechanism_model/robot.h>
 #include <pr2_mechanism_model/transmission.h>
+#include "pr2_mechanism_model/joint_calibration_simulator.h"
 
 namespace pr2_mechanism_model {
 
@@ -90,6 +91,8 @@ private:
 
   double delta_motor_vel_;
   double last_motor_damping_force_;
+
+  JointCalibrationSimulator joint_calibration_simulator_;
 };
 
 } // namespace

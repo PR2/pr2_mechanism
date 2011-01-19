@@ -246,6 +246,12 @@ void WristTransmission::propagatePositionBackwards(
 			      (js[1]->position_-js[1]->reference_position_)*joint_reduction_[1]) * actuator_reduction_[1]);
   as[1]->state_.velocity_ = ((-js[0]->velocity_*joint_reduction_[0] - js[1]->velocity_*joint_reduction_[1]) * actuator_reduction_[1]);
   as[1]->state_.last_measured_effort_ = (-js[0]->measured_effort_/joint_reduction_[0] - js[1]->measured_effort_/joint_reduction_[1]) /(2.0*actuator_reduction_[1]);
+
+
+  // simulate calibration sensors by filling out actuator states
+  // this is where to embed the hack which joint connects to which mcb
+  this->joint_calibration_simulator_[0].simulateJointCalibration(js[0],as[1]);
+  this->joint_calibration_simulator_[1].simulateJointCalibration(js[1],as[0]);
 }
 
 void WristTransmission::propagateEffort(

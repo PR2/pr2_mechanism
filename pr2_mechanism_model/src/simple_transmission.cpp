@@ -130,6 +130,9 @@ void SimpleTransmission::propagatePositionBackwards(
   as[0]->state_.position_ = (js[0]->position_ - js[0]->reference_position_) * mechanical_reduction_;
   as[0]->state_.velocity_ = js[0]->velocity_ * mechanical_reduction_;
   as[0]->state_.last_measured_effort_ = js[0]->measured_effort_ / mechanical_reduction_;
+
+  // simulate calibration sensors by filling out actuator states
+  this->joint_calibration_simulator_.simulateJointCalibration(js[0],as[0]);
 }
 
 void SimpleTransmission::propagateEffort(

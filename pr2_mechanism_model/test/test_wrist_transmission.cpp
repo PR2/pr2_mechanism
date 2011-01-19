@@ -56,6 +56,11 @@ protected:
     joint_states_.resize(2);
     joint_states_[0] = new JointState();
     joint_states_[1] = new JointState();
+
+    boost::shared_ptr<const urdf::Joint> joint(new urdf::Joint());
+    joint_states_[0]->joint_ = joint;
+    joint_states_[1]->joint_ = joint;
+    
   }
 
   virtual void TearDown()

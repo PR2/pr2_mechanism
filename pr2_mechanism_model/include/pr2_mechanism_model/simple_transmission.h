@@ -41,6 +41,7 @@
 #include "pr2_mechanism_model/transmission.h"
 #include "pr2_mechanism_model/joint.h"
 #include "pr2_hardware_interface/hardware_interface.h"
+#include "pr2_mechanism_model/joint_calibration_simulator.h"
 
 namespace pr2_mechanism_model {
 
@@ -63,6 +64,9 @@ public:
                        std::vector<pr2_hardware_interface::Actuator*>&);
   void propagateEffortBackwards(std::vector<pr2_hardware_interface::Actuator*>&,
                                 std::vector<pr2_mechanism_model::JointState*>&);
+
+private:
+  JointCalibrationSimulator joint_calibration_simulator_;
 };
 
 } // namespace pr2_mechanism_model
