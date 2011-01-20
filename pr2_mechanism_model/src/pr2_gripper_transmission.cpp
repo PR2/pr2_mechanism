@@ -716,6 +716,7 @@ void PR2GripperTransmission::propagatePositionBackwards(
   ///                                 = gap_effort * dt_dMR / (2*pi)  * gap_mechanical_reduction_
   ///                                 = gap_effort / dMR_dt * RAD2MR * gap_mechanical_reduction_
   as[0]->state_.last_measured_effort_ = 2.0*gap_effort / dMR_dt * RAD2MR * gap_mechanical_reduction_;
+  as[0]->state_.timestamp_ = ros::Time::now().toSec();
 
   // simulate calibration sensors by filling out actuator states
   this->joint_calibration_simulator_.simulateJointCalibration(js[0],as[0]);
