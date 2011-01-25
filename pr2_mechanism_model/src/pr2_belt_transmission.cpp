@@ -139,6 +139,17 @@ bool PR2BeltCompensatorTransmission::initXml(TiXmlElement *elt, Robot *robot)
   last_motor_damping_force_ = 0;
 
   last_time_ = robot->getTime();
+
+  // Initialize the backward transmission state variables.
+  last_time_backwards_ = last_time_;
+  halfdt_backwards_ = 0.0;
+  motor_force_backwards_ = 0.0;
+  last_motor_pos_backwards_ = 0.0;
+  last_motor_vel_backwards_ = 0.0;
+  last_motor_acc_backwards_ = 0.0;
+  last_joint_pos_backwards_ = 0.0;
+  last_joint_vel_backwards_ = 0.0;
+
   return true;
 }
 
@@ -225,6 +236,18 @@ bool PR2BeltCompensatorTransmission::initXml(TiXmlElement *elt)
   delta_motor_vel_ = 0;
   last_motor_damping_force_ = 0;
 
+  // last_time_ = ???
+
+  // Initialize the backward transmission state variables.
+  last_time_backwards_ = last_time_;
+  halfdt_backwards_ = 0.0;
+  motor_force_backwards_ = 0.0;
+  last_motor_pos_backwards_ = 0.0;
+  last_motor_vel_backwards_ = 0.0;
+  last_motor_acc_backwards_ = 0.0;
+  last_joint_pos_backwards_ = 0.0;
+  last_joint_vel_backwards_ = 0.0;
+
   return true;
 }
 
@@ -240,9 +263,9 @@ void PR2BeltCompensatorTransmission::propagatePosition(
   // These are not the actual "motor" positions.  They are the
   // theoretical joint positions if there were no belt involved.
 
-  // Get the motor position, velocity, measured force.  Note we filter
-  // the motor velocity, because we want the least lag for the motor
-  // damping feedback.  We will filter the joint velocity.
+  // Get the motor position, velocity, measured force.  Note we do not
+  // filter the motor velocity, because we want the least lag for the
+  // motor damping feedback.  We will filter the joint velocity.
   double motor_pos = as[0]->state_.position_ / mechanical_reduction_;
   double motor_vel = ( dt>0.0 ? (motor_pos - last_motor_pos_)/dt : 0.0 );
 
@@ -275,8 +298,8 @@ void PR2BeltCompensatorTransmission::propagatePosition(
   // Method 2: Estimate the transmission deflection explicitly.  This
   // uses only the transmission stiffness (compliance) and motor mass.
   // The later is combined with the compliance to give a transmission
-  // time constant (tau).  This method assumes the motor mass it is
-  // much smaller than the joint mass and the resonance of the motor
+  // time constant (tau).  This method assumes the motor mass is much
+  // smaller than the joint mass and the resonance of the motor
   // against the transmission is damped.  It does NOT need to know the
   // joint/link mass (i.e. is independent of joint configurations) and
   // adds the appropriate DC transmission stretch.  However, is uses
@@ -344,20 +367,6 @@ void PR2BeltCompensatorTransmission::propagatePosition(
   last_joint_vel_   = joint_vel;
 }
 
-void PR2BeltCompensatorTransmission::propagatePositionBackwards(
-  std::vector<JointState*>& js, std::vector<pr2_hardware_interface::Actuator*>& as)
-{
-  assert(as.size() == 1);
-  assert(js.size() == 1);
-  as[0]->state_.position_ = (js[0]->position_ - js[0]->reference_position_) * mechanical_reduction_;
-  as[0]->state_.velocity_ = js[0]->velocity_ * mechanical_reduction_;
-  as[0]->state_.last_measured_effort_ = js[0]->measured_effort_ / mechanical_reduction_;
-  if (ros::isStarted()) as[0]->state_.timestamp_ = ros::Time::now().toSec();
-
-  // simulate calibration sensors by filling out actuator states
-  this->joint_calibration_simulator_.simulateJointCalibration(js[0],as[0]);
-}
-
 void PR2BeltCompensatorTransmission::propagateEffort(
   std::vector<JointState*>& js, std::vector<pr2_hardware_interface::Actuator*>& as)
 {
@@ -380,12 +389,199 @@ void PR2BeltCompensatorTransmission::propagateEffort(
   last_motor_damping_force_ = motor_damping_force;
 }
 
+
+
+// The backward transmission is a entirely separate entity for the
+// forward transmission.  Both contain state information, that is NOT
+// shared.  In particular, the backward transmission implements a
+// 4th-order model of the motor mass, belt stiffness, and joint mass,
+// which is what the forward transmission expects.  It should be used
+// ONLY in Gazebo, i.e. when simulating the robot.  As such, we assume
+// here that a cycle starts with a given actuator effort,
+// propagateEffortBackwards() is called first (setting the time step) to
+// set the joint effort, Gazebo then calculates a new joint position,
+// and propagatePositionBackwards() is called last to provide the new
+// actuator position.
 void PR2BeltCompensatorTransmission::propagateEffortBackwards(
   std::vector<pr2_hardware_interface::Actuator*>& as, std::vector<JointState*>& js)
 {
+  // Check the arguments.  This acts only on a single actuator/joint.
   assert(as.size() == 1);
   assert(js.size() == 1);
-  js[0]->commanded_effort_ = as[0]->command_.effort_ * mechanical_reduction_;
+
+  // We are simulating a motor-mass / belt-spring-damper / joint-mass
+  // system.  Note all calculations are done if joint-space units, so
+  // that the motor position/velocity/acceleration/force are scaled
+  // appropriately by the mechanical reduction.  Also note, the joint
+  // mass is actually simulated in Gazebo, so for the purposes of this
+  // belt simulation, we assume an infinite joint mass and hence zero
+  // joint acceleration.  Finally, we assume the belt-spring/motor-mass
+  // dynamics are critically damped and set the damping accordingly.
+  double motor_pos, motor_vel, motor_acc;
+  double joint_pos, joint_vel;
+  double motor_force;
+  double spring_force;
+  double halfdt;
+
+  // Calculate the time step.  Should be the same as the forward
+  // transmission, but we don't want/need to assume that.  Furthermore,
+  // given this is used only to simulate a transmission, the time-steps
+  // should be perfectly constant and known in advance.  But to keep
+  // this clean we recalculate.  The question remains who defines the
+  // time step.  Like the forward transmission, we can only use the time
+  // step in the actuator state, though this makes little sense here...
+  ros::Time time(as[0]->state_.timestamp_);
+  halfdt = 0.5*(time - last_time_backwards_).toSec();
+  last_time_backwards_ = time;
+
+  // Get the actuator force acting on the motor mass, multipled by the
+  // mechanical reduction to be in joint-space units.  Note we are
+  // assuming the command is perfectly executed, i.e. will completely
+  // act on the motor.
+  motor_force = as[0]->command_.effort_ * mechanical_reduction_;
+
+  // If the transmission compliance is zero (infinitely stiff) or the
+  // motor mass is zero (infinitely light), then the transmission time
+  // constant is also zero (infinitely fast) and the entire transmission
+  // collapses to a regular rigid connection.
+  if ((trans_compl_ == 0.0) || (trans_tau_ == 0.0))
+    {
+      // Immediately propagate the motor force to the spring, ignoring
+      // the (infinitely fast) model dynamics.
+      spring_force = motor_force;
+    }
+  else
+    {
+      // Update the model.  Note for numerical stability, the
+      // transmission dynamics need to be slower than the integration
+      // time step.  Specifically we need to lower bound the tranmission
+      // time constant by dt/2.
+      double tau = (halfdt < trans_tau_ ? trans_tau_ : halfdt);
+
+      // Calculate the new motor position/velocity assuming a new motor
+      // acceleration of zero (simply integrate the last information).
+      motor_vel = last_motor_vel_backwards_ + halfdt*(last_motor_acc_backwards_ + 0        );
+      motor_pos = last_motor_pos_backwards_ + halfdt*(last_motor_vel_backwards_ + motor_vel);
+
+      // Calculate the new joint position/velocity assuming a new joint
+      // acceleration of zero, equivalent to an extremely large joint
+      // mass (relatively to the motor).  This is also "fixed" in the
+      // second half of the backward transmission after the simulator
+      // has provided a new joint position/velocity.
+      joint_vel = last_joint_vel_backwards_;
+      joint_pos = last_joint_pos_backwards_ + halfdt*(last_joint_vel_backwards_ + joint_vel);
+
+      // Calculate the spring force between the two masses.
+      spring_force = (2.0*tau*(motor_vel - joint_vel) + (motor_pos - joint_pos)) / trans_compl_;
+
+      // This gives us the new motor acceleration (still assuming no
+      // joint acceleration).
+      motor_acc = (motor_force - spring_force) * trans_compl_ / (tau*tau + 2.0*tau*halfdt + halfdt*halfdt);
+
+      // Recalculate the motor position/velocity, using this new acceleration.
+      motor_vel = last_motor_vel_backwards_ + halfdt*(last_motor_acc_backwards_ + motor_acc);
+      motor_pos = last_motor_pos_backwards_ + halfdt*(last_motor_vel_backwards_ + motor_vel);
+
+      // Recalculate the spring force.
+      spring_force = (2.0*tau*(motor_vel - joint_vel) + (motor_pos - joint_pos)) / trans_compl_;
+    }
+  
+  // The spring force becomes the force seen by the joint.
+  js[0]->commanded_effort_ = spring_force;
+
+  // Save the information that is to be used in the second half, i.e. in
+  // propagatePositionBackwards().  This includes the motor force
+  // (driving this cycle) and the time step (calculated here).
+  halfdt_backwards_ = halfdt;
+  motor_force_backwards_ = motor_force;
+}
+
+
+void PR2BeltCompensatorTransmission::propagatePositionBackwards(
+  std::vector<JointState*>& js, std::vector<pr2_hardware_interface::Actuator*>& as)
+{
+  // Check the arguments.  This acts only on a single actuator/joint.
+  assert(as.size() == 1);
+  assert(js.size() == 1);
+
+  // Again (as in the first half of the backward transmission) simulate
+  // the motor-mass / belt-spring-damper / joint-mass system.  And
+  // again, all variables are in joint-space units.  Only this time use
+  // the joint position/velocity provided by the simulator.
+  double motor_pos, motor_vel, motor_acc;
+  double joint_pos, joint_vel;
+  double motor_force;
+  double spring_force;
+  double halfdt;
+
+  // Get the time step and motor force from the first half of the
+  // backward transmission.
+  halfdt = halfdt_backwards_;
+  motor_force = motor_force_backwards_;
+
+  // Get the new joint position and velocity, as calculated by the
+  // simulator.
+  joint_pos = js[0]->position_ - js[0]->reference_position_;
+  joint_vel = js[0]->velocity_;
+
+  // As in the first half, if the transmission compliance or time
+  // constant are zero, the transmission collapses to a regular rigid
+  // transmission.
+  if ((trans_compl_ == 0.0) || (trans_tau_ == 0.0))
+    {
+      // Immediately propagate the joint position/velocity to the motor,
+      // ignoring the (infinitely fast) model dynamics.
+      motor_acc = 0.0;
+      motor_vel = joint_vel;
+      motor_pos = joint_pos;
+    }
+  else
+    {
+      // Update the model.  Note for numerical stability, we again lower
+      // bound the tranmission time constant by dt/2.
+      double tau = (halfdt < trans_tau_ ? trans_tau_ : halfdt);
+
+      // Calculate the new motor position/velocity assuming a new motor
+      // acceleration of zero.
+      motor_vel = last_motor_vel_backwards_ + halfdt*(last_motor_acc_backwards_ + 0        );
+      motor_pos = last_motor_pos_backwards_ + halfdt*(last_motor_vel_backwards_ + motor_vel);
+
+      // Calculate the spring force between the two masses.
+      spring_force = (2.0*tau*(motor_vel - joint_vel) + (motor_pos - joint_pos)) / trans_compl_;
+
+      // This gives us the new motor acceleration.
+      motor_acc = (motor_force - spring_force) * trans_compl_ / (tau*tau + 2.0*tau*halfdt + halfdt*halfdt);
+
+      // Recalculate the motor position/velocity, using this new acceleration.
+      motor_vel = last_motor_vel_backwards_ + halfdt*(last_motor_acc_backwards_ + motor_acc);
+      motor_pos = last_motor_pos_backwards_ + halfdt*(last_motor_vel_backwards_ + motor_vel);
+    }
+
+  // Save the current state for the next cycle.
+  last_motor_pos_backwards_ = motor_pos;
+  last_motor_vel_backwards_ = motor_vel;
+  last_motor_acc_backwards_ = motor_acc;
+
+  last_joint_pos_backwards_ = joint_pos;
+  last_joint_vel_backwards_ = joint_vel;
+
+  // Push the motor position/velocity to the actuator, accounting for
+  // the mechanical reduction.
+  as[0]->state_.position_ = motor_pos * mechanical_reduction_;
+  as[0]->state_.velocity_ = motor_vel * mechanical_reduction_;
+
+  // Also push the motor force to the actuator.  Note we already assumed
+  // that the commanded actuator effort was accurately executed/applied,
+  // so the measured actuator effort is just the motor force.
+  as[0]->state_.last_measured_effort_ = motor_force / mechanical_reduction_;
+
+
+  // By storing the new actuator data, we are advancing to the next
+  // servo cycle.  Reset the time stamp???
+  if (ros::isStarted()) as[0]->state_.timestamp_ = ros::Time::now().toSec();
+
+  // Simulate calibration sensors by filling out actuator states
+  this->joint_calibration_simulator_.simulateJointCalibration(js[0],as[0]);
 }
 
 } // namespace

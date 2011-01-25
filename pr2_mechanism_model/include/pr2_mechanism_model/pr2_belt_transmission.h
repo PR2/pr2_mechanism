@@ -92,6 +92,21 @@ private:
   double delta_motor_vel_;
   double last_motor_damping_force_;
 
+
+  // Backward transmission states
+  ros::Time last_time_backwards_;
+  double halfdt_backwards_;
+
+  double motor_force_backwards_;
+
+  double last_motor_pos_backwards_;
+  double last_motor_vel_backwards_;
+  double last_motor_acc_backwards_;
+
+  double last_joint_pos_backwards_;
+  double last_joint_vel_backwards_;
+
+
   JointCalibrationSimulator joint_calibration_simulator_;
 };
 
