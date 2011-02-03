@@ -287,10 +287,11 @@ void PR2BeltCompensatorTransmission::propagatePosition(
   double jnt1_pos, jnt1_vel, jnt1_acc;
   double lam = (dt*lambda_joint_ < 2.0 ? lambda_joint_ : 2.0/dt);
 
-  jnt1_acc = (lam*lam * motor_pos
-              - lam*lam * (last_jnt1_pos_ + dt*last_jnt1_vel_ + 0.25*dt*dt*last_jnt1_acc_)
-              - 2.0*lam * (last_jnt1_vel_ + 0.5*dt*last_jnt1_acc_))
-    / (1.0 + 0.5*dt*2.0*lam + 0.25*dt*dt*lam*lam);
+  jnt1_vel = last_jnt1_vel_ + 0.5*dt*(           last_jnt1_acc_);
+  jnt1_pos = last_jnt1_pos_ + 0.5*dt*(jnt1_vel + last_jnt1_vel_);
+
+  jnt1_acc = (lam*lam * (motor_pos-jnt1_pos) - 2.0*lam * jnt1_vel)
+           / (1.0 + 0.5*dt*2.0*lam + 0.25*dt*dt*lam*lam);
 
   jnt1_vel = last_jnt1_vel_ + 0.5*dt*(jnt1_acc + last_jnt1_acc_);
   jnt1_pos = last_jnt1_pos_ + 0.5*dt*(jnt1_vel + last_jnt1_vel_);
@@ -302,10 +303,12 @@ void PR2BeltCompensatorTransmission::propagatePosition(
   // smaller than the joint mass and the resonance of the motor
   // against the transmission is damped.  It does NOT need to know the
   // joint/link mass (i.e. is independent of joint configurations) and
-  // adds the appropriate DC transmission stretch.  However, is uses
-  // the encoder directly at high frequency, remaining noisy.  For
-  // numerical stability, if the time constant is zero, implement a
-  // 0th order system.  Else lower bound the time constant by dt/2.
+  // adds the appropriate DC transmission stretch.  However, it
+  // assumes zero motor friction to ground and no Coulomb fiction.
+  // Also, it uses the encoder directly at high frequency, remaining
+  // noisy.  For numerical stability, if the time constant is zero,
+  // implement a 0th order system.  Else lower bound the time constant
+  // by dt/2.
   double defl_pos, defl_vel, defl_acc;
   if (trans_tau_ == 0)
   {
@@ -317,10 +320,12 @@ void PR2BeltCompensatorTransmission::propagatePosition(
   {
     double tau = (dt < 2.0*trans_tau_ ? trans_tau_ : dt/2.0);
 
+    defl_vel = last_defl_vel_ + 0.5*dt*(           last_defl_acc_);
+    defl_pos = last_defl_pos_ + 0.5*dt*(defl_vel + last_defl_vel_);
+
     defl_acc = (trans_compl_ * motor_measured_force
-                -           (last_defl_pos_ + dt*last_defl_vel_ + 0.25*dt*dt*last_defl_acc_)
-                - 2.0*tau * (last_defl_vel_ + 0.5*dt*last_defl_acc_))
-      / (tau*tau + 2.0*tau*0.5*dt + 0.25*dt*dt);
+                - defl_pos - 2.0*tau * defl_vel)
+             / (tau*tau + 2.0*tau*0.5*dt + 0.25*dt*dt);
 
     defl_vel = last_defl_vel_ + 0.5*dt*(defl_acc + last_defl_acc_);
     defl_pos = last_defl_pos_ + 0.5*dt*(defl_vel + last_defl_vel_);
@@ -336,12 +341,13 @@ void PR2BeltCompensatorTransmission::propagatePosition(
   lam = (dt*lambda_combo_ < 2.0 ? lambda_combo_ : 2.0/dt);
 
   double joint_pos, joint_vel;
-  joint_vel = (jnt1_vel
-               + lam * jnt2_pos
-               - lam * (last_joint_pos_ + 0.5*dt*last_joint_vel_))
-    / (1.0 + 0.5*dt*lam);
+  joint_pos = last_joint_pos_ + 0.5*dt*(last_joint_vel_);
+  joint_vel = (jnt1_vel + lam * (jnt2_pos - joint_pos))
+            / (1.0 + 0.5*dt*lam);
   joint_pos = last_joint_pos_ + 0.5*dt*(joint_vel + last_joint_vel_);
 
+
+  // Push the joint info out.
   js[0]->position_ = joint_pos + js[0]->reference_position_;
   js[0]->velocity_ = joint_vel;
   js[0]->measured_effort_ = as[0]->state_.last_measured_effort_ * mechanical_reduction_;
