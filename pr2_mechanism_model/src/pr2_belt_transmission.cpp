@@ -337,14 +337,23 @@ void PR2BeltCompensatorTransmission::propagatePosition(
   // velocity: High pass method 1, low pass method 2.  In the end, the
   // encoder and measured force are both filtered at least once before
   // reaching the joint estimate.  I.e. the velocity is smooth.  For
-  // numerical stability, upper bound the combination bandwidth.
-  lam = (dt*lambda_combo_ < 2.0 ? lambda_combo_ : 2.0/dt);
-
+  // numerical stability, upper bound the combination bandwidth.  If
+  // the bandwidth is zero, take just method 1.
   double joint_pos, joint_vel;
-  joint_pos = last_joint_pos_ + 0.5*dt*(last_joint_vel_);
-  joint_vel = (jnt1_vel + lam * (jnt2_pos - joint_pos))
-            / (1.0 + 0.5*dt*lam);
-  joint_pos = last_joint_pos_ + 0.5*dt*(joint_vel + last_joint_vel_);
+  if (lambda_combo_ == 0.0)
+  {
+    joint_pos = jnt1_pos;
+    joint_vel = jnt1_vel;
+  }
+  else
+  {
+    lam = (dt*lambda_combo_ < 2.0 ? lambda_combo_ : 2.0/dt);
+
+    joint_pos = last_joint_pos_ + 0.5*dt*(last_joint_vel_);
+    joint_vel = (jnt1_vel + lam * (jnt2_pos - joint_pos))
+              / (1.0 + 0.5*dt*lam);
+    joint_pos = last_joint_pos_ + 0.5*dt*(joint_vel + last_joint_vel_);
+  }
 
 
   // Push the joint info out.
@@ -380,11 +389,24 @@ void PR2BeltCompensatorTransmission::propagateEffort(
   assert(js.size() == 1);
 
 
-  double lam = (dt*lambda_motor_ < 2.0 ? lambda_motor_ : 2.0/dt);
+  // Calculate the damping force for the motor vibrations against the
+  // transmission.  As we don't have a true vibration measurement,
+  // dampen the motor simply at high frequency.  For numerical
+  // stability, upper bound the cutoff bandwidth.  If the bandwidth is
+  // zero, use damping over all frequencies, i.e. regular damping.
+  double motor_damping_force;
+  if (lambda_motor_ == 0.0)
+  {
+    motor_damping_force = - Kd_motor_ * last_motor_vel_;
+  }
+  else
+  {
+    double lam = (dt*lambda_motor_ < 2.0 ? lambda_motor_ : 2.0/dt);
 
-  double motor_damping_force = ((1.0-0.5*dt*lam) * last_motor_damping_force_
-                                - Kd_motor_ * delta_motor_vel_)
-    / (1.0+0.5*dt*lam);
+    motor_damping_force = ((1.0-0.5*dt*lam) * last_motor_damping_force_
+                           - Kd_motor_ * delta_motor_vel_)
+                        / (1.0+0.5*dt*lam);
+  }
 
   // Add to the joint force.
   double motor_force = js[0]->commanded_effort_ + motor_damping_force;
