@@ -71,7 +71,22 @@ public:
       num_encoder_errors_(0),
       zero_offset_(0)
   {}
-  double timestamp_; //!< The time at which this actuator state was measured (in seconds)
+
+  /** 
+   * The time at which actuator state was measured. 
+   * Timestamp value is not synchronised with wall time and may be different for different actuators. 
+   * For Willow Garage motor controllers, timestamp is made when actuator data is sampled.
+   * sample_timestamp_ will provide better accuracy than ros::Time::now() or robot->getTime() 
+   * when using a time difference in caclulations based on actuator variables.
+   */
+  ros::Time sample_timestamp_; 
+
+  /** The time at which this actuator state was measured (in seconds). 
+   * This value should be same as sample_timestamp_.toSec() for Willow Garage devices.
+   * The timestamp_ variable is being kept around for backwards compatibility, new controllers
+   * should use sample_timestamp_ instead.  
+   */
+  double timestamp_; 
 
   int device_id_; //!< Position in EtherCAT chain
 
