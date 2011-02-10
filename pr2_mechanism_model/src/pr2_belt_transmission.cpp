@@ -138,10 +138,10 @@ bool PR2BeltCompensatorTransmission::initXml(TiXmlElement *elt, Robot *robot)
   delta_motor_vel_ = 0;
   last_motor_damping_force_ = 0;
 
-  last_time_ = robot->getTime();
+  last_timestamp_ = ros::Duration(0);
 
   // Initialize the backward transmission state variables.
-  last_time_backwards_ = last_time_;
+  last_timestamp_backwards_ = last_timestamp_;
   halfdt_backwards_ = 0.0;
   motor_force_backwards_ = 0.0;
   last_motor_pos_backwards_ = 0.0;
@@ -236,10 +236,10 @@ bool PR2BeltCompensatorTransmission::initXml(TiXmlElement *elt)
   delta_motor_vel_ = 0;
   last_motor_damping_force_ = 0;
 
-  // last_time_ = ???
+  last_timestamp_ = ros::Duration(0);
 
   // Initialize the backward transmission state variables.
-  last_time_backwards_ = last_time_;
+  last_timestamp_backwards_ = last_timestamp_;
   halfdt_backwards_ = 0.0;
   motor_force_backwards_ = 0.0;
   last_motor_pos_backwards_ = 0.0;
@@ -256,9 +256,9 @@ void PR2BeltCompensatorTransmission::propagatePosition(
 {
   assert(as.size() == 1);
   assert(js.size() == 1);
-  ros::Time time(as[0]->state_.timestamp_);
-  dt = (time - last_time_).toSec();
-  last_time_ = time;
+  ros::Duration timestamp = as[0]->state_.sample_timestamp_;
+  dt = (timestamp - last_timestamp_).toSec();
+  last_timestamp_ = timestamp;
 
   // These are not the actual "motor" positions.  They are the
   // theoretical joint positions if there were no belt involved.
@@ -458,9 +458,9 @@ void PR2BeltCompensatorTransmission::propagateEffortBackwards(
   // this clean we recalculate.  The question remains who defines the
   // time step.  Like the forward transmission, we can only use the time
   // step in the actuator state, though this makes little sense here...
-  ros::Time time(as[0]->state_.timestamp_);
-  halfdt = 0.5*(time - last_time_backwards_).toSec();
-  last_time_backwards_ = time;
+  ros::Duration timestamp = as[0]->state_.sample_timestamp_;
+  halfdt = 0.5*(timestamp - last_timestamp_backwards_).toSec();
+  last_timestamp_backwards_ = timestamp;
 
   // Get the actuator force acting on the motor mass, multipled by the
   // mechanical reduction to be in joint-space units.  Note we are
@@ -605,8 +605,27 @@ void PR2BeltCompensatorTransmission::propagatePositionBackwards(
 
 
   // By storing the new actuator data, we are advancing to the next
-  // servo cycle.  Reset the time stamp???
-  if (ros::isStarted()) as[0]->state_.timestamp_ = ros::Time::now().toSec();
+  // servo cycle.  Always make sure the timing has been initialized.
+  if (! simulated_actuator_timestamp_initialized_)
+    {
+      // Set the time stamp to zero (it is measured relative to the start time).
+      as[0]->state_.sample_timestamp_ = ros::Duration(0);
+
+      // Try to set the start time.  Only then do we claim initialized.
+      if (ros::isStarted())
+	{
+	  simulated_actuator_start_time_ = ros::Time::now();
+	  simulated_actuator_timestamp_initialized_ = true;
+	}
+    }
+  else
+    {
+      // Measure the time stamp relative to the start time.
+      as[0]->state_.sample_timestamp_ = ros::Time::now() - simulated_actuator_start_time_;
+    }
+  // Set the historical (double) timestamp accordingly.
+  as[0]->state_.timestamp_ = as[0]->state_.sample_timestamp_.toSec();
+
 
   // Simulate calibration sensors by filling out actuator states
   this->joint_calibration_simulator_.simulateJointCalibration(js[0],as[0]);

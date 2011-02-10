@@ -63,7 +63,7 @@ public:
                                 std::vector<pr2_mechanism_model::JointState*>&);
 
 private:
-  ros::Time last_time_;
+  ros::Duration last_timestamp_;
   double dt;
 
   // Transmission parameters
@@ -94,7 +94,7 @@ private:
 
 
   // Backward transmission states
-  ros::Time last_time_backwards_;
+  ros::Duration last_timestamp_backwards_;
   double halfdt_backwards_;
 
   double motor_force_backwards_;
@@ -105,6 +105,9 @@ private:
 
   double last_joint_pos_backwards_;
   double last_joint_vel_backwards_;
+
+  int simulated_actuator_timestamp_initialized_;
+  ros::Time simulated_actuator_start_time_;
 
 
   JointCalibrationSimulator joint_calibration_simulator_;

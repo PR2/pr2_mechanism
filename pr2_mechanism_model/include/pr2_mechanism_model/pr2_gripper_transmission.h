@@ -117,6 +117,9 @@ private:
 #define RAD2MR (1.0/(2.0*M_PI)) // convert radians to motor revolutions
 #define TOL 0.00001   // limit for denominators
 
+  int simulated_actuator_timestamp_initialized_;
+  ros::Time simulated_actuator_start_time_;
+
   JointCalibrationSimulator joint_calibration_simulator_;
 };
 

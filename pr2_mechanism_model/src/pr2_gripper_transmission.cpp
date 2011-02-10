@@ -716,7 +716,27 @@ void PR2GripperTransmission::propagatePositionBackwards(
   ///                                 = gap_effort * dt_dMR / (2*pi)  * gap_mechanical_reduction_
   ///                                 = gap_effort / dMR_dt * RAD2MR * gap_mechanical_reduction_
   as[0]->state_.last_measured_effort_ = 2.0*gap_effort / dMR_dt * RAD2MR * gap_mechanical_reduction_;
-  if (ros::isStarted()) as[0]->state_.timestamp_ = ros::Time::now().toSec();
+
+  // Update the timing (making sure it's initialized).
+  if (! simulated_actuator_timestamp_initialized_)
+    {
+      // Set the time stamp to zero (it is measured relative to the start time).
+      as[0]->state_.sample_timestamp_ = ros::Duration(0);
+
+      // Try to set the start time.  Only then do we claim initialized.
+      if (ros::isStarted())
+	{
+	  simulated_actuator_start_time_ = ros::Time::now();
+	  simulated_actuator_timestamp_initialized_ = true;
+	}
+    }
+  else
+    {
+      // Measure the time stamp relative to the start time.
+      as[0]->state_.sample_timestamp_ = ros::Time::now() - simulated_actuator_start_time_;
+    }
+  // Set the historical (double) timestamp accordingly.
+  as[0]->state_.timestamp_ = as[0]->state_.sample_timestamp_.toSec();
 
   // simulate calibration sensors by filling out actuator states
   this->joint_calibration_simulator_.simulateJointCalibration(js[0],as[0]);

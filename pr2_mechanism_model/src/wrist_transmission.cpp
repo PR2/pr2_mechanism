@@ -241,14 +241,35 @@ void WristTransmission::propagatePositionBackwards(
 			      (js[1]->position_-js[1]->reference_position_)*joint_reduction_[1]) * actuator_reduction_[0]);
   as[0]->state_.velocity_ = ((js[0]->velocity_*joint_reduction_[0] - js[1]->velocity_*joint_reduction_[1]) * actuator_reduction_[0]);
   as[0]->state_.last_measured_effort_ = (js[0]->measured_effort_/joint_reduction_[0] - js[1]->measured_effort_/joint_reduction_[1]) /(2.0*actuator_reduction_[0]);
-  if (ros::isStarted()) as[0]->state_.timestamp_ = ros::Time::now().toSec();
 
   as[1]->state_.position_ = ((-(js[0]->position_-js[0]->reference_position_)*joint_reduction_[0] -
 			      (js[1]->position_-js[1]->reference_position_)*joint_reduction_[1]) * actuator_reduction_[1]);
   as[1]->state_.velocity_ = ((-js[0]->velocity_*joint_reduction_[0] - js[1]->velocity_*joint_reduction_[1]) * actuator_reduction_[1]);
   as[1]->state_.last_measured_effort_ = (-js[0]->measured_effort_/joint_reduction_[0] - js[1]->measured_effort_/joint_reduction_[1]) /(2.0*actuator_reduction_[1]);
-  if (ros::isStarted()) as[1]->state_.timestamp_ = ros::Time::now().toSec();
 
+  // Update the timing (making sure it's initialized).
+  if (! simulated_actuator_timestamp_initialized_)
+    {
+      // Set the time stamp to zero (it is measured relative to the start time).
+      as[0]->state_.sample_timestamp_ = ros::Duration(0);
+      as[1]->state_.sample_timestamp_ = ros::Duration(0);
+
+      // Try to set the start time.  Only then do we claim initialized.
+      if (ros::isStarted())
+	{
+	  simulated_actuator_start_time_ = ros::Time::now();
+	  simulated_actuator_timestamp_initialized_ = true;
+	}
+    }
+  else
+    {
+      // Measure the time stamp relative to the start time.
+      as[0]->state_.sample_timestamp_ = ros::Time::now() - simulated_actuator_start_time_;
+      as[1]->state_.sample_timestamp_ = ros::Time::now() - simulated_actuator_start_time_;
+    }
+  // Set the historical (double) timestamp accordingly.
+  as[0]->state_.timestamp_ = as[0]->state_.sample_timestamp_.toSec();
+  as[1]->state_.timestamp_ = as[1]->state_.sample_timestamp_.toSec();
 
   // simulate calibration sensors by filling out actuator states
   // this is where to embed the hack which joint connects to which mcb

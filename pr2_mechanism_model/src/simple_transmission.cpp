@@ -130,7 +130,27 @@ void SimpleTransmission::propagatePositionBackwards(
   as[0]->state_.position_ = (js[0]->position_ - js[0]->reference_position_) * mechanical_reduction_;
   as[0]->state_.velocity_ = js[0]->velocity_ * mechanical_reduction_;
   as[0]->state_.last_measured_effort_ = js[0]->measured_effort_ / mechanical_reduction_;
-  if (ros::isStarted()) as[0]->state_.timestamp_ = ros::Time::now().toSec();
+
+  // Update the timing (making sure it's initialized).
+  if (! simulated_actuator_timestamp_initialized_)
+    {
+      // Set the time stamp to zero (it is measured relative to the start time).
+      as[0]->state_.sample_timestamp_ = ros::Duration(0);
+
+      // Try to set the start time.  Only then do we claim initialized.
+      if (ros::isStarted())
+	{
+	  simulated_actuator_start_time_ = ros::Time::now();
+	  simulated_actuator_timestamp_initialized_ = true;
+	}
+    }
+  else
+    {
+      // Measure the time stamp relative to the start time.
+      as[0]->state_.sample_timestamp_ = ros::Time::now() - simulated_actuator_start_time_;
+    }
+  // Set the historical (double) timestamp accordingly.
+  as[0]->state_.timestamp_ = as[0]->state_.sample_timestamp_.toSec();
 
   // simulate calibration sensors by filling out actuator states
   this->joint_calibration_simulator_.simulateJointCalibration(js[0],as[0]);
