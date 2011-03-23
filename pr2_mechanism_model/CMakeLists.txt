@@ -9,6 +9,7 @@ rosbuild_add_library( pr2_mechanism_model
   src/joint.cpp
   src/robot.cpp
   src/chain.cpp
+  src/tree.cpp
   src/simple_transmission.cpp
   src/pr2_gripper_transmission.cpp
   src/wrist_transmission.cpp
