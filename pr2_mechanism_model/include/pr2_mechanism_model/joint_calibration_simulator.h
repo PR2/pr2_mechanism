@@ -33,7 +33,7 @@
 
 #include "pr2_mechanism_model/joint.h"
 #include "pr2_hardware_interface/hardware_interface.h"
-#include <urdf/joint.h>
+#include <urdf_interface/joint.h>
 
 
 namespace pr2_mechanism_model

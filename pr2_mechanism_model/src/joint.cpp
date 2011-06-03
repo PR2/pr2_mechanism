@@ -37,7 +37,6 @@
 #include <string>
 #include <vector>
 #include <cfloat>
-//#include "urdf/parser.h"
 
 using namespace std;
 using namespace pr2_mechanism_model;

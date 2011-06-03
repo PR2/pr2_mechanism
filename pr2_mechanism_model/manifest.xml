@@ -21,6 +21,7 @@
 <depend package="pr2_hardware_interface" />
 <depend package="tinyxml" />
 <depend package="urdf" />
+<depend package="urdf_interface" />
 <depend package="kdl_parser" />
 <depend package="pluginlib" />
 <depend package="angles" />
