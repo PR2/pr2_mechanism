@@ -48,7 +48,7 @@ namespace pr2_mechanism_model {
 class SimpleTransmission : public Transmission
 {
 public:
-  SimpleTransmission() {}
+  SimpleTransmission() {use_simulated_actuated_joint_=false;}
   ~SimpleTransmission() {}
 
   bool initXml(TiXmlElement *config, Robot *robot);
@@ -66,6 +66,10 @@ public:
                                 std::vector<pr2_mechanism_model::JointState*>&);
 
 private:
+  // if a actuated_joint is specified, apply torque based on simulated_reduction_
+  double simulated_reduction_;
+  bool use_simulated_actuated_joint_;
+
   int simulated_actuator_timestamp_initialized_;
   ros::Time simulated_actuator_start_time_;
 

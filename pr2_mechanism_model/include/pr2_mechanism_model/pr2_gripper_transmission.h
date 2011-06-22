@@ -55,7 +55,7 @@ namespace pr2_mechanism_model {
 class PR2GripperTransmission : public Transmission
 {
 public:
-  PR2GripperTransmission() {default_passive_joint_index_from_sim=1;use_simulated_gripper_joint=false;}
+  PR2GripperTransmission() {use_simulated_actuated_joint_=false;has_simulated_passive_actuated_joint_=false;};
   virtual ~PR2GripperTransmission() {/*myfile.close();*/}
 
   bool initXml(TiXmlElement *config, Robot *robot);
@@ -76,6 +76,11 @@ public:
   //
   double      gap_mechanical_reduction_;
 
+  // if a screw_joint is specified, apply torque based on simulated_reduction_
+  double      simulated_reduction_;
+  bool        use_simulated_actuated_joint_;
+  bool        has_simulated_passive_actuated_joint_;
+
   // The joint_names_ variable is inherited from Transmission.  In
   // joint_names_, the gap joint is first, followed by all the passive
   // joints.
@@ -84,20 +89,11 @@ public:
   std::vector<std::string> passive_joints_;
 
 private:
-  /// \brief new option to turn off using passive joints for torque control, position detection in sim
-  bool use_simulated_gripper_joint;
-
   /// \brief compute gap position, velocity and measured effort from actuator states
   void computeGapStates(double MR,double MR_dot,double MT,
                         double &theta,double &dtheta_dMR,double &dt_dtheta,double &dt_dMR,double &gap_size,double &gap_velocity,double &gap_effort);
-  void inverseGapStates(double theta,double &MR, double &dMR_dtheta,double &dtheta_dt,double &dMR_dt);
-  //std::ofstream myfile;
-  void getRateFromMaxRateJoint(std::vector<pr2_mechanism_model::JointState*>& js,
-                               std::vector<pr2_hardware_interface::Actuator*>& as,
-    int &maxRateJointIndex,double &rate);
-
-  // use the same passive joint for determining gipper position, so forward/backward are consistent
-  int default_passive_joint_index_from_sim;
+  void inverseGapStates(double gap_size,double &MR, double &dMR_dtheta,double &dtheta_dt,double &dMR_dt);
+  void inverseGapStates1(double theta,double &MR, double &dMR_dtheta,double &dtheta_dt,double &dMR_dt);
 
   //
   // SOME CONSTANTS
