@@ -37,7 +37,7 @@
 #include <vector>
 #include "ros/ros.h"
 #include "pr2_controller_manager/controller_spec.h"
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <pr2_hardware_interface/hardware_interface.h>
 #include <pr2_mechanism_model/robot.h>
 #include <realtime_tools/realtime_publisher.h>

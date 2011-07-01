@@ -44,7 +44,7 @@
 #define GRIPPER_TRANSMISSION_H
 
 #include <vector>
-#include "tinyxml/tinyxml.h"
+#include "tinyxml.h"
 #include "pr2_mechanism_model/transmission.h"
 #include "pr2_mechanism_model/robot.h"
 //#include <fstream>

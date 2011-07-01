@@ -37,7 +37,7 @@
 #ifndef JOINT_H
 #define JOINT_H
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <urdf_interface/joint.h>
 
 

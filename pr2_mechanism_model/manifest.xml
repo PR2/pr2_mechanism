@@ -17,9 +17,11 @@
 <author>Eric Berger berger@willowgarage.com, Stuart Glaser, Wim Meeussen</author>
 <license>BSD</license> 
 <review status="doc reviewed" notes=""/>
+
+<rosdep name="tinyxml" />
+
 <depend package="roscpp" />
 <depend package="pr2_hardware_interface" />
-<depend package="tinyxml" />
 <depend package="urdf" />
 <depend package="urdf_interface" />
 <depend package="kdl_parser" />

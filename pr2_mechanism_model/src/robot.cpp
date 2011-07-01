@@ -33,7 +33,7 @@
 
 #include "pr2_mechanism_model/robot.h"
 #include "pr2_mechanism_model/transmission.h"
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <urdf/model.h>
 #include <pluginlib/class_loader.h>
 #include "pr2_hardware_interface/hardware_interface.h"
