@@ -836,24 +836,27 @@ void PR2GripperTransmission::propagatePosition(
   // we need to do this for each finger, in simulation, each finger has it's state filled out
   for (size_t i = 1; i < passive_joints_.size()+1; ++i)
   {
-    js[i]->position_        = theta - theta0_;
-    js[i]->velocity_        = dtheta_dMR * MR_dot;
-    js[i]->measured_effort_ = MT / dtheta_dMR / RAD2MR;
+    js[i]->position_           = theta - theta0_;
+    js[i]->velocity_           = dtheta_dMR * MR_dot;
+    js[i]->measured_effort_    = MT / dtheta_dMR / RAD2MR;
+    js[i]->reference_position_ = MT / dtheta_dMR / RAD2MR;
   }
 
   if (use_simulated_actuated_joint_)
   {
     // screw joint state is not important to us, fill with zeros
-    js[passive_joints_.size()+1]->position_        = 0.0;
-    js[passive_joints_.size()+1]->velocity_        = 0.0;
-    js[passive_joints_.size()+1]->measured_effort_ = 0.0;
+    js[passive_joints_.size()+1]->position_           = 0.0;
+    js[passive_joints_.size()+1]->velocity_           = 0.0;
+    js[passive_joints_.size()+1]->measured_effort_    = 0.0;
+    js[passive_joints_.size()+1]->reference_position_ = 0.0;
   }
   if (has_simulated_passive_actuated_joint_)
   {
     // screw joint state is not important to us, fill with zeros
-    js[passive_joints_.size()+2]->position_        = 0.0;
-    js[passive_joints_.size()+2]->velocity_        = 0.0;
-    js[passive_joints_.size()+2]->measured_effort_ = 0.0;
+    js[passive_joints_.size()+2]->position_           = 0.0;
+    js[passive_joints_.size()+2]->velocity_           = 0.0;
+    js[passive_joints_.size()+2]->measured_effort_    = 0.0;
+    js[passive_joints_.size()+2]->reference_position_ = 0.0;
   }
 }
 
