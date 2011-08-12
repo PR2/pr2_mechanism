@@ -792,7 +792,9 @@ void PR2GripperTransmission::propagatePosition(
 
   ROS_ASSERT(as.size() == 1);
   // js has passive joints and 1 gap joint and 1 screw joint
-  if (use_simulated_actuated_joint_) {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);}
+  if (use_simulated_actuated_joint_ && has_simulated_passive_actuated_joint_)
+    {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 2);}
+  else if (use_simulated_actuated_joint_) {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);}
   else                  {ROS_ASSERT(js.size() == 1 + passive_joints_.size());}
 
   /// \brief motor revolutions = encoder value * gap_mechanical_reduction_ * RAD2MR
@@ -922,7 +924,9 @@ void PR2GripperTransmission::propagateEffort(
   std::vector<JointState*>& js, std::vector<Actuator*>& as)
 {
   ROS_ASSERT(as.size() == 1);
-  if (use_simulated_actuated_joint_) {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);}
+  if (use_simulated_actuated_joint_ && has_simulated_passive_actuated_joint_)
+    {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 2);}
+  else if (use_simulated_actuated_joint_) {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);}
   else                  {ROS_ASSERT(js.size() == 1 + passive_joints_.size());}
 
   //
