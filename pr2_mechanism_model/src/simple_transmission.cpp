@@ -202,6 +202,7 @@ void SimpleTransmission::propagatePosition(
     js[1]->velocity_ = 0;
     js[1]->measured_effort_ = 0;
     js[1]->reference_position_ = 0;
+    js[1]->calibrated_ = true; // treat passive simulation joints as "calibrated"
   }
 }
 

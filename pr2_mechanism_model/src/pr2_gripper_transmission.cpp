@@ -851,6 +851,7 @@ void PR2GripperTransmission::propagatePosition(
     js[passive_joints_.size()+1]->velocity_           = 0.0;
     js[passive_joints_.size()+1]->measured_effort_    = 0.0;
     js[passive_joints_.size()+1]->reference_position_ = 0.0;
+    js[passive_joints_.size()+1]->calibrated_         = true; // treat passive simulation joints as "calibrated"
   }
   if (has_simulated_passive_actuated_joint_)
   {
@@ -859,6 +860,7 @@ void PR2GripperTransmission::propagatePosition(
     js[passive_joints_.size()+2]->velocity_           = 0.0;
     js[passive_joints_.size()+2]->measured_effort_    = 0.0;
     js[passive_joints_.size()+2]->reference_position_ = 0.0;
+    js[passive_joints_.size()+2]->calibrated_         = true; // treat passive simulation joints as "calibrated"
   }
 }
 
