@@ -125,8 +125,10 @@ def main():
     controllers = []
     for name in args:
         if os.path.exists(name):
+            # load yaml file onto the parameter server, using the namespace specified in the yaml file
+            rosparam.set_param("",open(name))
+            # list the controllers to be loaded
             name_yaml = yaml.load(open(name))
-            rosparam._set_param("",name_yaml)
             for controller in name_yaml:
                 controllers.append(controller)
         else:
