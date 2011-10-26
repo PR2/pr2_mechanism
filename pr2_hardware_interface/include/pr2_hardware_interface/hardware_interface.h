@@ -41,6 +41,7 @@
 #include <ros/ros.h>
 
 #include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/Wrench.h>
 
 namespace pr2_hardware_interface{
 
@@ -215,6 +216,27 @@ public:
   AccelerometerState state_;
   AccelerometerCommand command_;
 };
+
+class ForceTorqueState
+{
+public:
+  bool good_; //!< True if sensor is working properly. False if some type of error is detected.
+  //!< A vector of samples taken from force/torque sensor since the last iteration of the control loop (oldest samples first).
+  std::vector<geometry_msgs::Wrench> samples_; 
+};
+
+class ForceTorqueCommand
+{
+public:
+};
+
+class ForceTorque
+{
+public:
+  ForceTorqueState state_;
+  ForceTorqueCommand command_;
+};
+
 
 class DigitalOutCommand
 {
