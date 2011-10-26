@@ -228,6 +228,8 @@ public:
 class ForceTorqueCommand
 {
 public:
+  //! If halt_on_error_ is true, the driver with halt motors when an there is an error is detected.  The default setting is false.  
+  bool halt_on_error_;  
 };
 
 class ForceTorque
