@@ -987,6 +987,7 @@ void PR2GripperTransmission::propagateEffortBackwards(
     {
       // set screw joint effort if simulated
       js[passive_joints_.size()+1]->commanded_effort_  = gap_effort/simulated_reduction_;
+      js[0]->commanded_effort_                         = gap_effort/2.0;
     }
     else
     {
