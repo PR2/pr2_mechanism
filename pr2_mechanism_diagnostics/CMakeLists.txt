@@ -23,8 +23,10 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #uncomment if you have defined services
 #rosbuild_gensrv()
 
-find_package(Eigen REQUIRED)
-include_directories(${EIGEN_INCLUDE_DIRS})
+find_package(PkgConfig)
+pkg_check_modules(PC_EIGEN REQUIRED eigen3)
+include_directories(${PC_EIGEN_INCLUDE_DIRS})
+add_definitions(${PC_EIGEN_CFLAGS_OTHER})
 
 #common commands for building c++ executables and libraries
 rosbuild_add_library(${PROJECT_NAME} 
