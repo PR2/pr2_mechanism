@@ -18,7 +18,6 @@
   <depend stack="pr2_common" /> <!-- pr2_description -->
   <depend stack="robot_model" /> <!-- urdf_interface, robot_state_publisher, urdf, kdl_parser -->
   <depend stack="ros" />
-  <depend stack="ros_comm" /> <!-- std_msgs, rosparam, rospy, roscpp, std_srvs -->
-  <depend stack="xacro" /> <!-- xacro -->
+  <depend stack="ros_comm" /> <!-- std_msgs, std_srvs, rosparam, rospy, roscpp -->
 
 </stack>
