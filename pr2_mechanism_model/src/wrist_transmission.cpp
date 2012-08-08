@@ -47,6 +47,20 @@ PLUGINLIB_DECLARE_CLASS(pr2_mechanism_model, WristTransmission,
                         pr2_mechanism_model::Transmission)
 
 
+static bool convertDouble(const char* val_str, double &value)
+{
+  char *endptr=NULL;
+  value = strtod(val_str, &endptr);
+  if ((endptr == val_str) || (endptr < (val_str+strlen(val_str))))
+  {
+    return false;
+  }
+
+  return true;
+}
+
+
+
 bool WristTransmission::initXml(TiXmlElement *elt, Robot *robot)
 {
   const char *name = elt->Attribute("name");
@@ -111,6 +125,26 @@ bool WristTransmission::initXml(TiXmlElement *elt, Robot *robot)
     return false;
   }
   joint_reduction_.push_back(atof(joint_red));
+  const char *joint_offset = j->Attribute("offset");
+  if (!joint_offset)
+  {
+    joint_offset_.push_back(0.0);
+  }
+  else
+  {
+    double offset;
+    if (!convertDouble(joint_offset, offset))
+    {
+      ROS_WARN("WristTransmission's joint \"%s\", cannot convert jointOffset attribute \"%s\" to floating point.",
+               joint_name, joint_offset);
+      return false;
+    }
+    else
+    {
+      ROS_WARN("Joint offset of %f for joint %s.", offset, joint_name);
+      joint_offset_.push_back(offset);
+    }
+  }
 
   j = elt->FirstChildElement("rollJoint");
   joint_name = j->Attribute("name");
@@ -134,6 +168,26 @@ bool WristTransmission::initXml(TiXmlElement *elt, Robot *robot)
     return false;
   }
   joint_reduction_.push_back(atof(joint_red));
+  joint_offset = j->Attribute("offset");
+  if (!joint_offset)
+  {
+    joint_offset_.push_back(0.0);
+  }
+  else
+  {
+    double offset;
+    if (!convertDouble(joint_offset, offset))
+    {
+      ROS_WARN("WristTransmission's joint \"%s\", cannot convert jointOffset attribute \"%s\" to floating point.",
+               joint_name, joint_offset);
+      return false;
+    }
+    else
+    {
+      ROS_WARN("Joint offset of %f for joint %s.", offset, joint_name); 
+      joint_offset_.push_back(offset);
+    }
+  }
 
 
   return true;
@@ -193,6 +247,26 @@ bool WristTransmission::initXml(TiXmlElement *elt)
     return false;
   }
   joint_reduction_.push_back(atof(joint_red));
+  const char *joint_offset = j->Attribute("offset");
+  if (!joint_offset)
+  {
+    joint_offset_.push_back(0.0);
+  }
+  else
+  {
+    double offset;
+    if (!convertDouble(joint_offset, offset))
+    {
+      ROS_WARN("WristTransmission's joint \"%s\", cannot convert jointOffset attribute \"%s\" to floating point.",
+               joint_name, joint_offset);
+      return false;
+    }
+    else
+    {
+      ROS_WARN("Joint offset of %f for joint %s.", offset, joint_name);
+      joint_offset_.push_back(offset);
+    }
+  }
 
   j = elt->FirstChildElement("rollJoint");
   joint_name = j->Attribute("name");
@@ -209,7 +283,25 @@ bool WristTransmission::initXml(TiXmlElement *elt)
     return false;
   }
   joint_reduction_.push_back(atof(joint_red));
-
+  if (!joint_offset)
+  {
+    joint_offset_.push_back(0.0);
+  }
+  else
+  {
+    double offset;
+    if (!convertDouble(joint_offset, offset))
+    {
+      ROS_WARN("WristTransmission's joint \"%s\", cannot convert jointOffset attribute \"%s\" to floating point.",
+               joint_name, joint_offset);
+      return false;
+    }
+    else
+    {
+      ROS_WARN("Joint offset of %f for joint %s.", offset, joint_name);
+      joint_offset_.push_back(offset);
+    }
+  }
 
   return true;
 }
@@ -221,12 +313,12 @@ void WristTransmission::propagatePosition(
   assert(js.size() == 2);
 
   js[0]->position_ = ((as[0]->state_.position_ / actuator_reduction_[0] - as[1]->state_.position_ / actuator_reduction_[1])/
-		      (2*joint_reduction_[0])) + js[0]->reference_position_;
+		      (2*joint_reduction_[0])) + js[0]->reference_position_+joint_offset_[0];
   js[0]->velocity_ = (as[0]->state_.velocity_ / actuator_reduction_[0] - as[1]->state_.velocity_ / actuator_reduction_[1])/(2*joint_reduction_[0]);
   js[0]->measured_effort_ = joint_reduction_[0]*(as[0]->state_.last_measured_effort_ * actuator_reduction_[0] - as[1]->state_.last_measured_effort_ * actuator_reduction_[1]);
 
   js[1]->position_ = ((-as[0]->state_.position_ / actuator_reduction_[0] - as[1]->state_.position_ / actuator_reduction_[1])/
-		      (2*joint_reduction_[1]))+js[1]->reference_position_;
+		      (2*joint_reduction_[1]))+js[1]->reference_position_+joint_offset_[1];
   js[1]->velocity_ = (-as[0]->state_.velocity_ / actuator_reduction_[0] - as[1]->state_.velocity_ / actuator_reduction_[1])/(2*joint_reduction_[1]);
   js[1]->measured_effort_ = joint_reduction_[1]*(-as[0]->state_.last_measured_effort_ * actuator_reduction_[0] - as[1]->state_.last_measured_effort_ * actuator_reduction_[1]);
 }
@@ -237,13 +329,13 @@ void WristTransmission::propagatePositionBackwards(
   assert(as.size() == 2);
   assert(js.size() == 2);
 
-  as[0]->state_.position_ = (((js[0]->position_-js[0]->reference_position_)*joint_reduction_[0] -
-			      (js[1]->position_-js[1]->reference_position_)*joint_reduction_[1]) * actuator_reduction_[0]);
+  as[0]->state_.position_ = (((js[0]->position_-js[0]->reference_position_-joint_offset_[0])*joint_reduction_[0] -
+			      (js[1]->position_-js[1]->reference_position_-joint_offset_[1])*joint_reduction_[1]) * actuator_reduction_[0]);
   as[0]->state_.velocity_ = ((js[0]->velocity_*joint_reduction_[0] - js[1]->velocity_*joint_reduction_[1]) * actuator_reduction_[0]);
   as[0]->state_.last_measured_effort_ = (js[0]->measured_effort_/joint_reduction_[0] - js[1]->measured_effort_/joint_reduction_[1]) /(2.0*actuator_reduction_[0]);
 
-  as[1]->state_.position_ = ((-(js[0]->position_-js[0]->reference_position_)*joint_reduction_[0] -
-			      (js[1]->position_-js[1]->reference_position_)*joint_reduction_[1]) * actuator_reduction_[1]);
+  as[1]->state_.position_ = ((-(js[0]->position_-js[0]->reference_position_-joint_offset_[0])*joint_reduction_[0] -
+			       (js[1]->position_-js[1]->reference_position_-joint_offset_[1])*joint_reduction_[1]) * actuator_reduction_[1]);
   as[1]->state_.velocity_ = ((-js[0]->velocity_*joint_reduction_[0] - js[1]->velocity_*joint_reduction_[1]) * actuator_reduction_[1]);
   as[1]->state_.last_measured_effort_ = (-js[0]->measured_effort_/joint_reduction_[0] - js[1]->measured_effort_/joint_reduction_[1]) /(2.0*actuator_reduction_[1]);
 

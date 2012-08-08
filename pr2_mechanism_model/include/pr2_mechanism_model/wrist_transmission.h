@@ -76,6 +76,7 @@ public:
 
   std::vector<double> actuator_reduction_;
   std::vector<double> joint_reduction_;
+  std::vector<double> joint_offset_;
 
   // Describes the order of the actuators and the joints in the arrays
   // of names and of those passed to propagate*
