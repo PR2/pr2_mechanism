@@ -59,6 +59,11 @@ static bool convertDouble(const char* val_str, double &value)
   return true;
 }
 
+WristTransmission::WristTransmission()
+{
+  joint_offset_[0] = 0.0;
+  joint_offset_[1] = 0.0;
+}
 
 
 bool WristTransmission::initXml(TiXmlElement *elt, Robot *robot)
@@ -128,12 +133,11 @@ bool WristTransmission::initXml(TiXmlElement *elt, Robot *robot)
   const char *joint_offset = j->Attribute("offset");
   if (!joint_offset)
   {
-    joint_offset_.push_back(0.0);
+    joint_offset_[0] = 0.0;
   }
   else
   {
-    double offset;
-    if (!convertDouble(joint_offset, offset))
+    if (!convertDouble(joint_offset, joint_offset_[0]))
     {
       ROS_WARN("WristTransmission's joint \"%s\", cannot convert jointOffset attribute \"%s\" to floating point.",
                joint_name, joint_offset);
@@ -141,8 +145,7 @@ bool WristTransmission::initXml(TiXmlElement *elt, Robot *robot)
     }
     else
     {
-      ROS_WARN("Joint offset of %f for joint %s.", offset, joint_name);
-      joint_offset_.push_back(offset);
+      ROS_WARN("Joint offset of %f for joint %s.", joint_offset_[0], joint_name);
     }
   }
 
@@ -171,12 +174,11 @@ bool WristTransmission::initXml(TiXmlElement *elt, Robot *robot)
   joint_offset = j->Attribute("offset");
   if (!joint_offset)
   {
-    joint_offset_.push_back(0.0);
+    joint_offset_[1] = 0.0;
   }
   else
   {
-    double offset;
-    if (!convertDouble(joint_offset, offset))
+    if (!convertDouble(joint_offset, joint_offset_[1]))
     {
       ROS_WARN("WristTransmission's joint \"%s\", cannot convert jointOffset attribute \"%s\" to floating point.",
                joint_name, joint_offset);
@@ -184,8 +186,7 @@ bool WristTransmission::initXml(TiXmlElement *elt, Robot *robot)
     }
     else
     {
-      ROS_WARN("Joint offset of %f for joint %s.", offset, joint_name); 
-      joint_offset_.push_back(offset);
+      ROS_WARN("Joint offset of %f for joint %s.", joint_offset_[1], joint_name); 
     }
   }
 
@@ -250,12 +251,12 @@ bool WristTransmission::initXml(TiXmlElement *elt)
   const char *joint_offset = j->Attribute("offset");
   if (!joint_offset)
   {
-    joint_offset_.push_back(0.0);
+    joint_offset_[0] = 0.0;
   }
   else
   {
     double offset;
-    if (!convertDouble(joint_offset, offset))
+    if (!convertDouble(joint_offset, joint_offset_[0]))
     {
       ROS_WARN("WristTransmission's joint \"%s\", cannot convert jointOffset attribute \"%s\" to floating point.",
                joint_name, joint_offset);
@@ -263,8 +264,7 @@ bool WristTransmission::initXml(TiXmlElement *elt)
     }
     else
     {
-      ROS_WARN("Joint offset of %f for joint %s.", offset, joint_name);
-      joint_offset_.push_back(offset);
+      ROS_WARN("Joint offset of %f for joint %s.", joint_offset_[0], joint_name);
     }
   }
 
@@ -285,12 +285,11 @@ bool WristTransmission::initXml(TiXmlElement *elt)
   joint_reduction_.push_back(atof(joint_red));
   if (!joint_offset)
   {
-    joint_offset_.push_back(0.0);
+    joint_offset_[1] = 0.0;
   }
   else
   {
-    double offset;
-    if (!convertDouble(joint_offset, offset))
+    if (!convertDouble(joint_offset, joint_offset_[1]))
     {
       ROS_WARN("WristTransmission's joint \"%s\", cannot convert jointOffset attribute \"%s\" to floating point.",
                joint_name, joint_offset);
@@ -298,8 +297,7 @@ bool WristTransmission::initXml(TiXmlElement *elt)
     }
     else
     {
-      ROS_WARN("Joint offset of %f for joint %s.", offset, joint_name);
-      joint_offset_.push_back(offset);
+      ROS_WARN("Joint offset of %f for joint %s.", joint_offset_[1], joint_name);
     }
   }
 
