@@ -7,6 +7,8 @@ rosbuild_genmsg()
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 rosbuild_add_boost_directories()
+find_package(Eigen REQUIRED)
+include_directories(SYSTEM ${Eigen_INCLUDE_DIRS})
 
 rosbuild_add_library(pr2_controller_manager src/controller_manager.cpp src/scheduler.cpp)
 rosbuild_remove_compile_flags(pr2_controller_manager -W)
