@@ -5,6 +5,9 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 set(ROS_BUILD_TYPE Release)
 rosbuild_init()
 
+find_package(Eigen REQUIRED)
+include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
+
 rosbuild_add_library( pr2_mechanism_model
   src/joint.cpp
   src/robot.cpp

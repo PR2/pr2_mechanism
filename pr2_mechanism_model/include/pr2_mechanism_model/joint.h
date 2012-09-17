@@ -38,7 +38,7 @@
 #define JOINT_H
 
 #include <tinyxml.h>
-#include <urdf_interface/joint.h>
+#include <urdf_model/joint.h>
 
 
 namespace pr2_mechanism_model {
