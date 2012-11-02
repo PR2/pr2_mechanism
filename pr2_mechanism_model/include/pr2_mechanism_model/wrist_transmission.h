@@ -68,7 +68,7 @@ namespace pr2_mechanism_model {
 class WristTransmission : public Transmission
 {
 public:
-  WristTransmission() {}
+  WristTransmission();
   ~WristTransmission() {}
 
   bool initXml(TiXmlElement *config, Robot *robot);
@@ -76,6 +76,7 @@ public:
 
   std::vector<double> actuator_reduction_;
   std::vector<double> joint_reduction_;
+  double joint_offset_[2];
 
   // Describes the order of the actuators and the joints in the arrays
   // of names and of those passed to propagate*
