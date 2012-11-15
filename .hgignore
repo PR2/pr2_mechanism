@@ -2,3 +2,4 @@
 .*/build/.*
 .*/lib/.*
 .*~
+.*/CMakeLists.txt.user
