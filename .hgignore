@@ -1,0 +1,4 @@
+.*qtcreator
+.*/build/.*
+.*/lib/.*
+.*~
