@@ -8,14 +8,14 @@
   mechanism in a realtime control loop, and therefore it only contains
   the components of a robot that are relevant in realtime: the robot
   joints (with encoders, transmisisons and actuators) and the
-  kinematic/dynamic model of the robot. 
+  kinematic/dynamic model of the robot.
 </p>
 <p>
   The pr2_mechanism_model package is well tested and is released with a stable API.
 </p>
 </description>
 <author>Eric Berger berger@willowgarage.com, Stuart Glaser, Wim Meeussen</author>
-<license>BSD</license> 
+<license>BSD</license>
 <review status="doc reviewed" notes=""/>
 
 <rosdep name="tinyxml" />
@@ -27,6 +27,8 @@
 <depend package="kdl_parser" />
 <depend package="pluginlib" />
 <depend package="angles" />
+<depend package="hardware_interface" />
+
 <url>http://ros.org/wiki/pr2_mechanism_model</url>
 <export>
   <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lpr2_mechanism_model -Wl,-rpath,${prefix}/lib"/>
