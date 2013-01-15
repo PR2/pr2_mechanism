@@ -51,6 +51,7 @@
 #include <string>
 #include <urdf/model.h>
 #include <pr2_hardware_interface/hardware_interface.h>
+#include <hardware_interface/hardware_interface.h>
 #include "pr2_mechanism_model/joint.h"
 #include "pr2_mechanism_model/transmission.h"
 
@@ -130,7 +131,7 @@ private:
  * Some specialized controllers (such as the calibration controllers) can get access
  * to actuator states, and transmission states.
  */
-class RobotState
+class RobotState : public hardware_interface::HardwareInterface
 {
 public:
   /// constructor
@@ -185,7 +186,6 @@ public:
   void zeroCommands();
 
 
-private:
   std::map<std::string, JointState*> joint_states_map_;
 
 };

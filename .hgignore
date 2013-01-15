@@ -1,0 +1,13 @@
+.*qtcreator
+.*/build/.*
+.*/lib/.*
+.*~
+.*/CMakeLists.txt.user
+msg_gen/
+srv_gen/
+\.pyc$
+~$
+msg/_.*\.py$
+srv/_.*\.py$
+.*/bin/
+pr2_mechanism_msgs/src/pr2_mechanism_msgs/__init__.py

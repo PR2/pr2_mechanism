@@ -5,10 +5,10 @@
     packages in this stack is through C++, but it is possible to
     interact with controllers through a ROS API. While the
     stack is currently aimed at controlling the PR2 robot, it should
-    work on most force-controlled robots. 
+    work on most force-controlled robots.
   </description>
   <author>Maintained by Wim Meeussen</author>
-  <license>BSD</license>  
+  <license>BSD</license>
   <review status="Doc reviewed" notes="2009-11-13"/>
   <url>http://ros.org/wiki/pr2_mechanism</url>
   <depend stack="common_msgs" /> <!-- geometry_msgs, sensor_msgs, diagnostic_msgs -->
@@ -20,5 +20,5 @@
   <depend stack="ros" />
   <depend stack="ros_comm" /> <!-- std_msgs, std_srvs, rosparam, rospy, roscpp -->
   <depend stack="pr2_mechanism_msgs" /> <!-- pr2_mechanism_msgs -->
-
+  <depend stack="ros_control" />
 </stack>

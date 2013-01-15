@@ -44,19 +44,23 @@
 
 #include <ros/node_handle.h>
 #include <pr2_mechanism_model/robot.h>
-#include "pr2_controller_interface/controller_provider.h"
-
+#include <pr2_controller_interface/controller_provider.h>
+#include <controller_interface/controller.h>
 
 namespace pr2_controller_interface
 {
 
-class Controller
+class Controller : public controller_interface::Controller<pr2_mechanism_model::RobotState >
 {
 public:
   enum {BEFORE_ME, AFTER_ME};
 
   Controller(): state_(CONSTRUCTED){}
   virtual ~Controller(){}
+
+  void starting(const ros::Time& time) { starting(); }
+  void update  (const ros::Time& time) { update();   }
+  void stopping(const ros::Time& time) { stopping(); }
 
   /// The starting method is called just before the first update from within the realtime thread.
   virtual void starting() {};
