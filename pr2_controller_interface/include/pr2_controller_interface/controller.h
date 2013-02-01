@@ -59,7 +59,7 @@ public:
   virtual ~Controller(){}
 
   void starting(const ros::Time& time) { starting(); }
-  void update  (const ros::Time& time) { update();   }
+  void update  (const ros::Time& time, const ros::Duration& period) { update();   }
   void stopping(const ros::Time& time) { stopping(); }
 
   /// The starting method is called just before the first update from within the realtime thread.
