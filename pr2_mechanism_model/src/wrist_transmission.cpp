@@ -42,8 +42,7 @@
 using namespace pr2_mechanism_model;
 using namespace pr2_hardware_interface;
 
-PLUGINLIB_DECLARE_CLASS(pr2_mechanism_model, WristTransmission,
-                        pr2_mechanism_model::WristTransmission,
+PLUGINLIB_EXPORT_CLASS(pr2_mechanism_model::WristTransmission,
                         pr2_mechanism_model::Transmission)
 
 

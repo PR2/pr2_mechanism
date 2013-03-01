@@ -36,8 +36,7 @@
 #include <math.h>
 #include <pluginlib/class_list_macros.h>
 
-PLUGINLIB_DECLARE_CLASS(pr2_mechanism_model, PR2BeltCompensatorTransmission,
-                        pr2_mechanism_model::PR2BeltCompensatorTransmission,
+PLUGINLIB_EXPORT_CLASS(pr2_mechanism_model::PR2BeltCompensatorTransmission,
                         pr2_mechanism_model::Transmission)
 
 namespace pr2_mechanism_model {

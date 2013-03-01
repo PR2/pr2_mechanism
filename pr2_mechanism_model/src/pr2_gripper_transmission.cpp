@@ -59,8 +59,7 @@
 using namespace pr2_hardware_interface;
 using namespace pr2_mechanism_model;
 
-PLUGINLIB_DECLARE_CLASS(pr2_mechanism_model, PR2GripperTransmission,
-                         pr2_mechanism_model::PR2GripperTransmission,
+PLUGINLIB_EXPORT_CLASS(pr2_mechanism_model::PR2GripperTransmission,
                          pr2_mechanism_model::Transmission)
 
 bool PR2GripperTransmission::initXml(TiXmlElement *config, Robot *robot)
