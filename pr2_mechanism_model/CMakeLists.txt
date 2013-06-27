@@ -9,6 +9,13 @@ find_package(Eigen REQUIRED)
 include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
 include_directories(include ${catkin_INCLUDE_DIRS})
 
+catkin_package(
+    DEPENDS tinyxml urdfdom
+    CATKIN_DEPENDS roscpp pr2_hardware_interface urdf kdl_parser pluginlib angles hardware_interface
+    INCLUDE_DIRS include
+    LIBRARIES pr2_mechanism_model
+)
+
 add_library( pr2_mechanism_model
   src/joint.cpp
   src/robot.cpp
@@ -19,13 +26,6 @@ add_library( pr2_mechanism_model
   src/wrist_transmission.cpp
   src/pr2_belt_transmission.cpp
   src/joint_calibration_simulator.cpp
-)
-
-catkin_package(
-    DEPENDS tinyxml urdfdom
-    CATKIN_DEPENDS roscpp pr2_hardware_interface urdf kdl_parser pluginlib angles hardware_interface
-    INCLUDE_DIRS include
-    LIBRARIES pr2_mechanism_model
 )
 
 catkin_add_gtest(test_chain test/test_chain.cpp)

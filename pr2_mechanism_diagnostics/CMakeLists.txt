@@ -10,6 +10,8 @@ pkg_check_modules(PC_EIGEN REQUIRED eigen3)
 include_directories(include ${PC_EIGEN_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 add_definitions(${PC_EIGEN_CFLAGS_OTHER})
 
+catkin_package()
+
 #common commands for building c++ executables and libraries
 add_library(${PROJECT_NAME} 
   src/controller_diagnostics.cpp 
@@ -23,8 +25,6 @@ add_rostest(test/launch/mech_diag_test_main.launch)
 add_rostest(test/launch/overrun_test.launch)
 add_rostest(test/launch/uncal_test.launch)
 add_rostest(test/launch/nan_test.launch)
-
-catkin_package()
 
 install(TARGETS pr2_mechanism_diagnostics_node
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
