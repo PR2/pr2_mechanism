@@ -29,10 +29,10 @@ add_library( pr2_mechanism_model
 )
 
 catkin_add_gtest(test_chain test/test_chain.cpp)
-target_link_libraries(test_chain pr2_mechanism_model)
+target_link_libraries(test_chain pr2_mechanism_model ${catkin_LIBRARIES})
 
 catkin_add_gtest(test_wrist_transmission test/test_wrist_transmission.cpp)
-target_link_libraries(test_wrist_transmission pr2_mechanism_model)
+target_link_libraries(test_wrist_transmission pr2_mechanism_model ${catkin_LIBRARIES})
 
 # test joint calibration simulator for writing actuator state optical flags
 #  in propagatePositionBackwards() call
