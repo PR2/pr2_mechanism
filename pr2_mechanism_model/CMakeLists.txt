@@ -1,14 +1,15 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
-#set(ROS_BUILD_TYPE Debug)
-#set(ROS_BUILD_TYPE RelWithDebInfo)
-set(ROS_BUILD_TYPE Release)
-rosbuild_init()
+# http://ros.org/doc/groovy/api/catkin/html/user_guide/supposed.html
+cmake_minimum_required(VERSION 2.8.3)
+project(pr2_mechanism_model)
+
+# Load catkin and all dependencies required for this package
+find_package(catkin REQUIRED COMPONENTS roscpp pr2_hardware_interface urdf urdfdom kdl_parser pluginlib angles hardware_interface rostest rosunit)
 
 find_package(Eigen REQUIRED)
 include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS})
 
-rosbuild_add_library( pr2_mechanism_model
+add_library( pr2_mechanism_model
   src/joint.cpp
   src/robot.cpp
   src/chain.cpp
@@ -20,15 +21,32 @@ rosbuild_add_library( pr2_mechanism_model
   src/joint_calibration_simulator.cpp
 )
 
+catkin_package(
+    DEPENDS tinyxml urdfdom
+    CATKIN_DEPENDS roscpp pr2_hardware_interface urdf kdl_parser pluginlib angles hardware_interface
+    INCLUDE_DIRS include
+    LIBRARIES pr2_mechanism_model
+)
 
-rosbuild_add_gtest(test/test_chain test/test_chain.cpp)
-target_link_libraries(test/test_chain pr2_mechanism_model)
+catkin_add_gtest(test_chain test/test_chain.cpp)
+target_link_libraries(test_chain pr2_mechanism_model)
 
-rosbuild_add_gtest(test/test_wrist_transmission test/test_wrist_transmission.cpp)
-target_link_libraries(test/test_wrist_transmission pr2_mechanism_model)
+catkin_add_gtest(test_wrist_transmission test/test_wrist_transmission.cpp)
+target_link_libraries(test_wrist_transmission pr2_mechanism_model)
 
-# test joint calibration simulator for writing actuator state optical flags in propagatePositionBackwards() call
-rosbuild_add_executable(test_joint_calibration_simulator test/test_joint_calibration_simulator.cpp src/joint_calibration_simulator.cpp)
-target_link_libraries(test_joint_calibration_simulator pr2_mechanism_model)
-rosbuild_add_gtest_build_flags(test_joint_calibration_simulator)
-rosbuild_add_rostest(test/test_joint_calibration_simulator.launch)
+# test joint calibration simulator for writing actuator state optical flags
+#  in propagatePositionBackwards() call
+add_executable(test_joint_calibration_simulator 
+   test/test_joint_calibration_simulator.cpp
+   src/joint_calibration_simulator.cpp)
+target_link_libraries(test_joint_calibration_simulator pr2_mechanism_model ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
+add_dependencies(test_joint_calibration_simulator gtest gtest_main)
+add_dependencies(tests test_joint_calibration_simulator)
+set_target_properties(test_joint_calibration_simulator PROPERTIES EXCLUDE_FROM_ALL TRUE)
+
+# CATKIN_MIGRATION: removed during catkin migration
+# rosbuild_add_gtest_build_flags(test_joint_calibration_simulator)
+
+# CATKIN_MIGRATION: removed during catkin migration
+add_rostest(test/test_joint_calibration_simulator.launch)
+

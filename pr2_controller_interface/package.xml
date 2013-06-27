@@ -1,0 +1,31 @@
+<package>
+  <name>pr2_controller_interface</name>
+  <version>1.8.0</version>
+  <description>
+   This package specifies the interface to a realtime controller. A
+   controller that implements this interface can be executed by the
+    <a href="http://www.ros.org/wiki/pr2_controller_manager">controller
+  manager</a> in the real time control loop. The package basically
+  contains the C++ controller base class that all controllers need to
+  inherit from.
+  </description>
+  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/pr2_controller_interface</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>Wim Meeussen</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>pr2_mechanism_model</build_depend>
+  <build_depend>controller_interface</build_depend>
+
+  <run_depend>roscpp</run_depend>
+  <run_depend>pr2_mechanism_model</run_depend>
+  <run_depend>controller_interface</run_depend>
+
+</package>

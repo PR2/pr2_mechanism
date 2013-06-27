@@ -52,7 +52,6 @@
 #include <pr2_mechanism_msgs/JointStatistics.h>
 #include <pr2_mechanism_msgs/ActuatorStatistics.h>
 #include <diagnostic_updater/DiagnosticStatusWrapper.h>
-#include <urdf_interface/joint.h>
 
 namespace pr2_mechanism_diagnostics
 {

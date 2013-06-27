@@ -1,0 +1,25 @@
+<package>
+  <name>pr2_mechanism</name>
+  <version>1.8.0</version>
+  <description>The pr2_mechanism stack contains the infrastructure to control the PR2 robot in a hard realtime control loop.</description>
+  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/pr2_mechanism</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>Maintained by Wim Meeussen</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>pr2_mechanism_model</run_depend>
+  <run_depend>pr2_controller_interface</run_depend>
+  <run_depend>pr2_controller_manager</run_depend>
+  <run_depend>pr2_mechanism_diagnostics</run_depend>
+  <run_depend>pr2_hardware_interface</run_depend>
+
+  <export>
+    <metapackage/>
+  </export>
+</package>

@@ -1,0 +1,55 @@
+<package>
+  <name>pr2_mechanism_model</name>
+  <version>1.8.0</version>
+  <description>
+     <p>
+        This package contains the robot model that is used by the realtime
+        controllers
+        inside <a href="http://www.ros.org/wiki/pr2_controller_manager">controller
+           manager</a>. This robot model focuses on controlling the robot
+        mechanism in a realtime control loop, and therefore it only contains
+        the components of a robot that are relevant in realtime: the robot
+        joints (with encoders, transmisisons and actuators) and the
+        kinematic/dynamic model of the robot.
+     </p>
+     <p>
+        The pr2_mechanism_model package is well tested and is released with a stable API.
+     </p>
+  </description>
+  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/pr2_mechanism_model</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>Eric Berger berger@willowgarage.com</author>
+  <author>Stuart Glaser</author>
+  <author>Wim Meeussen</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>pr2_hardware_interface</build_depend>
+  <build_depend>urdf</build_depend>
+  <build_depend>urdfdom</build_depend>
+  <build_depend>kdl_parser</build_depend>
+  <build_depend>pluginlib</build_depend>
+  <build_depend>angles</build_depend>
+  <build_depend>hardware_interface</build_depend>
+  <build_depend>rostest</build_depend>
+  <build_depend>rosunit</build_depend>
+
+  <run_depend>roscpp</run_depend>
+  <run_depend>pr2_hardware_interface</run_depend>
+  <run_depend>urdf</run_depend>
+  <run_depend>urdfdom</run_depend>
+  <run_depend>kdl_parser</run_depend>
+  <run_depend>pluginlib</run_depend>
+  <run_depend>angles</run_depend>
+  <run_depend>hardware_interface</run_depend>
+
+  <export>
+    <pr2_mechanism_model plugin="${prefix}/transmission_plugins.xml"/>
+  </export>
+</package>

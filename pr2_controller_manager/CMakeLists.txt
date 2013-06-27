@@ -1,28 +1,36 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
-#set(ROS_BUILD_TYPE RelWithDebInfo)
-set(ROS_BUILD_TYPE Release)
-rosbuild_init()
-rosbuild_genmsg()
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+# http://ros.org/doc/groovy/api/catkin/html/user_guide/supposed.html
+cmake_minimum_required(VERSION 2.8.3)
+project(pr2_controller_manager)
 
-rosbuild_add_boost_directories()
+# Load catkin and all dependencies required for this package
+find_package(catkin REQUIRED COMPONENTS pr2_hardware_interface pr2_mechanism_model pr2_mechanism_diagnostics pr2_description pr2_controller_interface pr2_mechanism_msgs diagnostic_msgs sensor_msgs realtime_tools roscpp pluginlib)
+
 find_package(Eigen REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system thread)
+
 include_directories(SYSTEM ${Eigen_INCLUDE_DIRS})
+include_directories(include ${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
-rosbuild_add_library(pr2_controller_manager src/controller_manager.cpp src/scheduler.cpp)
-rosbuild_remove_compile_flags(pr2_controller_manager -W)
-rosbuild_link_boost(pr2_controller_manager thread)
+add_library(pr2_controller_manager src/controller_manager.cpp src/scheduler.cpp)
 
-rosbuild_add_library(controller_test test/controllers/test_controller.cpp)
-rosbuild_add_executable(test_controllers test/test.cpp)
-rosbuild_add_executable(test_robot test/robot.cpp)
-rosbuild_link_boost(test_robot system)
-target_link_libraries(test_robot ${PROJECT_NAME})
-rosbuild_add_gtest_build_flags(test_controllers)
+target_link_libraries(pr2_controller_manager ${Boost_LIBRARIES})
 
-rosbuild_check_for_vm(vm)
-if(NOT vm)
-  rosbuild_add_rostest(test/controller_test.launch)
-endif(NOT vm)
+add_library(controller_test test/controllers/test_controller.cpp)
 
+add_executable(test_controllers test/test.cpp)
+add_executable(test_robot test/robot.cpp)
+
+target_link_libraries(test_robot ${Boost_LIBRARIES} ${PROJECT_NAME} ${catkin_LIBRARIES})
+
+target_link_libraries(test_controllers ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
+
+#rosbuild_check_for_vm(vm)
+#if(NOT vm)
+   add_rostest(test/controller_test.launch)
+#endif(NOT vm)
+
+
+catkin_package(
+    DEPENDS tinyxml
+    CATKIN_DEPENDS pr2_hardware_interface pr2_mechanism_model pr2_mechanism_diagnostics pr2_description pr2_controller_interface pr2_mechanism_msgs diagnostic_msgs sensor_msgs realtime_tools roscpp pluginlib
+)
