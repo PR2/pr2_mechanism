@@ -25,3 +25,6 @@ add_rostest(test/launch/uncal_test.launch)
 add_rostest(test/launch/nan_test.launch)
 
 catkin_package()
+
+install(TARGETS pr2_mechanism_diagnostics_node
+   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

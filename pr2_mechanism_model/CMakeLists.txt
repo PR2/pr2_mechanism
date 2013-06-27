@@ -44,9 +44,15 @@ add_dependencies(test_joint_calibration_simulator gtest gtest_main)
 add_dependencies(tests test_joint_calibration_simulator)
 set_target_properties(test_joint_calibration_simulator PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
-# CATKIN_MIGRATION: removed during catkin migration
-# rosbuild_add_gtest_build_flags(test_joint_calibration_simulator)
-
-# CATKIN_MIGRATION: removed during catkin migration
 add_rostest(test/test_joint_calibration_simulator.launch)
 
+install(DIRECTORY include/${PACKAGE_NAME}/
+   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+
+install(TARGETS pr2_mechanism_model
+   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+
+install(FILES transmission_plugins.xml
+   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

@@ -11,17 +11,17 @@
 -->
 
 
-<!-- Controller manager parameters -->
+  <!-- Controller manager parameters -->
   <param name="pr2_controller_manager/mechanism_statistics_publish_rate" value="1.0" />
   <param name="pr2_controller_manager/joint_state_publish_rate" value="100.0" />
 
-<!-- Robot state publisher -->
+  <!-- Robot state publisher -->
   <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
     <param name="publish_frequency" type="double" value="50.0" />
     <param name="tf_prefix" type="string" value="" />
   </node>
 
-<!-- Diagnostics -->
+  <!-- Diagnostics -->
   <node pkg="pr2_mechanism_diagnostics" type="pr2_mechanism_diagnostics" name="pr2_mechanism_diagnostics" />
 
 </launch>

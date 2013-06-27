@@ -29,8 +29,25 @@ target_link_libraries(test_controllers ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
    add_rostest(test/controller_test.launch)
 #endif(NOT vm)
 
-
 catkin_package(
     DEPENDS tinyxml
     CATKIN_DEPENDS pr2_hardware_interface pr2_mechanism_model pr2_mechanism_diagnostics pr2_description pr2_controller_interface pr2_mechanism_msgs diagnostic_msgs sensor_msgs realtime_tools roscpp pluginlib
+    INCLUDE_DIRS include
+    LIBRARIES pr2_controller_manager
 )
+
+install(DIRECTORY scripts/
+   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+catkin_python_setup()
+
+install(TARGETS pr2_controller_manager
+   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+
+install(DIRECTORY include/${PACKAGE_NAME}/
+   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+
+install(FILES controller_manager.launch
+   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
