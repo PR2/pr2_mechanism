@@ -358,12 +358,42 @@ public:
   AnalogInCommand command_;
 };
 
+
+class CustomHWCommand
+{
+};
+
+class CustomHWState
+{
+};
+
+
+/*!
+ * \class CustomHW
+ * The CustomHW class provides an easy way to add more hardware to the HardwareInterface.
+ * Simply inherit from that class to add a new type of hardware, containing the data you
+ * want in its command and state.
+ *
+ *
+ * The CustomHWCommand is the base class for containing your custom hardware command.
+ *
+ * The CustomHWState class is the base class for containing your custom hardware state.
+ */
+class CustomHW
+{
+public:
+  std::string name_;
+  CustomHWState state_;
+  CustomHWCommand command_;
+};
+
 typedef std::map<std::string, Actuator*> ActuatorMap;
 typedef std::map<std::string, PressureSensor*> PressureSensorMap;
 typedef std::map<std::string, Accelerometer*> AccelerometerMap;
 typedef std::map<std::string, DigitalOut*> DigitalOutMap;
 typedef std::map<std::string, Projector*> ProjectorMap;
 typedef std::map<std::string, AnalogIn*> AnalogInMap;
+typedef std::map<std::string, CustomHW*> CustomHWMap;
 
 /*!
  * \class HardwareInterface
@@ -398,6 +428,7 @@ public:
   DigitalOutMap digital_outs_;
   ProjectorMap projectors_;
   AnalogInMap analog_ins_;
+  CustomHWMap custom_hws_;
   /*! \brief Get a pointer to the actuator by name
    *
    *  \param name The name of the actuator
@@ -456,6 +487,16 @@ public:
   AnalogIn* getAnalogIn(const std::string &name) const {
     AnalogInMap::const_iterator it = analog_ins_.find(name);
     return it != analog_ins_.end() ? it->second : NULL;
+  }
+
+  /*! \brief Get a pointer to the Custom Hardware device by name
+   *
+   *  \param name The name of the Custom Hardware device
+   *  \return A pointer to a CustomHW.  Returns NULL if name is not valid.
+   */
+  CustomHW* getCustomHW(const std::string &name) const {
+    CustomHWMap::const_iterator it = custom_hws_.find(name);
+    return it != custom_hws_.end() ? it->second : NULL;
   }
 
   /*! \brief Add an actuator to the hardware interface
@@ -521,6 +562,17 @@ public:
   bool addAnalogIn(AnalogIn *analog_in) {
     std::pair<AnalogInMap::iterator, bool> p;
     p = analog_ins_.insert(AnalogInMap::value_type(analog_in->name_, analog_in));
+    return p.second;
+  }
+
+  /*! \brief Add a Custom Hardware device to the hardware interface
+   *
+   *  \param custom_hw A pointer to the CustomHW
+   *  \return true if successful, false if name is a duplicate
+   */
+  bool addCustomHW(CustomHW *custom_hw) {
+    std::pair<CustomHWMap::iterator, bool> p;
+    p = custom_hws_.insert(CustomHWMap::value_type(custom_hw->name_, custom_hw));
     return p.second;
   }
 
