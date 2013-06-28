@@ -46,7 +46,7 @@ set_target_properties(test_joint_calibration_simulator PROPERTIES EXCLUDE_FROM_A
 
 add_rostest(test/test_joint_calibration_simulator.launch)
 
-install(DIRECTORY include/${PACKAGE_NAME}/
+install(DIRECTORY include/${PROJECT_NAME}/
    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
 install(TARGETS pr2_mechanism_model
