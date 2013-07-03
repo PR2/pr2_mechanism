@@ -1,6 +1,6 @@
 <package>
   <name>pr2_controller_interface</name>
-  <version>1.8.1</version>
+  <version>1.8.2</version>
   <description>
    This package specifies the interface to a realtime controller. A
    controller that implements this interface can be executed by the
