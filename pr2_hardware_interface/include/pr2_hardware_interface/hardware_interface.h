@@ -73,21 +73,21 @@ public:
       zero_offset_(0)
   {}
 
-  /** 
-   * The time at which actuator state was measured, relative to the time the ethercat process was started. 
-   * Timestamp value is not synchronised with wall time and may be different for different actuators. 
+  /**
+   * The time at which actuator state was measured, relative to the time the ethercat process was started.
+   * Timestamp value is not synchronised with wall time and may be different for different actuators.
    * For Willow Garage motor controllers, timestamp is made when actuator data is sampled.
-   * sample_timestamp_ will provide better accuracy than ros::Time::now() or robot->getTime() 
+   * sample_timestamp_ will provide better accuracy than ros::Time::now() or robot->getTime()
    * when using a time difference in calculations based on actuator variables.
    */
-  ros::Duration sample_timestamp_; 
+  ros::Duration sample_timestamp_;
 
-  /** The time at which this actuator state was measured (in seconds). 
+  /** The time at which this actuator state was measured (in seconds).
    * This value should be same as sample_timestamp_.toSec() for Willow Garage devices.
    * The timestamp_ variable is being kept around for backwards compatibility, new controllers
-   * should use sample_timestamp_ instead.  
+   * should use sample_timestamp_ instead.
    */
-  double timestamp_; 
+  double timestamp_;
 
   int device_id_; //!< Position in EtherCAT chain
 
@@ -189,7 +189,7 @@ public:
   enum {BANDWIDTH_1500HZ=6, BANDWIDTH_750HZ=5, BANDWIDTH_375HZ=4, BANDWIDTH_190HZ=3, BANDWIDTH_100HZ=2, BANDWIDTH_50HZ=1, BANDWIDTH_25HZ=0}; //! Enums for possible accelerometer bandwidth settings.
   AccelerometerCommand() : range_(RANGE_2G), bandwidth_(BANDWIDTH_1500HZ) {}
   int range_; //!< The range of the values to be returned (range of 0 means within +/- 2g, 1 means within +/-4g, 2 means /- 8g).  Value is reported in m/s/s.
-  int bandwidth_; //!< Accelerometer bandwidth setting. Value is passed directly to Bosch accelerometer (BMA 150). The maximum bandwidth of 1500Hz is appropriate in almost all cases.  Instead of changing bandwidth value, use software filter to remove high frequencies from accelerometer data.  This way, other accerometer users are not affected.  Read accelerometer datasheet for more information about possible bandwidth setting.  
+  int bandwidth_; //!< Accelerometer bandwidth setting. Value is passed directly to Bosch accelerometer (BMA 150). The maximum bandwidth of 1500Hz is appropriate in almost all cases.  Instead of changing bandwidth value, use software filter to remove high frequencies from accelerometer data.  This way, other accerometer users are not affected.  Read accelerometer datasheet for more information about possible bandwidth setting.
 };
 
 class AccelerometerState
@@ -222,14 +222,14 @@ class ForceTorqueState
 public:
   bool good_; //!< True if sensor is working properly. False if some type of error is detected.
   //!< A vector of samples taken from force/torque sensor since the last iteration of the control loop (oldest samples first).
-  std::vector<geometry_msgs::Wrench> samples_; 
+  std::vector<geometry_msgs::Wrench> samples_;
 };
 
 class ForceTorqueCommand
 {
 public:
-  //! If halt_on_error_ is true, the driver with halt motors when an there is an error is detected.  The default setting is false.  
-  bool halt_on_error_;  
+  //! If halt_on_error_ is true, the driver with halt motors when an there is an error is detected.  The default setting is false.
+  bool halt_on_error_;
 };
 
 class ForceTorque
@@ -295,7 +295,7 @@ public:
   double last_commanded_current_;
   double last_executed_current_;
   double last_measured_current_;
-  double max_current_;  //!< Current limit (Amps).  Minimum of board and LED limits. 
+  double max_current_;  //!< Current limit (Amps).  Minimum of board and LED limits.
   uint8_t &A_;
   uint8_t &B_;
   uint8_t &I_;
@@ -358,33 +358,16 @@ public:
   AnalogInCommand command_;
 };
 
-
-class CustomHWCommand
-{
-};
-
-class CustomHWState
-{
-};
-
-
 /*!
  * \class CustomHW
  * The CustomHW class provides an easy way to add more hardware to the HardwareInterface.
  * Simply inherit from that class to add a new type of hardware, containing the data you
  * want in its command and state.
- *
- *
- * The CustomHWCommand is the base class for containing your custom hardware command.
- *
- * The CustomHWState class is the base class for containing your custom hardware state.
  */
 class CustomHW
 {
 public:
   std::string name_;
-  CustomHWState state_;
-  CustomHWCommand command_;
 };
 
 typedef std::map<std::string, Actuator*> ActuatorMap;
