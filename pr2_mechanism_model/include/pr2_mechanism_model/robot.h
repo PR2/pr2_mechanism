@@ -82,15 +82,7 @@ public:
   Robot(pr2_hardware_interface::HardwareInterface *hw);
 
   /// Destructor
-  ~Robot()
-  {
-    for (unsigned int i=0; i< transmissions_.size(); i++){
-      if (transmissions_[i]){
-        delete transmissions_[i];
-        transmissions_[i] = NULL;
-      }
-    }
-  }
+  ~Robot() { }
 
   /// Initialize the robot model form xml
   bool initXml(TiXmlElement *root);
@@ -99,7 +91,7 @@ public:
   urdf::Model robot_model_;
 
   /// The list of transmissions
-  std::vector<Transmission*> transmissions_;
+  std::vector<boost::shared_ptr<Transmission> > transmissions_;
 
   /// get the transmission index based on the transmission name. Returns -1 on failure
   int getTransmissionIndex(const std::string &name) const;
@@ -108,7 +100,7 @@ public:
   pr2_hardware_interface::Actuator* getActuator(const std::string &name) const;
 
   /// get a transmission pointer based on the transmission name. Returns NULL on failure
-  pr2_mechanism_model::Transmission* getTransmission(const std::string &name) const;
+  boost::shared_ptr<pr2_mechanism_model::Transmission> getTransmission(const std::string &name) const;
 
   /// Get the time when the current controller cycle was started
   ros::Time getTime();

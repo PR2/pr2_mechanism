@@ -72,7 +72,7 @@ bool Robot::initXml(TiXmlElement *root)
        xit = xit->NextSiblingElement("transmission"))
   {
     std::string type(xit->Attribute("type"));
-    Transmission *t = NULL;
+    boost::shared_ptr<Transmission> t;
     try {
       // Backwards compatibility for using non-namespaced controller types
       if (!transmission_loader_->isClassAvailable(type))
@@ -90,37 +90,17 @@ bool Robot::initXml(TiXmlElement *root)
           }
         }
       }
-      t = transmission_loader_->createClassInstance(type);
+      t = transmission_loader_->createInstance(type);
     }
     catch (const std::runtime_error &ex)
     {
       ROS_ERROR("Could not load class %s: %s", type.c_str(), ex.what());
     }
-    /*
-    catch(pluginlib::LibraryLoadException &ex)
-    {
-      ROS_ERROR("LibraryLoadException for transmission of type %s", type);
-      ROS_ERROR("%s", ex.what());
-      return false;
-    }
-    catch(pluginlib::CreateClassException &ex)
-    {
-      ROS_ERROR("CreateClassException for transmission of type %s", type);
-      ROS_ERROR("%s", ex.what());
-      return false;
-    }
-    catch(...)
-    {
-      ROS_ERROR("Could not construct transmission of type %s", type);
-      return false;
-    }
-    */
 
     if (!t)
       ROS_ERROR("Unknown transmission type: %s", type.c_str());
     else if (!t->initXml(xit, this)){
       ROS_ERROR("Failed to initialize transmission");
-      delete t;
     }
     else // Success!
       transmissions_.push_back(t);
@@ -135,7 +115,8 @@ ros::Time Robot::getTime()
 }
 
 template <class T>
-int findIndexByName(const std::vector<T*>& v, const std::string &name)
+int findIndexByName(const std::vector<boost::shared_ptr<T> >& v, 
+      const std::string &name)
 {
   for (unsigned int i = 0; i < v.size(); ++i)
   {
@@ -155,10 +136,10 @@ Actuator* Robot::getActuator(const std::string &name) const
   return hw_->getActuator(name);
 }
 
-Transmission* Robot::getTransmission(const std::string &name) const
+boost::shared_ptr<Transmission> Robot::getTransmission(const std::string &name) const
 {
   int i = getTransmissionIndex(name);
-  return i >= 0 ? transmissions_[i] : NULL;
+  return i >= 0 ? transmissions_[i] : boost::shared_ptr<Transmission>();
 }
 
 
@@ -177,7 +158,7 @@ RobotState::RobotState(Robot *model)
   unsigned int js_size = 0;
   for (unsigned int i = 0; i < model_->transmissions_.size(); ++i)
   {
-    Transmission *t = model_->transmissions_[i];
+     boost::shared_ptr<Transmission> t = model_->transmissions_[i];
     for (unsigned int j = 0; j < t->actuator_names_.size(); ++j)
     {
       Actuator *act = model_->getActuator(t->actuator_names_[j]);
@@ -192,7 +173,7 @@ RobotState::RobotState(Robot *model)
   unsigned int js_id = 0;
   for (unsigned int i = 0; i < model_->transmissions_.size(); ++i)
   {
-    Transmission *t = model_->transmissions_[i];
+     boost::shared_ptr<Transmission> t = model_->transmissions_[i];
     for (unsigned int j = 0; j < t->joint_names_.size(); ++j)
     {
       joint_states_[js_id].joint_ = model_->robot_model_.getJoint(t->joint_names_[j]);
