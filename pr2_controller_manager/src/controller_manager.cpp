@@ -263,7 +263,7 @@ bool ControllerManager::loadController(const std::string& name)
     ROS_ERROR("Exception thrown while constructing nodehandle for controller with name '%s'", name.c_str());
     return false;
   }
-  pr2_controller_interface::Controller *c = NULL;
+  boost::shared_ptr<pr2_controller_interface::Controller> controller;
   std::string type;
   if (c_node.getParam("type", type))
   {
@@ -286,7 +286,7 @@ bool ControllerManager::loadController(const std::string& name)
         }
       }
 
-      c = controller_loader_->createClassInstance(type, true);
+      controller = controller_loader_->createInstance(type);
     }
     catch (const std::runtime_error &ex)
     {
@@ -295,7 +295,7 @@ bool ControllerManager::loadController(const std::string& name)
   }
 
   // checks if controller was constructed
-  if (c == NULL)
+  if (controller == NULL)
   {
     to.clear();
     if (type == "")
@@ -311,7 +311,7 @@ bool ControllerManager::loadController(const std::string& name)
   ROS_DEBUG("Initializing controller '%s'", name.c_str());
   bool initialized;
   try{
-    initialized = c->initRequest(this, state_, c_node);
+    initialized = controller->initRequest(this, state_, c_node);
   }
   catch(std::exception &e){
     ROS_ERROR("Exception thrown while initializing controller %s.\n%s", name.c_str(), e.what());
@@ -324,7 +324,6 @@ bool ControllerManager::loadController(const std::string& name)
   if (!initialized)
   {
     to.clear();
-    delete c;
     ROS_ERROR("Initializing controller '%s' failed", name.c_str());
     return false;
   }
@@ -333,12 +332,11 @@ bool ControllerManager::loadController(const std::string& name)
   // Adds the controller to the new list
   to.resize(to.size() + 1);
   to[to.size()-1].name = name;
-  to[to.size()-1].c.reset(c);
+  to[to.size()-1].c = controller;
 
   //  Do the controller scheduling
   if (!scheduleControllers(to, controllers_scheduling_[free_controllers_list])){
     to.clear();
-    delete c;
     ROS_ERROR("Scheduling controller '%s' failed", name.c_str());
     return false;
   }
