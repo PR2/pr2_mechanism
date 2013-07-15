@@ -36,7 +36,9 @@ target_link_libraries(test_controllers ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
    add_rostest(test/controller_test.launch)
 #endif(NOT vm)
 
-install(DIRECTORY scripts/
+file(GLOB PYTHON_SCRIPTS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" 
+   "${CMAKE_CURRENT_SOURCE_DIR}/scripts/*")
+install(PROGRAMS ${PYTHON_SCRIPTS}
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 catkin_python_setup()
