@@ -12,14 +12,15 @@ add_definitions(${PC_EIGEN_CFLAGS_OTHER})
 
 catkin_package()
 
-#common commands for building c++ executables and libraries
+add_definitions(-O3)
+
 add_library(${PROJECT_NAME} 
   src/controller_diagnostics.cpp 
   src/joint_diagnostics.cpp)
 
 add_executable(pr2_mechanism_diagnostics_node src/pr2_mechanism_diagnostics.cpp)
 target_link_libraries(pr2_mechanism_diagnostics_node ${PROJECT_NAME} ${catkin_LIBRARIES})
-SET_TARGET_PROPERTIES(pr2_mechanism_diagnostics_node PROPERTIES OUTPUT_NAME pr2_mechanism_diagnostics)
+set_target_properties(pr2_mechanism_diagnostics_node PROPERTIES OUTPUT_NAME pr2_mechanism_diagnostics)
 
 add_rostest(test/launch/mech_diag_test_main.launch)
 add_rostest(test/launch/overrun_test.launch)

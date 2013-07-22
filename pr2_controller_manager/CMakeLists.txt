@@ -8,8 +8,11 @@ find_package(catkin REQUIRED COMPONENTS pr2_hardware_interface pr2_mechanism_mod
 find_package(Eigen REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
 
-include_directories(SYSTEM ${Eigen_INCLUDE_DIRS})
-include_directories(include ${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+include_directories(
+   include 
+   ${Boost_INCLUDE_DIRS} 
+   ${catkin_INCLUDE_DIRS} 
+   ${EIGEN_INCLUDE_DIRS})
 
 catkin_package(
     DEPENDS tinyxml
@@ -17,6 +20,8 @@ catkin_package(
     INCLUDE_DIRS include
     LIBRARIES pr2_controller_manager
 )
+
+add_definitions(-O3)
 
 add_library(pr2_controller_manager src/controller_manager.cpp src/scheduler.cpp)
 

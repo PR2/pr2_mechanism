@@ -16,6 +16,8 @@ catkin_package(
     LIBRARIES pr2_mechanism_model
 )
 
+add_definitions(-O3)
+
 add_library( pr2_mechanism_model
   src/joint.cpp
   src/robot.cpp
