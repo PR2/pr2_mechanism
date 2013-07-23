@@ -36,10 +36,7 @@ target_link_libraries(test_robot ${Boost_LIBRARIES} ${PROJECT_NAME} ${catkin_LIB
 
 target_link_libraries(test_controllers ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
 
-#rosbuild_check_for_vm(vm)
-#if(NOT vm)
-   add_rostest(test/controller_test.launch)
-#endif(NOT vm)
+add_rostest(test/controller_test.launch)
 
 file(GLOB PYTHON_SCRIPTS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" 
    "${CMAKE_CURRENT_SOURCE_DIR}/scripts/*")
@@ -48,7 +45,7 @@ install(PROGRAMS ${PYTHON_SCRIPTS}
 
 catkin_python_setup()
 
-install(TARGETS pr2_controller_manager
+install(TARGETS pr2_controller_manager controller_test
    RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
@@ -58,3 +55,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 install(FILES controller_manager.launch
    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+install(FILES test/controller_plugin.xml
+   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/test)
