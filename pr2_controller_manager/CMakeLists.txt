@@ -28,6 +28,7 @@ add_library(pr2_controller_manager src/controller_manager.cpp src/scheduler.cpp)
 target_link_libraries(pr2_controller_manager ${Boost_LIBRARIES})
 
 add_library(controller_test test/controllers/test_controller.cpp)
+pr2_enable_rpath(controller_test)
 
 add_executable(test_controllers test/test.cpp)
 add_executable(test_robot test/robot.cpp)

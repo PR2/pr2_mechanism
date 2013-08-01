@@ -29,6 +29,7 @@ add_library( pr2_mechanism_model
   src/pr2_belt_transmission.cpp
   src/joint_calibration_simulator.cpp
 )
+pr2_enable_rpath(pr2_mechanism_model)
 
 catkin_add_gtest(test_chain test/test_chain.cpp)
 target_link_libraries(test_chain pr2_mechanism_model ${catkin_LIBRARIES})
