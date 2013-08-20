@@ -528,6 +528,17 @@ public:
     return p.second;
   }
 
+  /*! \brief Add a FT sensor to the hardware interface
+   *
+   *  \param forcetorque A pointer to the ForceTorque
+   *  \return true if successful, false if name is a duplicate
+   */
+  bool addForceTorque(ForceTorque *forcetorque) {
+    std::pair<ForceTorqueMap::iterator, bool> p;
+    p = ft_sensors_.insert(ForceTorqueMap::value_type(forcetorque->name_, forcetorque));
+    return p.second;
+  }
+
   /*! \brief Add an digital I/O to the hardware interface
    *
    *  \param digital_out A pointer to the DigitalOut
