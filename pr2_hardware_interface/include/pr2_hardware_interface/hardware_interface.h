@@ -373,6 +373,7 @@ public:
 typedef std::map<std::string, Actuator*> ActuatorMap;
 typedef std::map<std::string, PressureSensor*> PressureSensorMap;
 typedef std::map<std::string, Accelerometer*> AccelerometerMap;
+typedef std::map<std::string, ForceTorque*> ForceTorqueMap;
 typedef std::map<std::string, DigitalOut*> DigitalOutMap;
 typedef std::map<std::string, Projector*> ProjectorMap;
 typedef std::map<std::string, AnalogIn*> AnalogInMap;
@@ -385,6 +386,7 @@ typedef std::map<std::string, CustomHW*> CustomHWMap;
  *  - Actuators
  *  - Finger-tip Pressure Sensors
  *  - Accelerometers
+ *  - Force/Torque Sensors
  *  - Digital I/Os
  *  - Projectors
  *
@@ -408,6 +410,7 @@ public:
   ActuatorMap actuators_;
   PressureSensorMap pressure_sensors_;
   AccelerometerMap accelerometers_;
+  ForceTorqueMap ft_sensors_;
   DigitalOutMap digital_outs_;
   ProjectorMap projectors_;
   AnalogInMap analog_ins_;
@@ -440,6 +443,16 @@ public:
   Accelerometer* getAccelerometer(const std::string &name) const {
     AccelerometerMap::const_iterator it = accelerometers_.find(name);
     return it != accelerometers_.end() ? it->second : NULL;
+  }
+
+  /*! \brief Get a pointer to the FT sensor by name
+   *
+   *  \param name The name of the FT sensor
+   *  \return A pointer to a FT sensor.  Returns NULL if name is not valid.
+   */
+  ForceTorque* getForceTorque(const std::string &name) const {
+    ForceTorqueMap::const_iterator it = ft_sensors_.find(name);
+    return it != ft_sensors_.end() ? it->second : NULL;
   }
 
   /*! \brief Get a pointer to the digital I/O by name
