@@ -235,6 +235,7 @@ public:
 class ForceTorque
 {
 public:
+  std::string name_;
   ForceTorqueState state_;
   ForceTorqueCommand command_;
 };
