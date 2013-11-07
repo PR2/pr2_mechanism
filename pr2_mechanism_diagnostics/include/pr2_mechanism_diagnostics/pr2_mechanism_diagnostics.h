@@ -46,7 +46,6 @@
 #include <float.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
-#include "pr2_mechanism_model/robot.h"
 #include "pr2_mechanism_diagnostics/joint_diagnostics.h"
 #include "pr2_mechanism_diagnostics/controller_diagnostics.h"
 #include "std_srvs/Empty.h"
