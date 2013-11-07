@@ -6,12 +6,14 @@ project(pr2_controller_manager)
 find_package(catkin REQUIRED COMPONENTS pr2_hardware_interface pr2_mechanism_model pr2_mechanism_diagnostics pr2_description pr2_controller_interface pr2_mechanism_msgs diagnostic_msgs sensor_msgs realtime_tools roscpp pluginlib rostest)
 
 find_package(Eigen REQUIRED)
+find_package(orocos_kdl REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
 
 include_directories(
    include 
    ${Boost_INCLUDE_DIRS} 
    ${catkin_INCLUDE_DIRS} 
+   ${orocos_kdl_INCLUDE_DIRS}
    ${EIGEN_INCLUDE_DIRS})
 
 catkin_package(
@@ -24,19 +26,43 @@ catkin_package(
 add_definitions(-O3)
 
 add_library(pr2_controller_manager src/controller_manager.cpp src/scheduler.cpp)
-
-target_link_libraries(pr2_controller_manager ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(pr2_controller_manager
+   ${catkin_LIBRARIES} 
+   ${Boost_LIBRARIES}
+   ${orocos_kdl_LIBRARIES})
+set_target_properties(pr2_controller_manager PROPERTIES LINK_FLAGS
+  -L${orocos_kdl_LIBRARY_DIRS})
 
 add_library(controller_test test/controllers/test_controller.cpp)
 pr2_enable_rpath(controller_test)
-target_link_libraries(controller_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(controller_test
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
+  ${orocos_kdl_LIBRARIES})
+set_target_properties(controller_test PROPERTIES LINK_FLAGS
+  -L${orocos_kdl_LIBRARY_DIRS})
 
 add_executable(test_controllers test/test.cpp)
+target_link_libraries(test_controllers
+  ${Boost_LIBRARIES}
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  ${orocos_kdl_LIBRARIES}
+  ${GTEST_LIBRARIES}
+)
+set_target_properties(test_controllers PROPERTIES LINK_FLAGS
+  -L${orocos_kdl_LIBRARY_DIRS})
+
 add_executable(test_robot test/robot.cpp)
 
 target_link_libraries(test_robot ${Boost_LIBRARIES} ${PROJECT_NAME} ${catkin_LIBRARIES})
-
-target_link_libraries(test_controllers ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
+target_link_libraries(test_robot
+  ${Boost_LIBRARIES}
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  ${orocos_kdl_LIBRARIES})
+set_target_properties(test_robot PROPERTIES LINK_FLAGS
+  -L${orocos_kdl_LIBRARY_DIRS})
 
 add_rostest(test/controller_test.launch)
 
