@@ -34,6 +34,8 @@
   <build_depend>urdf</build_depend>
   <build_depend>urdfdom</build_depend>
   <build_depend>kdl_parser</build_depend>
+  <build_depend>orocos_kdl</build_depend>
+  <build_depend>eigen</build_depend>
   <build_depend>pluginlib</build_depend>
   <build_depend>angles</build_depend>
   <build_depend>hardware_interface</build_depend>
@@ -45,6 +47,8 @@
   <run_depend>urdf</run_depend>
   <run_depend>urdfdom</run_depend>
   <run_depend>kdl_parser</run_depend>
+  <run_depend>orocos_kdl</run_depend>
+  <run_depend>eigen</run_depend>
   <run_depend>pluginlib</run_depend>
   <run_depend>angles</run_depend>
   <run_depend>hardware_interface</run_depend>
