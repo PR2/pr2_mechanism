@@ -17,6 +17,8 @@
 
   <build_depend>pr2_hardware_interface</build_depend>
   <build_depend>pr2_mechanism_model</build_depend>
+  <build_depend>orocos_kdl</build_depend>
+  <build_depend>eigen</build_depend>
   <build_depend>pr2_mechanism_diagnostics</build_depend>
   <build_depend>pr2_description</build_depend>
   <build_depend>pr2_controller_interface</build_depend>
@@ -30,6 +32,8 @@
 
   <run_depend>pr2_hardware_interface</run_depend>
   <run_depend>pr2_mechanism_model</run_depend>
+  <run_depend>orocos_kdl</run_depend>
+  <run_depend>eigen</run_depend>
   <run_depend>pr2_mechanism_diagnostics</run_depend>
   <run_depend>pr2_description</run_depend>
   <run_depend>pr2_controller_interface</run_depend>
