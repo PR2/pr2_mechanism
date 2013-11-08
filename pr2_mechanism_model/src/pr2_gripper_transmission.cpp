@@ -793,8 +793,10 @@ void PR2GripperTransmission::propagatePosition(
   // js has passive joints and 1 gap joint and 1 screw joint
   if (use_simulated_actuated_joint_ && has_simulated_passive_actuated_joint_)
     {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 2);}
-  else if (use_simulated_actuated_joint_) {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);}
-  else                  {ROS_ASSERT(js.size() == 1 + passive_joints_.size());}
+  else if (use_simulated_actuated_joint_) 
+    {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);}
+  else
+    {ROS_ASSERT(js.size() == 1 + passive_joints_.size());}
 
   /// \brief motor revolutions = encoder value * gap_mechanical_reduction_ * RAD2MR
   ///        motor revolutions =      motor angle(rad)                     / (2*pi)
@@ -868,8 +870,12 @@ void PR2GripperTransmission::propagatePositionBackwards(
   std::vector<JointState*>& js, std::vector<Actuator*>& as)
 {
   ROS_ASSERT(as.size() == 1);
-  if (use_simulated_actuated_joint_) {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);}
-  else                  {ROS_ASSERT(js.size() == 1 + passive_joints_.size());}
+  if (use_simulated_actuated_joint_ && has_simulated_passive_actuated_joint_)
+    {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 2);}
+  else if (use_simulated_actuated_joint_) 
+    {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);}
+  else                  
+    {ROS_ASSERT(js.size() == 1 + passive_joints_.size());}
 
   // keep the simulation stable by using the minimum rate joint to compute gripper gap rate
   double MR,dMR_dtheta,dtheta_dt,dMR_dt;
@@ -930,8 +936,10 @@ void PR2GripperTransmission::propagateEffort(
   ROS_ASSERT(as.size() == 1);
   if (use_simulated_actuated_joint_ && has_simulated_passive_actuated_joint_)
     {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 2);}
-  else if (use_simulated_actuated_joint_) {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);}
-  else                  {ROS_ASSERT(js.size() == 1 + passive_joints_.size());}
+  else if (use_simulated_actuated_joint_) 
+    {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);}
+  else
+    {ROS_ASSERT(js.size() == 1 + passive_joints_.size());}
 
   //
   // in hardware, the position of passive joints are set by propagatePosition, so they should be identical and
@@ -958,9 +966,14 @@ void PR2GripperTransmission::propagateEffort(
 void PR2GripperTransmission::propagateEffortBackwards(
   std::vector<Actuator*>& as, std::vector<JointState*>& js)
 {
+
   ROS_ASSERT(as.size() == 1);
-  if (use_simulated_actuated_joint_) {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);}
-  else                  {ROS_ASSERT(js.size() == 1 + passive_joints_.size());}
+  if (use_simulated_actuated_joint_ && has_simulated_passive_actuated_joint_)
+    {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 2);}
+  else if (use_simulated_actuated_joint_) 
+    {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);}
+  else                  
+    {ROS_ASSERT(js.size() == 1 + passive_joints_.size());}
   ROS_ASSERT(simulated_reduction_>0.0);
 
   //
