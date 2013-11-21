@@ -14,6 +14,10 @@ catkin_package()
 
 add_definitions(-O3)
 
+find_package(orocos_kdl REQUIRED)
+include_directories(${orocos_kdl_INCLUDE_DIRS})
+link_directories(${orocos_kdl_LIBRARY_DIRS})
+
 add_library(${PROJECT_NAME} 
   src/controller_diagnostics.cpp 
   src/joint_diagnostics.cpp)
