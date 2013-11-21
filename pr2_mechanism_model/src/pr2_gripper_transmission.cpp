@@ -48,6 +48,32 @@
  * propagateEffortBackwards
  *   non-passive js->commanded_effort_ is 1to1 with MT
  *   passive js->commanded_effort_ is 1/2?? of MT converted to joint torques
+
+ * Example transmission block
+ *
+ * <transmission name="r_gripper_trans" type="pr2_mechanism_model/PR2GripperTransmission">
+ *   <actuator name="r_gripper_motor"/>
+ *   <gap_joint L0="0.0375528" a="0.0683698" b="0.0433849" gear_ratio="40.095" h="0.0"
+ *              mechanical_reduction="1.0" name="r_gripper_joint" phi0="0.518518122146"
+ *              r="0.0915" screw_reduction="0.004" t0="-0.0001914" theta0="0.0628824676201"/>
+ *   <!-- if a gazebo joint exists as [l|r]_gripper_joint, use this tag to have
+ *        gripper transmission apply torque directly to prismatic joint
+ *        this should be the default behavior in diamondback, deprecating this flag -->
+ *
+ *   <!-- set passive joint angles so things look nice in rviz -->
+ *   <passive_joint name="r_gripper_l_finger_joint"/>
+ *   <passive_joint name="r_gripper_r_finger_joint"/>
+ *   <passive_joint name="r_gripper_r_finger_tip_joint"/>
+ *   <passive_joint name="r_gripper_l_finger_tip_joint"/>
+ *
+ *   <!-- screw joint used to actuate gripper
+ *     TODO: rename "name" to something like actuated_screw_joint
+ *   -->
+ *   <simulated_actuated_joint name="r_gripper_motor_screw_joint"
+ *                             passive_actuated_joint="r_gripper_motor_slider_joint"
+ *                             simulated_reduction="3141.6"/>
+ * </transmission>
+ *
  */
 #include "pr2_mechanism_model/pr2_gripper_transmission.h"
 #include <pluginlib/class_list_macros.h>
@@ -64,318 +90,37 @@ PLUGINLIB_EXPORT_CLASS(pr2_mechanism_model::PR2GripperTransmission,
 
 bool PR2GripperTransmission::initXml(TiXmlElement *config, Robot *robot)
 {
-  const char *name = config->Attribute("name");
-  name_ = name ? name : "";
-  //myfile.open("transmission_data.txt");
-  TiXmlElement *ael = config->FirstChildElement("actuator");
-  const char *actuator_name = ael ? ael->Attribute("name") : NULL;
-  if (!actuator_name || !robot->getActuator(actuator_name))
+  if (this->initXml(config))
   {
-    ROS_ERROR("PR2GripperTransmission could not find actuator named \"%s\"", actuator_name);
-    return false;
-  }
-  robot->getActuator(actuator_name)->command_.enable_ = true;
-  actuator_names_.push_back(actuator_name);
-
-  for (TiXmlElement *j = config->FirstChildElement("gap_joint"); j; j = j->NextSiblingElement("gap_joint"))
-  {
-    const char *joint_name = j->Attribute("name");
-    if (!joint_name)
+    // set robot actuator enabled
+    for (std::vector<std::string>::iterator actuator_name = actuator_names_.begin(); actuator_name != actuator_names_.end(); ++actuator_name)
     {
-      ROS_ERROR("PR2GripperTransmission did not specify joint name");
-      return false;
-    }
-
-    const boost::shared_ptr<const urdf::Joint> joint = robot->robot_model_.getJoint(joint_name);
-    if (!joint)
-    {
-      ROS_ERROR("PR2GripperTransmission could not find joint named \"%s\"", joint_name);
-      return false;
-    }
-    gap_joint_ = std::string(joint_name);
-    joint_names_.push_back(joint_name);  // The first joint is the gap joint
-
-    // get the mechanical reduction
-    const char *joint_reduction = j->Attribute("mechanical_reduction");
-    if (!joint_reduction)
-    {
-      ROS_ERROR("PR2GripperTransmission's joint \"%s\" has no coefficient: mechanical reduction.", joint_name);
-      return false;
-    }
-    try
-    {
-      gap_mechanical_reduction_ = boost::lexical_cast<double>(joint_reduction);
-    }
-    catch (boost::bad_lexical_cast &e)
-    {
-      ROS_ERROR("joint_reduction (%s) is not a float",joint_reduction);
-      return false;
-    }
-
-    // get the screw drive reduction
-    const char *screw_reduction_str = j->Attribute("screw_reduction");
-    if (screw_reduction_str == NULL)
-    {
-      screw_reduction_ = 2.0/1000.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: screw drive reduction, using default for PR2 alpha2.", joint_name);
-    }
-    else
-      try
+      if (robot->getActuator(*actuator_name))
       {
-        screw_reduction_ = boost::lexical_cast<double>(screw_reduction_str);
-      }
-      catch (boost::bad_lexical_cast &e)
-      {
-        ROS_ERROR("screw_reduction (%s) is not a float",screw_reduction_str);
-        return false;
-      }
-
-
-    // get the gear_ratio
-    const char *gear_ratio_str = j->Attribute("gear_ratio");
-    if (gear_ratio_str == NULL)
-    {
-      gear_ratio_ = 29.16;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: gear_ratio, using default for PR2 alpha2.", joint_name);
-    }
-    else
-      try
-      {
-        gear_ratio_ = boost::lexical_cast<double>(gear_ratio_str);
-      }
-      catch (boost::bad_lexical_cast &e)
-      {
-        ROS_ERROR("gear_ratio (%s) is not a float",gear_ratio_str);
-        return false;
-      }
-
-    // get the theta0 coefficient
-    const char *theta0_str = j->Attribute("theta0");
-    if (theta0_str == NULL)
-    {
-      theta0_ = 2.97571*M_PI/180.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: theta0, using default for PR2 alpha2.", joint_name);
-    }
-    else
-      try
-      {
-        theta0_ = boost::lexical_cast<double>(theta0_str);
-      }
-      catch (boost::bad_lexical_cast &e)
-      {
-        ROS_ERROR("theta0 (%s) is not a float",theta0_str);
-        return false;
-      }
-    // get the phi0 coefficient
-    const char *phi0_str = j->Attribute("phi0");
-    if (phi0_str == NULL)
-    {
-      phi0_ = 29.98717*M_PI/180.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: phi0, using default for PR2 alpha2.", joint_name);
-    }
-    else
-      try
-      {
-        phi0_ = boost::lexical_cast<double>(phi0_str);
-      }
-      catch (boost::bad_lexical_cast &e)
-      {
-        ROS_ERROR("phi0 (%s) is not a float",phi0_str);
-        return false;
-      }
-    // get the t0 coefficient
-    const char *t0_str = j->Attribute("t0");
-    if (t0_str == NULL)
-    {
-      t0_ = -0.19543/1000.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: t0, using default for PR2 alpha2.", joint_name);
-    }
-    else
-      try
-      {
-        t0_ = boost::lexical_cast<double>(t0_str);
-      }
-      catch (boost::bad_lexical_cast &e)
-      {
-        ROS_ERROR("t0 (%s) is not a float",t0_str);
-        return false;
-      }
-    // get the L0 coefficient
-    const char *L0_str = j->Attribute("L0");
-    if (L0_str == NULL)
-    {
-      L0_ = 34.70821/1000.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: L0, using default for PR2 alpha2.", joint_name);
-    }
-    else
-      try
-      {
-        L0_ = boost::lexical_cast<double>(L0_str);
-      }
-      catch (boost::bad_lexical_cast &e)
-      {
-        ROS_ERROR("L0 (%s) is not a float",L0_str);
-        return false;
-      }
-    // get the h coefficient
-    const char *h_str = j->Attribute("h");
-    if (h_str == NULL)
-    {
-      h_ = 5.200/1000.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: h, using default for PR2 alpha2.", joint_name);
-    }
-    else
-      try
-      {
-        h_ = boost::lexical_cast<double>(h_str);
-      }
-      catch (boost::bad_lexical_cast &e)
-      {
-        ROS_ERROR("h (%s) is not a float",h_str);
-        return false;
-      }
-    // get the a coefficient
-    const char *a_str = j->Attribute("a");
-    if (a_str == NULL)
-    {
-      a_ = 67.56801/1000.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: a, using default for PR2 alpha2.", joint_name);
-    }
-    else
-      try
-      {
-        a_ = boost::lexical_cast<double>(a_str);
-      }
-      catch (boost::bad_lexical_cast &e)
-      {
-        ROS_ERROR("a (%s) is not a float",a_str);
-        return false;
-      }
-    // get the b coefficient
-    const char *b_str = j->Attribute("b");
-    if (b_str == NULL)
-    {
-      b_ = 48.97193/1000.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: b, using default for PR2 alpha2.", joint_name);
-    }
-    else
-      try
-      {
-        b_ = boost::lexical_cast<double>(b_str);
-      }
-      catch (boost::bad_lexical_cast &e)
-      {
-        ROS_ERROR("b (%s) is not a float",b_str);
-        return false;
-      }
-    // get the r coefficient
-    const char *r_str = j->Attribute("r");
-    if (r_str == NULL)
-    {
-      r_ = 91.50000/1000.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: r, using default for PR2 alpha2.", joint_name);
-    }
-    else
-      try
-      {
-        r_ = boost::lexical_cast<double>(r_str);
-      }
-      catch (boost::bad_lexical_cast &e)
-      {
-        ROS_ERROR("r (%s) is not a float",r_str);
-        return false;
-      }
-  }
-
-  // Print all coefficients
-  ROS_DEBUG("Gripper transmission parameters for %s: a=%f, b=%f, r=%f, h=%f, L0=%f, t0=%f, theta0=%f, phi0=%f, gear_ratio=%f, screw_red=%f",
-            name_.c_str(), a_, b_, r_, h_, L0_, t0_, theta0_, phi0_, gear_ratio_, screw_reduction_);
-
-  // Get passive joint informations
-  for (TiXmlElement *j = config->FirstChildElement("passive_joint"); j; j = j->NextSiblingElement("passive_joint"))
-  {
-    const char *joint_name = j->Attribute("name");
-    if (!joint_name)
-    {
-      ROS_ERROR("PR2GripperTransmission did not specify joint name");
-      return false;
-    }
-    const boost::shared_ptr<const urdf::Joint> joint = robot->robot_model_.getJoint(joint_name);
-
-    if (!joint)
-    {
-      ROS_ERROR("PR2GripperTransmission could not find joint named \"%s\"", joint_name);
-      return false;
-    }
-
-    // add joint name to list
-    joint_names_.push_back(joint_name);  // Adds the passive joints after the gap joint
-    passive_joints_.push_back(joint_name);
-  }
-
-  // Get screw joint informations
-  for (TiXmlElement *j = config->FirstChildElement("simulated_actuated_joint"); j; j = j->NextSiblingElement("simulated_actuated_joint"))
-  {
-    const char *joint_name = j->Attribute("name");
-    if (!joint_name)
-    {
-      ROS_ERROR("PR2GripperTransmission simulated_actuated_joint did snot specify joint name");
-      use_simulated_actuated_joint_=false;
-    }
-    else
-    {
-      const boost::shared_ptr<const urdf::Joint> joint = robot->robot_model_.getJoint(joint_name);
-      if (!joint)
-      {
-        ROS_ERROR("PR2GripperTransmission could not find joint named \"%s\"", joint_name);
-        use_simulated_actuated_joint_=false;
+        robot->getActuator(*actuator_name)->command_.enable_ = true;
       }
       else
       {
-        use_simulated_actuated_joint_=true;
-        joint_names_.push_back(joint_name);  // The first joint is the gap joint
-
-        // get the thread pitch
-        const char *simulated_reduction = j->Attribute("simulated_reduction");
-        if (!simulated_reduction)
-        {
-          ROS_ERROR("PR2GripperTransmission's joint \"%s\" has no coefficient: simulated_reduction.", joint_name);
-          return false;
-        }
-        try
-        {
-          simulated_reduction_ = boost::lexical_cast<double>(simulated_reduction);
-        }
-        catch (boost::bad_lexical_cast &e)
-        {
-          ROS_ERROR("simulated_reduction (%s) is not a float",simulated_reduction);
-          return false;
-        }
-
-        // get any additional joint introduced from this screw joint implementation
-        // for the gripper, this is due to the limitation that screw constraint
-        // requires axis of rotation to be aligned with line between CG's of the two
-        // connected bodies.  For this reason, an additional slider joint was introduced
-        // thus, requiring joint state to be published for motion planning packages
-        // and that's why we're here.
-        const char *passive_actuated_joint_name = j->Attribute("passive_actuated_joint");
-        if (passive_actuated_joint_name)
-        {
-          const boost::shared_ptr<const urdf::Joint> passive_actuated_joint = robot->robot_model_.getJoint(passive_actuated_joint_name);
-          if (passive_actuated_joint)
-          {
-            has_simulated_passive_actuated_joint_ = true;
-            joint_names_.push_back(passive_actuated_joint_name);  // The first joint is the gap joint
-          }
-        }
-
+        ROS_ERROR("PR2GripperTransmission actuator named \"%s\" not loaded in Robot", actuator_name->c_str());
+        return false;
       }
     }
+
+    // look for joint_names_ in robot
+    for (std::vector<std::string>::iterator joint_name = joint_names_.begin(); joint_name != joint_names_.end(); ++joint_name)
+    {
+      if (!robot->robot_model_.getJoint(*joint_name))
+      {
+        ROS_ERROR("PR2GripperTransmission joint named \"%s\" not loaded in Robot", joint_name->c_str());
+        return false;
+      }
+    }
+
+    // init successful
+    return true;
   }
-
-  // assuming simulated gripper prismatic joint exists, use it
-
-  return true;
+  else
+    return false;
 }
 
 bool PR2GripperTransmission::initXml(TiXmlElement *config)
@@ -394,20 +139,20 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config)
 
   for (TiXmlElement *j = config->FirstChildElement("gap_joint"); j; j = j->NextSiblingElement("gap_joint"))
   {
-    const char *joint_name = j->Attribute("name");
-    if (!joint_name)
+    const char *gap_joint_name = j->Attribute("name");
+    if (!gap_joint_name)
     {
       ROS_ERROR("PR2GripperTransmission did not specify joint name");
       return false;
     }
-    gap_joint_ = std::string(joint_name);
-    joint_names_.push_back(joint_name);  // The first joint is the gap joint
+    gap_joint_ = std::string(gap_joint_name);
+    joint_names_.push_back(gap_joint_name);
 
     // get the mechanical reduction
     const char *joint_reduction = j->Attribute("mechanical_reduction");
     if (!joint_reduction)
     {
-      ROS_ERROR("PR2GripperTransmission's joint \"%s\" has no coefficient: mechanical reduction.", joint_name);
+      ROS_ERROR("PR2GripperTransmission's joint \"%s\" has no coefficient: mechanical reduction.", gap_joint_name);
       return false;
     }
     try
@@ -425,7 +170,7 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config)
     if (screw_reduction_str == NULL)
     {
       screw_reduction_ = 2.0/1000.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: screw drive reduction, using default for PR2 alpha2.", joint_name);
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: screw drive reduction, using default for PR2 alpha2.", gap_joint_name);
     }
     else
       try
@@ -437,14 +182,13 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config)
         ROS_ERROR("screw_reduction (%s) is not a float",screw_reduction_str);
         return false;
       }
-    //ROS_INFO("screw drive reduction. %f", screw_reduction_);
 
     // get the gear_ratio
     const char *gear_ratio_str = j->Attribute("gear_ratio");
     if (gear_ratio_str == NULL)
     {
       gear_ratio_ = 29.16;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: gear_ratio, using default for PR2 alpha2.", joint_name);
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: gear_ratio, using default for PR2 alpha2.", gap_joint_name);
     }
     else
       try
@@ -456,14 +200,13 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config)
         ROS_ERROR("gear_ratio (%s) is not a float",gear_ratio_str);
         return false;
       }
-    //ROS_INFO("gear_ratio. %f", gear_ratio_);
 
     // get the theta0 coefficient
     const char *theta0_str = j->Attribute("theta0");
     if (theta0_str == NULL)
     {
       theta0_ = 2.97571*M_PI/180.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: theta0, using default for PR2 alpha2.", joint_name);
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: theta0, using default for PR2 alpha2.", gap_joint_name);
     }
     else
       try
@@ -480,7 +223,7 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config)
     if (phi0_str == NULL)
     {
       phi0_ = 29.98717*M_PI/180.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: phi0, using default for PR2 alpha2.", joint_name);
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: phi0, using default for PR2 alpha2.", gap_joint_name);
     }
     else
       try
@@ -497,7 +240,7 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config)
     if (t0_str == NULL)
     {
       t0_ = -0.19543/1000.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: t0, using default for PR2 alpha2.", joint_name);
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: t0, using default for PR2 alpha2.", gap_joint_name);
     }
     else
       try
@@ -514,7 +257,7 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config)
     if (L0_str == NULL)
     {
       L0_ = 34.70821/1000.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: L0, using default for PR2 alpha2.", joint_name);
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: L0, using default for PR2 alpha2.", gap_joint_name);
     }
     else
       try
@@ -531,7 +274,7 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config)
     if (h_str == NULL)
     {
       h_ = 5.200/1000.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: h, using default for PR2 alpha2.", joint_name);
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: h, using default for PR2 alpha2.", gap_joint_name);
     }
     else
       try
@@ -548,7 +291,7 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config)
     if (a_str == NULL)
     {
       a_ = 67.56801/1000.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: a, using default for PR2 alpha2.", joint_name);
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: a, using default for PR2 alpha2.", gap_joint_name);
     }
     else
       try
@@ -565,7 +308,7 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config)
     if (b_str == NULL)
     {
       b_ = 48.97193/1000.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: b, using default for PR2 alpha2.", joint_name);
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: b, using default for PR2 alpha2.", gap_joint_name);
     }
     else
       try
@@ -582,7 +325,7 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config)
     if (r_str == NULL)
     {
       r_ = 91.50000/1000.0;
-      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: r, using default for PR2 alpha2.", joint_name);
+      ROS_WARN("PR2GripperTransmission's joint \"%s\" has no coefficient: r, using default for PR2 alpha2.", gap_joint_name);
     }
     else
       try
@@ -603,62 +346,60 @@ bool PR2GripperTransmission::initXml(TiXmlElement *config)
   // Get passive joint informations
   for (TiXmlElement *j = config->FirstChildElement("passive_joint"); j; j = j->NextSiblingElement("passive_joint"))
   {
-    const char *joint_name = j->Attribute("name");
-    if (!joint_name)
+    const char *passive_joint_name = j->Attribute("name");
+    if (!passive_joint_name)
     {
       ROS_ERROR("PR2GripperTransmission did not specify joint name");
       return false;
     }
 
     // add joint name to list
-    joint_names_.push_back(joint_name);  // Adds the passive joints after the gap joint
-    passive_joints_.push_back(joint_name);
+    // joint_names_.push_back(passive_joint_name);
+    passive_joints_.push_back(passive_joint_name);
   }
 
   // Get screw joint informations
   for (TiXmlElement *j = config->FirstChildElement("simulated_actuated_joint"); j; j = j->NextSiblingElement("simulated_actuated_joint"))
   {
-    const char *joint_name = j->Attribute("name");
-    if (!joint_name)
+    const char *simulated_actuated_joint_name = j->Attribute("name");
+    if (simulated_actuated_joint_name)
     {
-      ROS_ERROR("PR2GripperTransmission screw joint did not specify joint name");
-      use_simulated_actuated_joint_=false;
+      // joint_names_.push_back(simulated_actuated_joint_name);
     }
     else
     {
-      use_simulated_actuated_joint_=true;
-      joint_names_.push_back(joint_name);  // The first joint is the gap joint
+      ROS_ERROR("PR2GripperTransmission simulated_actuated_joint did snot specify joint name");
+      return false;
+    }
 
-      // get the thread pitch
-      const char *simulated_reduction = j->Attribute("simulated_reduction");
-      if (!simulated_reduction)
-      {
-        ROS_ERROR("PR2GripperTransmission's joint \"%s\" has no coefficient: simulated_reduction.", joint_name);
-        return false;
-      }
-      try
-      {
-        simulated_reduction_ = boost::lexical_cast<double>(simulated_reduction);
-      }
-      catch (boost::bad_lexical_cast &e)
-      {
-        ROS_ERROR("simulated_reduction (%s) is not a float",simulated_reduction);
-        return false;
-      }
+    // get the thread pitch
+    const char *simulated_reduction = j->Attribute("simulated_reduction");
+    if (!simulated_reduction)
+    {
+      ROS_ERROR("PR2GripperTransmission's simulated_actuated_joint \"%s\" has no coefficient: simulated_reduction.", simulated_actuated_joint_name);
+      return false;
+    }
+    try
+    {
+      simulated_reduction_ = boost::lexical_cast<double>(simulated_reduction);
+    }
+    catch (boost::bad_lexical_cast &e)
+    {
+      ROS_ERROR("simulated_reduction (%s) is not a float",simulated_reduction);
+      return false;
+    }
 
-      // get any additional joint introduced from this screw joint implementation
-      // for the gripper, this is due to the limitation that screw constraint
-      // requires axis of rotation to be aligned with line between CG's of the two
-      // connected bodies.  For this reason, an additional slider joint was introduced
-      // thus, requiring joint state to be published for motion planning packages
-      // and that's why we're here.
-      const char *passive_actuated_joint_name = j->Attribute("passive_actuated_joint");
-      if (passive_actuated_joint_name)
-      {
-        has_simulated_passive_actuated_joint_ = true;
-        joint_names_.push_back(passive_actuated_joint_name);  // The first joint is the gap joint
-      }
-
+    // get any additional joint introduced from this screw joint implementation
+    // for the gripper, this is due to the limitation that screw constraint
+    // requires axis of rotation to be aligned with line between CG's of the two
+    // connected bodies.  For this reason, an additional slider joint was introduced
+    // thus, requiring joint state to be published for motion planning packages
+    // and that's why we're here.
+    const char *passive_actuated_joint_name = j->Attribute("passive_actuated_joint");
+    if (passive_actuated_joint_name)
+    {
+      has_simulated_passive_actuated_joint_ = true;
+      // joint_names_.push_back(passive_actuated_joint_name);
     }
   }
 
@@ -791,10 +532,10 @@ void PR2GripperTransmission::propagatePosition(
 
   ROS_ASSERT(as.size() == 1);
   // js has passive joints and 1 gap joint and 1 screw joint
-  if (use_simulated_actuated_joint_ && has_simulated_passive_actuated_joint_)
-    {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 2);}
-  else if (use_simulated_actuated_joint_) {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);}
-  else                  {ROS_ASSERT(js.size() == 1 + passive_joints_.size());}
+#if 0
+  if (has_simulated_passive_actuated_joint_) {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 2);}
+  ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);
+#endif
 
   /// \brief motor revolutions = encoder value * gap_mechanical_reduction_ * RAD2MR
   ///        motor revolutions =      motor angle(rad)                     / (2*pi)
@@ -833,6 +574,7 @@ void PR2GripperTransmission::propagatePosition(
   js[0]->measured_effort_ = gap_effort/2.0;
   //ROS_ERROR("prop pos eff=%f",js[0]->measured_effort_);
 
+#if 0
   // Determines the states of the passive joints.
   // we need to do this for each finger, in simulation, each finger has it's state filled out
   for (size_t i = 1; i < passive_joints_.size()+1; ++i)
@@ -843,15 +585,13 @@ void PR2GripperTransmission::propagatePosition(
     js[i]->reference_position_ = MT / dtheta_dMR / RAD2MR;
   }
 
-  if (use_simulated_actuated_joint_)
-  {
-    // screw joint state is not important to us, fill with zeros
-    js[passive_joints_.size()+1]->position_           = 0.0;
-    js[passive_joints_.size()+1]->velocity_           = 0.0;
-    js[passive_joints_.size()+1]->measured_effort_    = 0.0;
-    js[passive_joints_.size()+1]->reference_position_ = 0.0;
-    js[passive_joints_.size()+1]->calibrated_         = true; // treat passive simulation joints as "calibrated"
-  }
+  // screw joint state is not important to us, fill with zeros
+  js[passive_joints_.size()+1]->position_           = 0.0;
+  js[passive_joints_.size()+1]->velocity_           = 0.0;
+  js[passive_joints_.size()+1]->measured_effort_    = 0.0;
+  js[passive_joints_.size()+1]->reference_position_ = 0.0;
+  js[passive_joints_.size()+1]->calibrated_         = true; // treat passive simulation joints as "calibrated"
+
   if (has_simulated_passive_actuated_joint_)
   {
     // screw joint state is not important to us, fill with zeros
@@ -861,6 +601,7 @@ void PR2GripperTransmission::propagatePosition(
     js[passive_joints_.size()+2]->reference_position_ = 0.0;
     js[passive_joints_.size()+2]->calibrated_         = true; // treat passive simulation joints as "calibrated"
   }
+#endif
 }
 
 // this is needed for simulation, so we can recover encoder value given joint angles
@@ -868,8 +609,8 @@ void PR2GripperTransmission::propagatePositionBackwards(
   std::vector<JointState*>& js, std::vector<Actuator*>& as)
 {
   ROS_ASSERT(as.size() == 1);
-  if (use_simulated_actuated_joint_) {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);}
-  else                  {ROS_ASSERT(js.size() == 1 + passive_joints_.size());}
+  ROS_ASSERT(js.size() == 1);
+  ROS_DEBUG("js [%d], pjs [%d]", js.size(), passive_joints_.size());
 
   // keep the simulation stable by using the minimum rate joint to compute gripper gap rate
   double MR,dMR_dtheta,dtheta_dt,dMR_dt;
@@ -900,23 +641,23 @@ void PR2GripperTransmission::propagatePositionBackwards(
   as[0]->state_.last_measured_effort_ = 2.0*gap_effort / dMR_dt * RAD2MR * gap_mechanical_reduction_;
 
   // Update the timing (making sure it's initialized).
-  if (! simulated_actuator_timestamp_initialized_)
-    {
-      // Set the time stamp to zero (it is measured relative to the start time).
-      as[0]->state_.sample_timestamp_ = ros::Duration(0);
+  if (!simulated_actuator_timestamp_initialized_)
+  {
+    // Set the time stamp to zero (it is measured relative to the start time).
+    as[0]->state_.sample_timestamp_ = ros::Duration(0);
 
-      // Try to set the start time.  Only then do we claim initialized.
-      if (ros::isStarted())
-      {
-        simulated_actuator_start_time_ = ros::Time::now();
-        simulated_actuator_timestamp_initialized_ = true;
-      }
-    }
-  else
+    // Try to set the start time.  Only then do we claim initialized.
+    if (ros::isStarted())
     {
-      // Measure the time stamp relative to the start time.
-      as[0]->state_.sample_timestamp_ = ros::Time::now() - simulated_actuator_start_time_;
+      simulated_actuator_start_time_ = ros::Time::now();
+      simulated_actuator_timestamp_initialized_ = true;
     }
+  }
+  else
+  {
+    // Measure the time stamp relative to the start time.
+    as[0]->state_.sample_timestamp_ = ros::Time::now() - simulated_actuator_start_time_;
+  }
   // Set the historical (double) timestamp accordingly.
   as[0]->state_.timestamp_ = as[0]->state_.sample_timestamp_.toSec();
 
@@ -928,10 +669,10 @@ void PR2GripperTransmission::propagateEffort(
   std::vector<JointState*>& js, std::vector<Actuator*>& as)
 {
   ROS_ASSERT(as.size() == 1);
-  if (use_simulated_actuated_joint_ && has_simulated_passive_actuated_joint_)
-    {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 2);}
-  else if (use_simulated_actuated_joint_) {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);}
-  else                  {ROS_ASSERT(js.size() == 1 + passive_joints_.size());}
+#if 0
+  if (has_simulated_passive_actuated_joint_) {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 2);}
+  else {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);}
+#endif
 
   //
   // in hardware, the position of passive joints are set by propagatePosition, so they should be identical and
@@ -959,8 +700,9 @@ void PR2GripperTransmission::propagateEffortBackwards(
   std::vector<Actuator*>& as, std::vector<JointState*>& js)
 {
   ROS_ASSERT(as.size() == 1);
-  if (use_simulated_actuated_joint_) {ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);}
-  else                  {ROS_ASSERT(js.size() == 1 + passive_joints_.size());}
+#if 0
+  ROS_ASSERT(js.size() == 1 + passive_joints_.size() + 1);
+#endif
   ROS_ASSERT(simulated_reduction_>0.0);
 
   //
@@ -979,21 +721,14 @@ void PR2GripperTransmission::propagateEffortBackwards(
   // compute gap position, velocity, measured_effort from actuator states
   computeGapStates(MR,MR_dot,MT,theta,dtheta_dMR, dt_dtheta, dt_dMR,gap_size,gap_velocity,gap_effort);
 
+#if 0
   {
     // propagate fictitious joint effort backwards
-    //ROS_ERROR("prop eff back eff=%f",js[0]->commanded_effort_);
-    if (use_simulated_actuated_joint_)
-    {
-      // set screw joint effort if simulated
-      js[passive_joints_.size()+1]->commanded_effort_  = gap_effort/simulated_reduction_;
-      //js[0]->commanded_effort_                         = gap_effort/2.0;
-    }
-    else
-    {
-      // an ugly hack to lessen instability due to gripper gains
-      double eps=0.01;
-      js[0]->commanded_effort_  = (1.0-eps)*js[0]->commanded_effort_ + eps*gap_effort/2.0; // skip slider joint effort
-    }
+    // ROS_ERROR("prop eff back eff=%f",js[0]->commanded_effort_);
+
+    // set screw joint effort if simulated
+    js[passive_joints_.size()+1]->commanded_effort_  = gap_effort/simulated_reduction_;
   }
+#endif
 }
 
