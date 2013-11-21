@@ -14,6 +14,10 @@ include_directories(
    ${catkin_INCLUDE_DIRS} 
    ${EIGEN_INCLUDE_DIRS})
 
+find_package(orocos_kdl REQUIRED)
+include_directories(${orocos_kdl_INCLUDE_DIRS})
+link_directories(${orocos_kdl_LIBRARY_DIRS})
+
 catkin_package(
     DEPENDS tinyxml
     CATKIN_DEPENDS pr2_hardware_interface pr2_mechanism_model pr2_mechanism_diagnostics pr2_description pr2_controller_interface pr2_mechanism_msgs diagnostic_msgs sensor_msgs realtime_tools roscpp pluginlib

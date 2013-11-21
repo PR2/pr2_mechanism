@@ -6,10 +6,13 @@ project(pr2_mechanism_model)
 find_package(catkin REQUIRED COMPONENTS roscpp pr2_hardware_interface urdf kdl_parser pluginlib angles hardware_interface rostest rosunit)
 
 find_package(Eigen REQUIRED)
-find_package(orocos_kdl REQUIRED)
 find_package(urdfdom REQUIRED)
 include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
-include_directories(include ${catkin_INCLUDE_DIRS} ${orocos_kdl_INCLUDE_DIRS} ${urdfdom_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${urdfdom_INCLUDE_DIRS})
+
+find_package(orocos_kdl REQUIRED)
+include_directories(${orocos_kdl_INCLUDE_DIRS})
+link_directories(${orocos_kdl_LIBRARY_DIRS})
 
 catkin_package(
     DEPENDS tinyxml urdfdom
