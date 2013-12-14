@@ -6,10 +6,9 @@ project(pr2_mechanism_model)
 find_package(catkin REQUIRED COMPONENTS roscpp pr2_hardware_interface urdf kdl_parser pluginlib angles hardware_interface rostest rosunit)
 
 find_package(Eigen REQUIRED)
-find_package(orocos_kdl REQUIRED)
 find_package(urdfdom REQUIRED)
 include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
-include_directories(include ${catkin_INCLUDE_DIRS} ${orocos_kdl_INCLUDE_DIRS} ${urdfdom_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${urdfdom_INCLUDE_DIRS})
 
 catkin_package(
     DEPENDS tinyxml urdfdom
@@ -32,7 +31,7 @@ add_library( pr2_mechanism_model
   src/joint_calibration_simulator.cpp
 )
 pr2_enable_rpath(pr2_mechanism_model)
-target_link_libraries(pr2_mechanism_model ${catkin_LIBRARIES} ${orocos_kdl_LIBRARIES})
+target_link_libraries(pr2_mechanism_model ${catkin_LIBRARIES} )
 
 catkin_add_gtest(test_chain test/test_chain.cpp)
 target_link_libraries(test_chain pr2_mechanism_model ${catkin_LIBRARIES})
