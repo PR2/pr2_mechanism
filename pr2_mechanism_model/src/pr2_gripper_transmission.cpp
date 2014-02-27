@@ -610,7 +610,7 @@ void PR2GripperTransmission::propagatePositionBackwards(
 {
   ROS_ASSERT(as.size() == 1);
   ROS_ASSERT(js.size() == 1);
-  ROS_DEBUG("js [%d], pjs [%d]", js.size(), passive_joints_.size());
+  ROS_DEBUG("js [%zd], pjs [%zd]", js.size(), passive_joints_.size());
 
   // keep the simulation stable by using the minimum rate joint to compute gripper gap rate
   double MR,dMR_dtheta,dtheta_dt,dMR_dt;
