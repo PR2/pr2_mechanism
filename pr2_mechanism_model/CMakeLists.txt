@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(pr2_mechanism_model)
 
 # Load catkin and all dependencies required for this package
-find_package(catkin REQUIRED COMPONENTS roscpp pr2_hardware_interface urdf kdl_parser pluginlib angles hardware_interface rostest rosunit)
+find_package(catkin REQUIRED COMPONENTS cmake_modules roscpp pr2_hardware_interface urdf kdl_parser pluginlib angles hardware_interface rostest rosunit)
 
 find_package(Eigen REQUIRED)
 find_package(urdfdom REQUIRED)
