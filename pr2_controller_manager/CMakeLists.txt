@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(pr2_controller_manager)
 
 # Load catkin and all dependencies required for this package
-find_package(catkin REQUIRED COMPONENTS pr2_hardware_interface pr2_mechanism_model pr2_mechanism_diagnostics pr2_description pr2_controller_interface pr2_mechanism_msgs diagnostic_msgs sensor_msgs realtime_tools roscpp pluginlib rostest)
+find_package(catkin REQUIRED COMPONENTS cmake_modules pr2_hardware_interface pr2_mechanism_model pr2_mechanism_diagnostics pr2_description pr2_controller_interface pr2_mechanism_msgs diagnostic_msgs sensor_msgs realtime_tools roscpp pluginlib rostest)
 
 find_package(Eigen REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
