@@ -1,6 +1,6 @@
 <package>
   <name>pr2_mechanism_model</name>
-  <version>1.8.12</version>
+  <version>1.8.13</version>
   <description>
      <p>
         This package contains the robot model that is used by the realtime
