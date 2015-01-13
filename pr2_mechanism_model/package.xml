@@ -33,7 +33,7 @@
   <build_depend>roscpp</build_depend>
   <build_depend>pr2_hardware_interface</build_depend>
   <build_depend>urdf</build_depend>
-  <build_depend>urdfdom</build_depend>
+  <build_depend>liburdfdom-dev</build_depend>
   <build_depend>kdl_parser</build_depend>
   <build_depend>pluginlib</build_depend>
   <build_depend>angles</build_depend>
