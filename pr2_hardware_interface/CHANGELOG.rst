@@ -2,5 +2,8 @@
 Changelog for package pr2_hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.8.13 (2014-12-16)
 -------------------
