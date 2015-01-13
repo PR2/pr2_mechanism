@@ -8,7 +8,7 @@
   triggers, etc... All of the hardware components in this interface are
   directly available to the controllers inside the hard realtime
   control loop.</description>
-  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
 
   <license>BSD</license>
 

@@ -16,7 +16,7 @@
         The pr2_mechanism_model package is well tested and is released with a stable API.
      </p>
   </description>
-  <maintainer email="ahendrix@willowgarage.com">Austin Hendrix</maintainer>
+  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
 
   <license>BSD</license>
 
@@ -44,7 +44,8 @@
   <run_depend>roscpp</run_depend>
   <run_depend>pr2_hardware_interface</run_depend>
   <run_depend>urdf</run_depend>
-  <run_depend>urdfdom</run_depend>
+  <run_depend>liburdfdom-dev</run_depend>
+  <!-- <run_depend>urdfdom</run_depend>Turned to liburdfdom-dev in Indigo -->
   <run_depend>kdl_parser</run_depend>
   <run_depend>pluginlib</run_depend>
   <run_depend>angles</run_depend>

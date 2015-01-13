@@ -2,6 +2,9 @@
 Changelog for package pr2_mechanism_diagnostics
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.8.14 (2015-01-13)
 -------------------
 
