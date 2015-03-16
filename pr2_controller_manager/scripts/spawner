@@ -150,7 +150,7 @@ def main():
 
     # start controllers is requested
     if autostart:
-        resp = switch_controller(loaded, [], 2)
+        resp = switch_controller(loaded, [], SwitchControllerRequest.STRICT)
         if resp.ok != 0:
             rospy.loginfo("Started controllers: %s" % ', '.join(loaded))
         else:
