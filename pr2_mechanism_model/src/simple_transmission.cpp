@@ -82,7 +82,11 @@ bool SimpleTransmission::initXml(TiXmlElement *elt, Robot *robot)
   a->command_.enable_ = true;
   actuator_names_.push_back(actuator_name);
 
-  mechanical_reduction_ = atof(elt->FirstChildElement("mechanicalReduction")->GetText());
+  // for the old and new transmission style
+  if(ael->FirstChildElement("mechanicalReduction"))
+    mechanical_reduction_ = atof(ael->FirstChildElement("mechanicalReduction")->GetText());
+  else
+    mechanical_reduction_ = atof(elt->FirstChildElement("mechanicalReduction")->GetText());
 
   // Get screw joint informations
   for (TiXmlElement *j = elt->FirstChildElement("simulated_actuated_joint"); j; j = j->NextSiblingElement("simulated_actuated_joint"))

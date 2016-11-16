@@ -71,7 +71,16 @@ bool Robot::initXml(TiXmlElement *root)
   for (xit = root->FirstChildElement("transmission"); xit;
        xit = xit->NextSiblingElement("transmission"))
   {
-    std::string type(xit->Attribute("type"));
+    // for the old and new transmission style
+    std::string type;
+    if(!xit->Attribute("type"))
+    {
+      if(!xit->FirstChildElement("type")) continue;
+      type = xit->FirstChildElement("type")->GetText();
+    }
+    else
+      type = xit->Attribute("type");
+    if(type.substr(0, 3) != "pr2") continue;
     boost::shared_ptr<Transmission> t;
     try {
       // Backwards compatibility for using non-namespaced controller types
