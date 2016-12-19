@@ -47,7 +47,6 @@ Robot::Robot(HardwareInterface *hw)
   :hw_(hw)
 {}
 
-
 bool Robot::initXml(TiXmlElement *root)
 {
   // check if current time is valid
@@ -115,7 +114,7 @@ ros::Time Robot::getTime()
 }
 
 template <class T>
-int findIndexByName(const std::vector<boost::shared_ptr<T> >& v, 
+int findIndexByName(const std::vector<boost::shared_ptr<T> >& v,
       const std::string &name)
 {
   for (unsigned int i = 0; i < v.size(); ++i)
@@ -149,6 +148,7 @@ boost::shared_ptr<Transmission> Robot::getTransmission(const std::string &name) 
 RobotState::RobotState(Robot *model)
   : model_(model)
 {
+
   assert(model_);
 
   transmissions_in_.resize(model->transmissions_.size());
@@ -188,6 +188,11 @@ RobotState::RobotState(Robot *model)
     ROS_WARN("No transmissions were specified in the robot description.");
   if (js_size == 0)
     ROS_WARN("None of the joints in the robot desription matches up to a motor. The robot is uncontrollable.");
+}
+
+RobotState::RobotState()
+{
+  ROS_WARN("RobotState instantiated without model");
 }
 
 
@@ -275,5 +280,3 @@ void RobotState::propagateActuatorEffortToJointEffort()
                                                         transmissions_out_[i]);
   }
 }
-
-

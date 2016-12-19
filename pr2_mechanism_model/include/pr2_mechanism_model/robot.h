@@ -126,8 +126,11 @@ private:
 class RobotState : public hardware_interface::HardwareInterface
 {
 public:
-  /// constructor
+  /// Constructor
   RobotState(Robot *model);
+
+  /// Default Constructor
+  RobotState();
 
   /// The robot model containing the transmissions, urdf robot model, and hardware interface
   Robot *model_;

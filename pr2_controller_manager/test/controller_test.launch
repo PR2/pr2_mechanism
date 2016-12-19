@@ -20,6 +20,10 @@
   <rosparam file="$(find pr2_controller_manager)/test/controller_config_broken10.yaml" ns="controller18" command="load" />
   <rosparam file="$(find pr2_controller_manager)/test/controller_config_broken11.yaml" ns="controller19" command="load" />
 
+  <!-- fake robot -->
+  <node pkg="pr2_controller_manager" type="test_robot" name="test_robot" />
+  <include file="$(find pr2_description)/robots/upload_pr2.launch" />
+
   <!-- Spawn some controllers stopped/started -->
   <node pkg="pr2_controller_manager" type="spawner" args="controller1" name="spawn1"/>
   <node pkg="pr2_controller_manager" type="spawner" args="--stopped controller2" name="spawn2" />
@@ -32,10 +36,6 @@
 
   <!-- Diagnostics -->
   <node pkg="pr2_mechanism_diagnostics" type="pr2_mechanism_diagnostics" name="pr2_mechanism_diagnostics" />
-
-  <!-- fake robot -->
-  <node pkg="pr2_controller_manager" type="test_robot" name="test_robot" />
-  <include file="$(find pr2_description)/robots/upload_pr2.launch" />
 
   <!-- test -->
   <test test-name="test_controller_manager" pkg="pr2_controller_manager" type="test_controllers" time-limit="200" />

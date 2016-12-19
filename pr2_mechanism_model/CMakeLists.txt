@@ -5,13 +5,14 @@ project(pr2_mechanism_model)
 # Load catkin and all dependencies required for this package
 find_package(catkin REQUIRED COMPONENTS cmake_modules roscpp pr2_hardware_interface urdf kdl_parser pluginlib angles hardware_interface rostest rosunit)
 
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(urdfdom REQUIRED)
+find_package(TinyXML REQUIRED)
 include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
-include_directories(include ${catkin_INCLUDE_DIRS} ${urdfdom_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${urdfdom_INCLUDE_DIRS} ${TinyXML_INCLUDE_DIRS})
 
 catkin_package(
-    DEPENDS tinyxml urdfdom
+    DEPENDS TinyXML urdfdom
     CATKIN_DEPENDS roscpp pr2_hardware_interface urdf kdl_parser pluginlib angles hardware_interface
     INCLUDE_DIRS include
     LIBRARIES pr2_mechanism_model
@@ -31,10 +32,10 @@ add_library( pr2_mechanism_model
   src/joint_calibration_simulator.cpp
 )
 pr2_enable_rpath(pr2_mechanism_model)
-target_link_libraries(pr2_mechanism_model ${catkin_LIBRARIES} )
+target_link_libraries(pr2_mechanism_model ${catkin_LIBRARIES} ${TinyXML_LIBRARIES})
 
 catkin_add_gtest(test_chain test/test_chain.cpp)
-target_link_libraries(test_chain pr2_mechanism_model ${catkin_LIBRARIES})
+target_link_libraries(test_chain pr2_mechanism_model ${catkin_LIBRARIES} ${TinyXML_LIBRARIES})
 
 catkin_add_gtest(test_wrist_transmission test/test_wrist_transmission.cpp)
 target_link_libraries(test_wrist_transmission pr2_mechanism_model ${catkin_LIBRARIES})
