@@ -5,17 +5,24 @@ project(pr2_mechanism_diagnostics)
 # Load catkin and all dependencies required for this package
 find_package(catkin REQUIRED COMPONENTS roscpp urdf rospy diagnostic_updater diagnostic_msgs pr2_mechanism_msgs pr2_mechanism_model angles std_srvs std_msgs rostest)
 
-find_package(PkgConfig)
-pkg_check_modules(PC_EIGEN REQUIRED eigen3)
-include_directories(include ${PC_EIGEN_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
-add_definitions(${PC_EIGEN_CFLAGS_OTHER})
+#find_package(PkgConfig)
+#pkg_check_modules(PC_EIGEN REQUIRED eigen3)
+#include_directories(include ${PC_EIGEN_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+#add_definitions(${PC_EIGEN_CFLAGS_OTHER})
+
+find_package(Eigen3 REQUIRED)
+
+include_directories(
+   include
+   ${catkin_INCLUDE_DIRS}
+   ${EIGEN_INCLUDE_DIRS})
 
 catkin_package()
 
 add_definitions(-O3)
 
-add_library(${PROJECT_NAME} 
-  src/controller_diagnostics.cpp 
+add_library(${PROJECT_NAME}
+  src/controller_diagnostics.cpp
   src/joint_diagnostics.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 

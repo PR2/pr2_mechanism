@@ -5,17 +5,19 @@ project(pr2_controller_manager)
 # Load catkin and all dependencies required for this package
 find_package(catkin REQUIRED COMPONENTS cmake_modules pr2_hardware_interface pr2_mechanism_model pr2_mechanism_diagnostics pr2_description pr2_controller_interface pr2_mechanism_msgs diagnostic_msgs sensor_msgs realtime_tools roscpp pluginlib rostest)
 
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(TinyXML REQUIRED)
 
 include_directories(
    include 
    ${Boost_INCLUDE_DIRS} 
    ${catkin_INCLUDE_DIRS} 
-   ${EIGEN_INCLUDE_DIRS})
+   ${EIGEN_INCLUDE_DIRS}
+   ${TinyXML_INCLUDE_DIRS})
 
 catkin_package(
-    DEPENDS tinyxml
+    DEPENDS TinyXML
     CATKIN_DEPENDS pr2_hardware_interface pr2_mechanism_model pr2_mechanism_diagnostics pr2_description pr2_controller_interface pr2_mechanism_msgs diagnostic_msgs sensor_msgs realtime_tools roscpp pluginlib
     INCLUDE_DIRS include
     LIBRARIES pr2_controller_manager
@@ -24,19 +26,19 @@ catkin_package(
 add_definitions(-O3)
 
 add_library(pr2_controller_manager src/controller_manager.cpp src/scheduler.cpp)
-
-target_link_libraries(pr2_controller_manager ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(pr2_controller_manager ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${TinyXML_LIBRARIES})
 
 add_library(controller_test test/controllers/test_controller.cpp)
+add_dependencies(controller_test pr2_mechanism_msgs_generate_messages_cpp)
 pr2_enable_rpath(controller_test)
 target_link_libraries(controller_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 add_executable(test_controllers test/test.cpp)
-add_executable(test_robot test/robot.cpp)
-
-target_link_libraries(test_robot ${Boost_LIBRARIES} ${PROJECT_NAME} ${catkin_LIBRARIES})
-
+add_dependencies(test_controllers pr2_mechanism_msgs_generate_messages_cpp)
 target_link_libraries(test_controllers ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
+
+add_executable(test_robot test/robot.cpp)
+target_link_libraries(test_robot ${Boost_LIBRARIES} ${PROJECT_NAME} ${catkin_LIBRARIES})
 
 add_rostest(test/controller_test.launch)
 

@@ -65,7 +65,7 @@ int main(int argc, char** argv)
     ROS_ERROR("Could not parse the robot description");
     return -1;
   }
-  
+
   // Initialize controller manager from robot description
   if (!cm.initXml(robot_description_root)){
     ROS_ERROR("Could not initialize controller manager");
@@ -85,5 +85,3 @@ int main(int argc, char** argv)
 
   return 0;
 }
-
-

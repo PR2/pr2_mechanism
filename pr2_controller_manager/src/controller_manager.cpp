@@ -831,4 +831,3 @@ bool ControllerManager::switchControllerSrv(
   ROS_DEBUG("switching service finished");
   return true;
 }
-
