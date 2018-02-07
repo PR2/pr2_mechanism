@@ -17,6 +17,7 @@ add_definitions(-O3)
 add_library(${PROJECT_NAME} 
   src/controller_diagnostics.cpp 
   src/joint_diagnostics.cpp)
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 add_executable(pr2_mechanism_diagnostics_node src/pr2_mechanism_diagnostics.cpp)
