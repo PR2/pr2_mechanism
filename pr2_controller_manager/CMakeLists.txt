@@ -25,14 +25,17 @@ catkin_package(
 add_definitions(-O3)
 
 add_library(pr2_controller_manager src/controller_manager.cpp src/scheduler.cpp)
+add_dependencies(pr2_controller_manager ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(pr2_controller_manager ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${TinyXML_LIBRARIES})
 
 add_library(controller_test test/controllers/test_controller.cpp)
+add_dependencies(controller_test ${catkin_EXPORTED_TARGETS})
 pr2_enable_rpath(controller_test)
 target_link_libraries(controller_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 add_executable(test_controllers test/test.cpp)
+add_dependencies(test_controllers ${catkin_EXPORTED_TARGETS})
 add_executable(test_robot test/robot.cpp)
 
 target_link_libraries(test_robot ${Boost_LIBRARIES} ${PROJECT_NAME} ${catkin_LIBRARIES})
