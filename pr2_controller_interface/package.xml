@@ -9,7 +9,7 @@
   contains the C++ controller base class that all controllers need to
   inherit from.
   </description>
-  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
+  <maintainer email="ros-orphaned-packages@googlegroups.com">ROS Orphaned Package Maintainers</maintainer>
 
   <license>BSD</license>
 
