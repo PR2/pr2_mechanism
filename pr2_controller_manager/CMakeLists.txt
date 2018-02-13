@@ -5,17 +5,18 @@ project(pr2_controller_manager)
 # Load catkin and all dependencies required for this package
 find_package(catkin REQUIRED COMPONENTS cmake_modules pr2_hardware_interface pr2_mechanism_model pr2_mechanism_diagnostics pr2_description pr2_controller_interface pr2_mechanism_msgs diagnostic_msgs sensor_msgs realtime_tools roscpp pluginlib rostest)
 
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(TinyXML REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
 
 include_directories(
    include 
    ${Boost_INCLUDE_DIRS} 
    ${catkin_INCLUDE_DIRS} 
-   ${EIGEN_INCLUDE_DIRS})
+   ${EIGEN3_INCLUDE_DIRS})
 
 catkin_package(
-    DEPENDS tinyxml
+    DEPENDS TinyXML
     CATKIN_DEPENDS pr2_hardware_interface pr2_mechanism_model pr2_mechanism_diagnostics pr2_description pr2_controller_interface pr2_mechanism_msgs diagnostic_msgs sensor_msgs realtime_tools roscpp pluginlib
     INCLUDE_DIRS include
     LIBRARIES pr2_controller_manager
@@ -25,7 +26,7 @@ add_definitions(-O3)
 
 add_library(pr2_controller_manager src/controller_manager.cpp src/scheduler.cpp)
 
-target_link_libraries(pr2_controller_manager ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(pr2_controller_manager ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${TinyXML_LIBRARIES})
 
 add_library(controller_test test/controllers/test_controller.cpp)
 pr2_enable_rpath(controller_test)
