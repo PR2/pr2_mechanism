@@ -2,6 +2,13 @@
 Changelog for package pr2_hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#332 <https://github.com/pr2/pr2_mechanism/issues/332>`_ from k-okada/maintain
+  change maintainer to ROS orphaned package maintainer
+* change maintainer to ROS orphaned package maintainer
+* Contributors: Kei Okada
+
 1.8.15 (2015-01-13)
 -------------------
 
