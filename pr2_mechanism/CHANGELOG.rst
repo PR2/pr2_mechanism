@@ -2,8 +2,8 @@
 Changelog for package pr2_mechanism
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.8.17 (2018-02-13)
+-------------------
 * Merge pull request `#332 <https://github.com/pr2/pr2_mechanism/issues/332>`_ from k-okada/maintain
   change maintainer to ROS orphaned package maintainer
 * change maintainer to ROS orphaned package maintainer

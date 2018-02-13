@@ -2,8 +2,8 @@
 Changelog for package pr2_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.8.17 (2018-02-13)
+-------------------
 * Merge pull request `#334 <https://github.com/pr2/pr2_mechanism/issues/334>`_ from k-okada/fix_cmake_warning
   Fix cmake warning
 * Merge pull request `#332 <https://github.com/pr2/pr2_mechanism/issues/332>`_ from k-okada/maintain
