@@ -37,7 +37,7 @@
   <build_depend>kdl_parser</build_depend>
   <build_depend>pluginlib</build_depend>
   <build_depend>angles</build_depend>
-  <build_depend>hardware_interface</build_depend>
+  <build_depend version_gte="0.13.0">hardware_interface</build_depend>
   <build_depend>rostest</build_depend>
   <build_depend>rosunit</build_depend>
 
