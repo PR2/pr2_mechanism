@@ -18,7 +18,7 @@ add_library(${PROJECT_NAME}
   src/controller_diagnostics.cpp 
   src/joint_diagnostics.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
-add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS} pr2_mechanism_msgs_gencpp)
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 
 add_executable(pr2_mechanism_diagnostics_node src/pr2_mechanism_diagnostics.cpp)
 target_link_libraries(pr2_mechanism_diagnostics_node ${PROJECT_NAME} ${catkin_LIBRARIES})
