@@ -5,13 +5,14 @@ project(pr2_mechanism_model)
 # Load catkin and all dependencies required for this package
 find_package(catkin REQUIRED COMPONENTS cmake_modules roscpp pr2_hardware_interface urdf kdl_parser pluginlib angles hardware_interface rostest rosunit)
 
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(TinyXML REQUIRED)
 find_package(urdfdom REQUIRED)
-include_directories(SYSTEM ${EIGEN_INCLUDE_DIRS})
+include_directories(SYSTEM ${EIGEN3_INCLUDE_DIRS})
 include_directories(include ${catkin_INCLUDE_DIRS} ${urdfdom_INCLUDE_DIRS})
 
 catkin_package(
-    DEPENDS tinyxml urdfdom
+    DEPENDS TinyXML urdfdom
     CATKIN_DEPENDS roscpp pr2_hardware_interface urdf kdl_parser pluginlib angles hardware_interface
     INCLUDE_DIRS include
     LIBRARIES pr2_mechanism_model
