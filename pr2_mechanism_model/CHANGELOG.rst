@@ -2,6 +2,15 @@
 Changelog for package pr2_mechanism_model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#338 <https://github.com/pr2/pr2_mechanism/issues/338>`_ from k-okada/add_travis
+  update travis.yml
+* fix urdf::JointConstSharedPtr for test directory
+* fix for urdfmodel >= 1.0.0 (melodic)
+* to pass catkin run_tests, partially copied from https://github.com/PR2/pr2_mechanism/pull/329
+* Contributors: Kei Okada
+
 1.8.17 (2018-02-13)
 -------------------
 * Merge pull request `#336 <https://github.com/pr2/pr2_mechanism/issues/336>`_ from k-okada/hardware_interface_0.13.0
