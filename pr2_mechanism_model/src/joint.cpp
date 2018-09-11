@@ -37,6 +37,7 @@
 #include <string>
 #include <vector>
 #include <cfloat>
+#include <limits> // for std::numeric_limits
 
 using namespace std;
 using namespace pr2_mechanism_model;

@@ -78,7 +78,11 @@ public:
   void getLimits(double &effort_low, double &effort_high);
 
   /// A pointer to the corresponding urdf::Joint from the urdf::Model
+#if URDFDOM_1_0_0_API
+  urdf::JointConstSharedPtr joint_;
+#else
   boost::shared_ptr<const urdf::Joint> joint_;
+#endif
 
   /// The joint position in radians or meters (read-only variable)
   double position_;
