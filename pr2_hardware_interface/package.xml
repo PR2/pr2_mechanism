@@ -1,6 +1,6 @@
 <package>
   <name>pr2_hardware_interface</name>
-  <version>1.8.17</version>
+  <version>1.8.18</version>
   <description>This package contains the C++ interfaces to the PR2 hardware
   components that are controlled over EtherCAT. This includes the
   motors and encoders needed to control the PR2 mechanism, as well as

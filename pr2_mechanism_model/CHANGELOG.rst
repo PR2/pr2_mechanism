@@ -2,8 +2,8 @@
 Changelog for package pr2_mechanism_model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.8.18 (2018-09-11)
+-------------------
 * Merge pull request `#338 <https://github.com/pr2/pr2_mechanism/issues/338>`_ from k-okada/add_travis
   update travis.yml
 * fix urdf::JointConstSharedPtr for test directory
