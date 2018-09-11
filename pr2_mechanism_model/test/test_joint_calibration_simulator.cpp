@@ -66,9 +66,15 @@ TEST_F(TestParser, test)
   urdf::Model robot;
   ASSERT_TRUE(robot.initFile(g_argv[1]));
 
+#if URDFDOM_1_0_0_API
+  urdf::JointConstSharedPtr jnt_cont1 = robot.getJoint("continuous1");
+  urdf::JointConstSharedPtr jnt_cont2 = robot.getJoint("continuous2");
+  urdf::JointConstSharedPtr jnt_rev  = robot.getJoint("revolute");
+#else
   boost::shared_ptr<const urdf::Joint> jnt_cont1 = robot.getJoint("continuous1");
   boost::shared_ptr<const urdf::Joint> jnt_cont2 = robot.getJoint("continuous2");
   boost::shared_ptr<const urdf::Joint> jnt_rev  = robot.getJoint("revolute");
+#endif
   ASSERT_TRUE(jnt_cont1 != NULL);
   ASSERT_TRUE(jnt_cont2 != NULL);
   ASSERT_TRUE(jnt_rev != NULL);

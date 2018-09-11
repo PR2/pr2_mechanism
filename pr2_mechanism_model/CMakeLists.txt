@@ -31,6 +31,13 @@ add_library( pr2_mechanism_model
   src/pr2_belt_transmission.cpp
   src/joint_calibration_simulator.cpp
 )
+
+find_package(PkgConfig)
+pkg_check_modules(URDFDOM REQUIRED urdfdom)
+if ("${URDFDOM_VERSION}" VERSION_EQUAL "1.0.0" OR "${URDFDOM_VERSION}" VERSION_GREATER "1.0.0")
+  add_definitions(-DURDFDOM_1_0_0_API)
+endif()
+
 pr2_enable_rpath(pr2_mechanism_model)
 target_link_libraries(pr2_mechanism_model ${catkin_LIBRARIES} )
 
