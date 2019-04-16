@@ -43,6 +43,8 @@
   <run_depend>rosparam</run_depend>
   <run_depend>pluginlib</run_depend>
 
+  <test_depend>roslaunch</test_depend>
+
   <export>
     <pr2_controller_interface plugin="${prefix}/test/controller_plugin.xml"/>
   </export>
