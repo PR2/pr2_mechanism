@@ -86,9 +86,9 @@ class TestMechDiag(unittest.TestCase):
         self.assert_(not rospy.is_shutdown(), "Rospy shutdown")
 
         with self._mutex:
-            if len(self._joints.items()) == 0:
+            if len(list(self._joints.items())) == 0:
                 self.assert_(False, "No joint data in diagnostics")
-            for key, val in self._joints.iteritems():
+            for key, val in self._joints.items():
                 if self._nan:
                     self.assert_(val.level == 2, "Joint %s was not ERROR, but was NaN. Level %d" % (val.name, val.level))
                 elif self._cal:
@@ -96,10 +96,10 @@ class TestMechDiag(unittest.TestCase):
                 else:
                     self.assert_(val.level == 1, "Joint %s was not warning, but was uncalibrated. Level %d" % (val.name, val.level))
 
-            if len(self._controllers.items()) == 0:
+            if len(list(self._controllers.items())) == 0:
                 self.assert_(False, "No controller data in diagnostics")
 
-            for key, val in self._controllers.iteritems():
+            for key, val in self._controllers.items():
                 if self._overrun:
                     self.assert_(val.level == 1, "Controller %s was not WARN, but was overrun. Level %d" % (val.name, val.level))
                 else:

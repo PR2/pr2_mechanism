@@ -77,10 +77,10 @@ def main():
 
 
 def print_help():
-    print './unspawner name1 name2 name3'
-    print ''
-    print '\tStops a set of controllers until killed.' 
-    print '\tUseful in roslaunch files to temporarily stop controllers'
+    print('./unspawner name1 name2 name3')
+    print('')
+    print('\tStops a set of controllers until killed.') 
+    print('\tUseful in roslaunch files to temporarily stop controllers')
 
 if __name__ == '__main__':
     if len(sys.argv) == 1 or sys.argv[1] == '-h' or sys.argv[1] == '--help':

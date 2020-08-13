@@ -18,7 +18,7 @@ class Tracker:
         self.msg = msg
 
 def print_usage(exit_code = 0):
-    print '''Commands:
+    print('''Commands:
     load <name>          - Load the controller named <name>  
     unload <name>        - Unload the controller named <name>  
     start <name>         - Start the controller named <name>
@@ -28,7 +28,7 @@ def print_usage(exit_code = 0):
     list                 - List active controllers
     list-joints          - List joints and actuators
     list-types           - List controller Types
-    reload-libraries     - Reloads all plugin controller libraries'''
+    reload-libraries     - Reloads all plugin controller libraries''')
 
     sys.exit(exit_code)
 
@@ -41,9 +41,9 @@ if __name__ == '__main__':
     elif args[1] == 'lc' or args[1] == 'list':
         pr2_controller_manager_interface.list_controllers()
     elif args[1] == 'reload-libraries':
-        print "ARGS", args, args[2:]
+        print("ARGS", args, args[2:])
         if '--restore' in args[2:]:
-            print "RE1"
+            print("RE1")
             pr2_controller_manager_interface.reload_libraries(True, restore = True)
         else:
             pr2_controller_manager_interface.reload_libraries(True)
@@ -71,18 +71,18 @@ if __name__ == '__main__':
             pr2_controller_manager_interface.unload_controller(c)
     elif args[1] == 'lj' or args[1] == 'list-joints':
         track_mech = Tracker('/mechanism_statistics', MechanismStatistics)
-        print "Waiting for mechanism statistics message..."
+        print("Waiting for mechanism statistics message...")
         rospy.init_node('mech', anonymous=True)
         while not track_mech.msg:
             time.sleep(0.01)
             if rospy.is_shutdown():
                 sys.exit(0)
         msg = track_mech.msg
-        print 'Actuators:'
+        print('Actuators:')
         for i in range(len(msg.actuator_statistics)):
-            print "  %3d %s" % (i, msg.actuator_statistics[i].name)
-        print 'Joints:'
+            print("  %3d %s" % (i, msg.actuator_statistics[i].name))
+        print('Joints:')
         for i in range(len(msg.joint_statistics)):
-            print "  %3d %s" % (i, msg.joint_statistics[i].name)
+            print("  %3d %s" % (i, msg.joint_statistics[i].name))
     else:
         print_usage(1)
