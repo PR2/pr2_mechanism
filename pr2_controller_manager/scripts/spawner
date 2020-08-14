@@ -44,9 +44,9 @@ from pr2_mechanism_msgs.srv import *
 from std_msgs.msg import *
 
 def print_usage(exit_code = 0):
-    print 'spawner [--stopped] [--wait-for=wait_for_topic] <controller names>'
-    print "  stopped: loads controllers, but doesn't start them"
-    print "  wait-for: doesn't load or start controllers until it hears 'True' on wait_for_topic (Bool)"
+    print('spawner [--stopped] [--wait-for=wait_for_topic] <controller names>')
+    print("  stopped: loads controllers, but doesn't start them")
+    print("  wait-for: doesn't load or start controllers until it hears 'True' on wait_for_topic (Bool)")
     sys.exit(exit_code)
 
 load_controller = rospy.ServiceProxy('pr2_controller_manager/load_controller', LoadController)
