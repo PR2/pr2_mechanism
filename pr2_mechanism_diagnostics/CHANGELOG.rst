@@ -2,8 +2,8 @@
 Changelog for package pr2_mechanism_diagnostics
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.8.19 (2022-04-10)
+-------------------
 * Merge pull request `#342 <https://github.com/PR2/pr2_mechanism/issues/342>`_ from k-okada/add_noetic
   add noetic to .travis.yml, remove indigo/lunar
 * use '2to3-2.7 -w -fprint -fraise -fexcept -fdict .' to fix python2 to python3
