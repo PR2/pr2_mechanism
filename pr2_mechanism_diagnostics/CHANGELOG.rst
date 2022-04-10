@@ -2,6 +2,16 @@
 Changelog for package pr2_mechanism_diagnostics
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#342 <https://github.com/PR2/pr2_mechanism/issues/342>`_ from k-okada/add_noetic
+  add noetic to .travis.yml, remove indigo/lunar
+* use '2to3-2.7 -w -fprint -fraise -fexcept -fdict .' to fix python2 to python3
+* Added missing dependencies for catkin_EXPORTED_TARGETS (`#341 <https://github.com/PR2/pr2_mechanism/issues/341>`_)
+  This fixes race conditions when compiling from scratch.
+  Co-authored-by: Lasse Einig <einig@informatik.uni-hamburg.de>
+* Contributors: Kei Okada, Michael Görner
+
 1.8.18 (2018-09-11)
 -------------------
 

@@ -2,6 +2,9 @@
 Changelog for package pr2_hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.8.18 (2018-09-11)
 -------------------
 
