@@ -64,3 +64,8 @@ install(FILES controller_manager.launch
 
 install(FILES test/controller_plugin.xml
    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/test)
+
+if(CATKIN_ENABLE_TESTING)
+  find_package(catkin REQUIRED COMPONENTS rostest roslaunch)
+  roslaunch_add_file_check(controller_manager.launch)
+endif()

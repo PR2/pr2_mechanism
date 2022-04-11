@@ -38,10 +38,13 @@
   <run_depend>diagnostic_msgs</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>realtime_tools</run_depend>
+  <run_depend>robot_state_publisher</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>rosparam</run_depend>
   <run_depend>pluginlib</run_depend>
+
+  <test_depend>roslaunch</test_depend>
 
   <export>
     <pr2_controller_interface plugin="${prefix}/test/controller_plugin.xml"/>
