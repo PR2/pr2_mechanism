@@ -1,6 +1,6 @@
 <package>
   <name>pr2_controller_manager</name>
-  <version>1.8.19</version>
+  <version>1.8.20</version>
   <description>The controller manager (CM) package provides the infrastructure to run controllers in a hard realtime loop.</description>
   <maintainer email="ros-orphaned-packages@googlegroups.com">ROS Orphaned Package Maintainers</maintainer>
 

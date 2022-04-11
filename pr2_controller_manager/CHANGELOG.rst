@@ -2,8 +2,8 @@
 Changelog for package pr2_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.8.20 (2022-04-11)
+-------------------
 * add missing package (robot_state_publisher) to package.xml (`#339 <https://github.com/PR2/pr2_mechanism//issues/339>`_)
 * Contributors: Kei Okada
 
