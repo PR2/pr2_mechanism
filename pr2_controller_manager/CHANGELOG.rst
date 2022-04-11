@@ -2,6 +2,11 @@
 Changelog for package pr2_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* add missing package (robot_state_publisher) to package.xml (`#339 <https://github.com/PR2/pr2_mechanism//issues/339>`_)
+* Contributors: Kei Okada
+
 1.8.19 (2022-04-10)
 -------------------
 * add noetic to .travis.yml, remove indigo/lunar (`#342 <https://github.com/PR2/pr2_mechanism/issues/342>`_)
