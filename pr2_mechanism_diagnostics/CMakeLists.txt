@@ -25,10 +25,12 @@ add_executable(pr2_mechanism_diagnostics_node src/pr2_mechanism_diagnostics.cpp)
 target_link_libraries(pr2_mechanism_diagnostics_node ${PROJECT_NAME} ${catkin_LIBRARIES})
 set_target_properties(pr2_mechanism_diagnostics_node PROPERTIES OUTPUT_NAME pr2_mechanism_diagnostics)
 
-add_rostest(test/launch/mech_diag_test_main.launch)
-add_rostest(test/launch/overrun_test.launch)
-add_rostest(test/launch/uncal_test.launch)
-add_rostest(test/launch/nan_test.launch)
+if(CATKIN_ENABLE_TESTING)
+  add_rostest(test/launch/mech_diag_test_main.launch)
+  add_rostest(test/launch/overrun_test.launch)
+  add_rostest(test/launch/uncal_test.launch)
+  add_rostest(test/launch/nan_test.launch)
+endif()
 
 install(TARGETS pr2_mechanism_diagnostics_node
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
