@@ -2,6 +2,16 @@
 Changelog for package pr2_mechanism_model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* set catkin_add_gtest within CATKIN_ENABLE_TESTING (`#346 <https://github.com/pr2/pr2_mechanism/issues/346>`_)
+  fix with CATKIN_ENABLE_TESTING=OFF
+* Parse old & new transmission style (`#345 <https://github.com/pr2/pr2_mechanism/issues/345>`_)
+  The transmission style changed in ros_control, to make them compatible
+  we adjusted them in the pr2_description
+  This came up when we integrated the shadow-hand- and the PR2-model
+* Contributors: Kei Okada, Michael Görner
+
 1.8.20 (2022-04-11)
 -------------------
 

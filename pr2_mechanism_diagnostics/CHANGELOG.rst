@@ -2,6 +2,12 @@
 Changelog for package pr2_mechanism_diagnostics
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* set catkin_add_gtest within CATKIN_ENABLE_TESTING (`#346 <https://github.com/pr2/pr2_mechanism/issues/346>`_)
+  fix with CATKIN_ENABLE_TESTING=OFF
+* Contributors: Kei Okada
+
 1.8.20 (2022-04-11)
 -------------------
 
