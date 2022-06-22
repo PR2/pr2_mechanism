@@ -2,8 +2,8 @@
 Changelog for package pr2_mechanism_model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.8.21 (2022-06-22)
+-------------------
 * set catkin_add_gtest within CATKIN_ENABLE_TESTING (`#346 <https://github.com/pr2/pr2_mechanism/issues/346>`_)
   fix with CATKIN_ENABLE_TESTING=OFF
 * Parse old & new transmission style (`#345 <https://github.com/pr2/pr2_mechanism/issues/345>`_)
