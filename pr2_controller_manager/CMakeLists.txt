@@ -34,15 +34,17 @@ add_dependencies(controller_test ${catkin_EXPORTED_TARGETS})
 pr2_enable_rpath(controller_test)
 target_link_libraries(controller_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
-add_executable(test_controllers test/test.cpp)
-add_dependencies(test_controllers ${catkin_EXPORTED_TARGETS})
-add_executable(test_robot test/robot.cpp)
+if(CATKIN_ENABLE_TESTING)
+  add_executable(test_controllers test/test.cpp)
+  add_dependencies(test_controllers ${catkin_EXPORTED_TARGETS})
+  add_executable(test_robot test/robot.cpp)
 
-target_link_libraries(test_robot ${Boost_LIBRARIES} ${PROJECT_NAME} ${catkin_LIBRARIES})
+  target_link_libraries(test_robot ${Boost_LIBRARIES} ${PROJECT_NAME} ${catkin_LIBRARIES})
 
-target_link_libraries(test_controllers ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
+  target_link_libraries(test_controllers ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
 
-add_rostest(test/controller_test.launch)
+  add_rostest(test/controller_test.launch)
+endif()
 
 file(GLOB PYTHON_SCRIPTS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" 
    "${CMAKE_CURRENT_SOURCE_DIR}/scripts/*")
