@@ -480,9 +480,9 @@ TEST_F(TestController, service_and_realtime_publisher)
 
   // connect to topic
   ros::Subscriber sub1 = node_.subscribe<sensor_msgs::JointState>("controller1/my_topic", 100, 
-                                                                  boost::bind(&TestController_service_and_realtime_publisher_Test::callback1, this, _1));
+                                                                  [this](auto& msg){ callback1(msg); });
   ros::Subscriber sub4 = node_.subscribe<sensor_msgs::JointState>("controller4/my_topic", 100, 
-                                                                  boost::bind(&TestController_service_and_realtime_publisher_Test::callback4, this, _1));
+                                                                  [this](auto& msg){ callback4(msg); });
 
   std::string not_started = "not_started";
   callback1_name_ = not_started;
@@ -527,7 +527,7 @@ TEST_F(TestController, publisher_hz)
 
   // connect to topic
   ros::Subscriber sub1 = node_.subscribe<sensor_msgs::JointState>("controller1/my_topic", 100, 
-                                                                  boost::bind(&TestController_publisher_hz_Test::callback1, this, _1));
+                                                                  [this](auto& msg){ callback1(msg); });
 
   callback1_counter_ = 0;
   ros::Time start = ros::Time::now();
@@ -554,8 +554,8 @@ TEST_F(TestController, publisher_hz)
 TEST_F(TestController, manager_hz)
 {
   // connect to topic
-  ros::Subscriber sub_js = node_.subscribe<sensor_msgs::JointState>("joint_states", 100, 
-                                                                    boost::bind(&TestController_manager_hz_Test::callbackJs, this, _1));
+  ros::Subscriber sub_js = node_.subscribe<sensor_msgs::JointState>("joint_states", 100,
+                                                                    [this](auto& msg){ callbackJs(msg); });
   callback_js_counter_ = 0;
   ros::Time start = ros::Time::now();
   ros::Duration timeout(5.0);
@@ -567,8 +567,8 @@ TEST_F(TestController, manager_hz)
   sub_js.shutdown();
 
 
-  ros::Subscriber sub_ms = node_.subscribe<pr2_mechanism_msgs::MechanismStatistics>("mechanism_statistics", 100, 
-                                                                                    boost::bind(&TestController_manager_hz_Test::callbackMs, this, _1));
+  ros::Subscriber sub_ms = node_.subscribe<pr2_mechanism_msgs::MechanismStatistics>("mechanism_statistics", 100,
+                                                                                    [this](auto& msg){ callbackMs(msg); });
   callback_ms_counter_ = 0;
   start = ros::Time::now();
   while (callback_ms_counter_ == 0 && ros::Time::now() - start < timeout)
@@ -585,8 +585,8 @@ TEST_F(TestController, manager_hz)
 TEST_F(TestController, diagnostic_hz)
 {
   // connect to topic
-  ros::Subscriber sub_diagnostics = node_.subscribe<diagnostic_msgs::DiagnosticArray>("/diagnostics", 100, 
-                                                                                      boost::bind(&TestController_manager_hz_Test::callbackDiagnostic, this, _1));
+  ros::Subscriber sub_diagnostics = node_.subscribe<diagnostic_msgs::DiagnosticArray>("/diagnostics", 100,
+                                                                                      [this](auto& msg){ callbackDiagnostic(msg); });
   joint_diagnostic_counter_ = 0;
   controller_diagnostic_counter_ = 0;
   ros::Duration(5.0).sleep();
