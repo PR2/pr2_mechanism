@@ -35,7 +35,7 @@
 #include "pr2_mechanism_model/transmission.h"
 #include <tinyxml.h>
 #include <urdf/model.h>
-#include <pluginlib/class_loader.h>
+#include <pluginlib/class_loader.hpp>
 #include "pr2_hardware_interface/hardware_interface.h"
 
 

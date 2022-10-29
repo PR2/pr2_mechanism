@@ -76,7 +76,7 @@
  *
  */
 #include "pr2_mechanism_model/pr2_gripper_transmission.h"
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 #include <algorithm>
 #include <numeric>
 #include <angles/angles.h>

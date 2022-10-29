@@ -34,7 +34,7 @@
 
 #include <pr2_mechanism_model/pr2_belt_transmission.h>
 #include <math.h>
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 
 PLUGINLIB_EXPORT_CLASS(pr2_mechanism_model::PR2BeltCompensatorTransmission,
                         pr2_mechanism_model::Transmission)

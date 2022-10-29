@@ -1,5 +1,5 @@
 #include "test_controller.h"
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 #include <boost/thread/condition.hpp>
 
 using namespace my_controller_ns;

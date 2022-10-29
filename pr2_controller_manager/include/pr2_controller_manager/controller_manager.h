@@ -43,7 +43,7 @@
 #include <realtime_tools/realtime_publisher.h>
 #include <ros/node_handle.h>
 #include <pr2_controller_interface/controller_provider.h>
-#include "pluginlib/class_loader.h"
+#include "pluginlib/class_loader.hpp"
 #include <pr2_mechanism_msgs/ListControllerTypes.h>
 #include <pr2_mechanism_msgs/ListControllers.h>
 #include <pr2_mechanism_msgs/ReloadControllerLibraries.h>

@@ -35,7 +35,7 @@
  * Author: Stuart Glaser
  */
 #include <math.h>
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 #include "pr2_mechanism_model/robot.h"
 #include "pr2_mechanism_model/simple_transmission.h"
 
