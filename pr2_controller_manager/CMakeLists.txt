@@ -7,7 +7,7 @@ find_package(catkin REQUIRED COMPONENTS cmake_modules pr2_hardware_interface pr2
 
 find_package(Eigen3 REQUIRED)
 find_package(TinyXML REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(Boost REQUIRED COMPONENTS thread)
 
 include_directories(
    include 
